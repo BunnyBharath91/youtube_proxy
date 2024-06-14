@@ -1,0 +1,10 @@
+.thumbnail {
+  width: 85px;
+}
+.request-card {
+  background-color: antiquewhite;
+  margin: 12px;
+}
+button {
+  cursor: pointer;
+}

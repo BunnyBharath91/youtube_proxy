@@ -1,0 +1,14 @@
+.header-container {
+  width: 100vw;
+  padding: 16px 25px;
+  background-color: beige;
+}
+.header-list {
+  display: flex;
+  align-items: center;
+}
+
+li {
+  list-style-type: none;
+  margin: 0px 18px;
+}
