@@ -207,8 +207,8 @@ app.post(
       // Prepare and execute the SQL INSERT query using parameterized query
       const addDetailsQuery = `
         INSERT INTO VIDEOS(video_url, title, description, thumbnail_url, visibility, category_id,
-                            privacy_status,privacy_status, from_user, to_user) 
-        VALUES(?, ?, ?, ?, 'public', 22, ?,'pending', ?, ?);
+                            privacy_status,request_status, from_user, to_user) 
+        VALUES(?, ?, ?, ?, 'adult', 22, ?,'pending', ?, ?);
       `;
       const addingResponse = await db.run(addDetailsQuery, [
         videoUploadResponse.url,
@@ -369,9 +369,18 @@ app.get("/requests", ensureAuthenticated, async (request, response) => {
     const userName = request.user.userName;
     console.log(userName);
 
-    // Prepare and execute the SQL SELECT query using a parameterized query
+    const { role } = request.query; //accessing query parameter role which will have values as editor or creator
+    let requestType;
+    if (role === "creator") {
+      requestType = "to_user";
+    } else if (role === "editor") {
+      requestType = "from_user";
+    } else {
+      return response.status(400).send("Invalid role parameter");
+    }
+
     const getRequestsQuery = `
-      SELECT * FROM VIDEOS WHERE to_user = ?;
+      SELECT * FROM VIDEOS WHERE ${requestType} = ?;
     `;
     const requestsResponse = await db.all(getRequestsQuery, [userName]);
 
@@ -382,3 +391,83 @@ app.get("/requests", ensureAuthenticated, async (request, response) => {
     response.status(500).send("Error retrieving requests");
   }
 });
+
+//getting videoDetails(request Details) with videoId
+app.get(
+  "/requests/:videoId",
+  ensureAuthenticated,
+  async (request, response) => {
+    try {
+      const { videoId } = request.params;
+      console.log("request params", request.params);
+
+      // Prepare and execute the SQL SELECT query using a parameterized query
+      const getRequestDetailsQuery = `
+      SELECT * FROM VIDEOS WHERE id = ?;
+    `;
+      const dbResponse = await db.get(getRequestDetailsQuery, [videoId]);
+      console.log(dbResponse);
+
+      // Send the retrieved requests as the response
+      response.status(200).json(dbResponse);
+    } catch (error) {
+      console.error("Error retrieving video details:", error);
+      response.status(500).send("Error retrieving video details");
+    }
+  }
+);
+
+//update requestStatus
+app.put(
+  "/response/:videoId",
+  ensureAuthenticated,
+  async (request, response) => {
+    const { videoId } = request.params;
+    const { creatorResponse } = request.body;
+
+    let editorRequestStatus;
+
+    if (creatorResponse) {
+      editorRequestStatus = "approved";
+    } else {
+      editorRequestStatus = "rejected";
+    }
+
+    try {
+      const updateRequestStatusQuery = `
+        UPDATE videos SET request_status=? WHERE id=?;
+      `;
+      const dbResponse = await db.run(updateRequestStatusQuery, [
+        editorRequestStatus,
+        videoId,
+      ]);
+      response.send(dbResponse);
+    } catch (error) {
+      console.error("Error updating request status:", error);
+      response.status(500).send("Error updating request status");
+    }
+  }
+);
+
+//delete the request
+app.delete(
+  "/delete/:videoId",
+  ensureAuthenticated,
+  async (request, response) => {
+    const { videoId } = request.params;
+
+    const deleteRequest = `
+        DELETE FROM videos WHERE id=?;
+    `;
+
+    try {
+      const deleteResponse = await db.run(deleteRequest, [videoId]);
+      response.json({ message: "Video deleted successfully", deleteResponse });
+    } catch (error) {
+      console.error("Error deleting video:", error);
+      response
+        .status(500)
+        .json({ error: "Failed to delete video. Please try again." });
+    }
+  }
+);

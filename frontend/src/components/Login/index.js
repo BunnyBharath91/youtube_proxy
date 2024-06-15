@@ -36,16 +36,62 @@
 // export default Login;
 
 import { Component } from "react";
+import { Redirect } from "react-router-dom";
+
 class Login extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isAuthenticated: false,
+      loading: true,
+    };
+  }
+
+  componentDidMount() {
+    this.checkAuthStatus();
+  }
+
+  checkAuthStatus = async () => {
+    try {
+      const response = await fetch("/oauth/status");
+      if (response.ok) {
+        const data = await response.json();
+        this.setState({
+          isAuthenticated: data.authenticated,
+          loading: false,
+        });
+      } else {
+        console.log(response.statusText);
+        this.setState({
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error checking authentication status:", error);
+      this.setState({
+        loading: false,
+      });
+    }
+  };
+
   render() {
-    console.log("login file");
-    return (
-      <div>
-        <a href="http://localhost:5000/oauth/google">
-          <button>Login With Google</button>
-        </a>
-      </div>
-    );
+    const { isAuthenticated, loading } = this.state;
+
+    if (loading) {
+      return <h1>Loading...</h1>;
+    }
+
+    if (isAuthenticated) {
+      return <Redirect to="/" />;
+    } else {
+      return (
+        <div>
+          <a href="http://localhost:5000/oauth/google">
+            <button>Login With Google</button>
+          </a>
+        </div>
+      );
+    }
   }
 }
 

@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./index.css";
 import Header from "../Header";
 
-class CreatorSection extends Component {
+class EditorSectionRequests extends Component {
   state = {
     requestsList: [],
     loading: true,
@@ -14,7 +14,7 @@ class CreatorSection extends Component {
 
   getRequests = async () => {
     try {
-      const response = await fetch("/requests?role=creator");
+      const response = await fetch(`/requests?role=editor`);
       if (!response.ok) {
         throw new Error(`Request failed with status: ${response.status}`);
       }
@@ -37,7 +37,7 @@ class CreatorSection extends Component {
         videoAccessToken: eachItem.video_access_token,
         requestStatus: eachItem.request_status,
       }));
-      console.log(updatedData);
+
       this.setState({
         loading: false,
         requestsList: updatedData,
@@ -48,72 +48,47 @@ class CreatorSection extends Component {
     }
   };
 
+  onDeleteRequest = async (videoId) => {
+    try {
+      const response = await fetch(`/delete/${videoId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-type": "application/json",
+        },
+      });
+      if (response.ok) {
+        await this.getRequests();
+      } else {
+        throw new Error("Failed to process your request. Please try again.");
+      }
+    } catch (error) {
+      console.log("error occurred: ", error);
+    }
+  };
+
   renderRequest = (requestItem) => {
     const {
       videoId,
       videoUrl,
       requestStatus,
-      fromUser,
+      toUser,
       title,
       thumbnailUrl,
     } = requestItem;
 
-    const onApprove = async (event) => {
-      event.stopPropagation();
-      try {
-        const response = await fetch(`/response/${videoId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ creatorResponse: true }),
-        });
-
-        if (response.ok) {
-          await this.getRequests();
-        } else {
-          throw new Error("Failed to process your request. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error processing approval:", error);
-        this.setState({
-          errorMessage: "Failed to process your request. Please try again.",
-        });
-      }
-    };
-
-    const onReject = async (event) => {
-      event.stopPropagation();
-      try {
-        const response = await fetch(`/response/${videoId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ creatorResponse: false }),
-        });
-
-        if (response.ok) {
-          await this.getRequests();
-        } else {
-          throw new Error("Failed to process your request. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error processing approval:", error);
-        this.setState({
-          errorMessage: "Failed to process your request. Please try again.",
-        });
-      }
+    const handleDelete = (event) => {
+      event.stopPropagation(); //prevents the event from bubbling up the DOM tree, effectively stopping any parent elements from handling the event.
+      this.onDeleteRequest(videoId);
     };
 
     return (
       <li
         key={videoId}
         className="request-card"
-        onClick={() => this.props.history.push(`/creator_section/${videoId}`)}
+        onClick={() => this.props.history.push(`/editor_section/${videoId}`)}
       >
-        <p className="editor-id">{fromUser}</p>
-        <p className="video-title">{title}</p>
+        <p className="creator-id">TO: {toUser}</p>
+        <p className="video-title">VIDEO TITLE: {title}</p>
         <video
           width="640"
           height="360"
@@ -124,14 +99,16 @@ class CreatorSection extends Component {
           <source src={videoUrl} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
-        {requestStatus === "pending" ? (
+
+        {requestStatus === "approved" && (
           <div>
-            <button onClick={onApprove}>Approve</button>
-            <button onClick={onReject}>Reject</button>
+            <p>Your request has been approved</p>
+            <button>Upload</button>
           </div>
-        ) : (
-          <p>Request Status: {requestStatus}</p>
         )}
+        {requestStatus === "pending" && <p>Your request is pending</p>}
+        {requestStatus === "rejected" && <p> Your request is rejected</p>}
+        <button onClick={handleDelete}>Delete request</button>
       </li>
     );
   };
@@ -146,7 +123,7 @@ class CreatorSection extends Component {
     return (
       <div className="creator-section">
         <Header />
-        <h1>Requests for you</h1>
+        <h1>Requests you made</h1>
         {requestsList.length === 0 ? (
           <h1>There are no requests</h1>
         ) : (
@@ -159,4 +136,4 @@ class CreatorSection extends Component {
   }
 }
 
-export default CreatorSection;
+export default EditorSectionRequests;

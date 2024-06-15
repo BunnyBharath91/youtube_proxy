@@ -1,4 +1,5 @@
 import { Component } from "react";
+import { Link } from "react-router-dom";
 import "./index.css";
 import Header from "../Header";
 
@@ -34,7 +35,7 @@ class EditorSection extends Component {
 
       if (response.ok) {
         const data = await response.json();
-        this.setState({ responseMessage: data.message, loading: false }); // Assuming your backend sends a JSON response with a 'message' field
+        this.setState({ responseMessage: data.message, loading: false });
       } else {
         console.error("Upload failed with status:", response.status);
         this.setState({
@@ -70,81 +71,88 @@ class EditorSection extends Component {
     }
 
     return (
-      <div className="editor-section-container">
+      <div className="editor-section">
         <Header />
-        <h1 className="heading">THIS IS EDITOR SECTION</h1>
-        <form onSubmit={this.handleSubmit} encType="multipart/form-data">
-          <div>
-            <label htmlFor="video">Video:</label>
-            <input
-              type="file"
-              name="video"
-              id="video"
-              accept="video/mp4"
-              required
-            />
+        <div className="editor-section-container">
+          <div className="video-upload-section">
+            <h1 className="heading">THIS IS EDITOR SECTION</h1>
+            <form onSubmit={this.handleSubmit} encType="multipart/form-data">
+              <div>
+                <label htmlFor="video">Video:</label>
+                <input
+                  type="file"
+                  name="video"
+                  id="video"
+                  accept="video/mp4"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="thumbnail">Thumbnail:</label>
+                <input
+                  type="file"
+                  name="thumbnail"
+                  id="thumbnail"
+                  accept="image/jpeg, image/png"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="title">Title:</label>
+                <input
+                  type="text"
+                  name="title"
+                  id="title"
+                  placeholder="Your video title"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="description">Description:</label>
+                <input
+                  type="text"
+                  name="description"
+                  id="description"
+                  placeholder="Your video description"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="status">Visibility:</label>
+                <select name="privacy_status" id="status" required>
+                  <option value="" disabled selected>
+                    Select visibility
+                  </option>
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="category">Category:</label>
+                <select name="category_id" id="category" required>
+                  <option value="" disabled selected>
+                    Select Category
+                  </option>
+                  <option value="22">Educational</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="creator">creator id:</label>
+                <input
+                  id="creator"
+                  name="creator_id"
+                  type="text"
+                  placeholder="fill creator id"
+                  required
+                />
+              </div>
+              <button type="submit">Submit</button>
+            </form>
           </div>
-          <div>
-            <label htmlFor="thumbnail">Thumbnail:</label>
-            <input
-              type="file"
-              name="thumbnail"
-              id="thumbnail"
-              accept="image/jpeg, image/png"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="title">Title:</label>
-            <input
-              type="text"
-              name="title"
-              id="title"
-              placeholder="Your video title"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="description">Description:</label>
-            <input
-              type="text"
-              name="description"
-              id="description"
-              placeholder="Your video description"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="status">Visibility:</label>
-            <select name="privacy_status" id="status" required>
-              <option value="" disabled selected>
-                Select visibility
-              </option>
-              <option value="public">Public</option>
-              <option value="private">Private</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="category">Category:</label>
-            <select name="category_id" id="category" required>
-              <option value="" disabled selected>
-                Select Category
-              </option>
-              <option value="22">Educational</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="creator">creator id:</label>
-            <input
-              id="creator"
-              name="creator_id"
-              type="text"
-              placeholder="fill creator id"
-              required
-            />
-          </div>
-          <button type="submit">Submit</button>
-        </form>
+          <Link to="/editor_section/requests">
+            <button>Your Requests</button>
+          </Link>
+        </div>
       </div>
     );
   }
