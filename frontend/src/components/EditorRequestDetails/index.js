@@ -86,6 +86,57 @@ class EditorRequestDetails extends Component {
     }
   };
 
+  onUploadVideo = async () => {
+    const { requestDetails } = this.state;
+    const {
+      videoId,
+      videoUrl,
+      title,
+      thumbnailUrl,
+      description,
+      privacyStatus,
+    } = requestDetails;
+    const requestBody = {
+      videoId,
+      videoUrl,
+      title,
+      thumbnailUrl,
+      description,
+      privacyStatus,
+    };
+    this.setState({
+      isLoading: true,
+    });
+    try {
+      const response = await fetch("/upload-video", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // Set the correct Content-Type header
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      this.setState({
+        isLoading: false,
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log("Video uploaded successfully:", responseData);
+        alert("Video uploaded successfully");
+      } else {
+        console.log("Error while uploading:", response.status);
+        alert("Error while uploading");
+      }
+    } catch (error) {
+      console.error("Error uploading video:", error);
+      this.setState({
+        isLoading: false,
+      });
+      alert("Error uploading video");
+    }
+  };
+
   render() {
     const { isLoading, requestDetails, errorMessage } = this.state;
     const {
@@ -139,7 +190,7 @@ class EditorRequestDetails extends Component {
         {requestStatus === "approved" && (
           <div>
             <p>Your request has been approved</p>
-            <button>Upload</button>
+            <button onClick={this.onUploadVideo}>Upload</button>
           </div>
         )}
         {requestStatus === "pending" && <p>Your request is pending</p>}

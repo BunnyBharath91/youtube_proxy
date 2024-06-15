@@ -16,6 +16,8 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 //we don't need whole package of passport-google-oauth module, we only need a class named 'Strategy'(since class name starts with Capital letter) in that module
 const cors = require("cors");
 
+const request = require("request");
+
 const app = express();
 
 app.use(express.json()); // Middleware to parse JSON payloads
@@ -229,50 +231,6 @@ app.post(
   }
 );
 
-//downloading the files from the cloudinary through url
-async function downloadImage(imageUrl, userId) {
-  try {
-    const uniqueFilename = `${userId}_${uuidv4()}.jpg`; // Generate unique filename
-    const filePath = `./images/${uniqueFilename}`; // Include a directory to store images
-
-    const file = fs.createWriteStream(filePath);
-
-    const response = await new Promise((resolve, reject) => {
-      http
-        .get(imageUrl, (response) => {
-          response.pipe(file);
-          response.on("end", () => resolve(filePath));
-          response.on("error", reject);
-        })
-        .on("error", reject);
-    });
-
-    return filePath;
-  } catch (error) {
-    console.error("Download failed:", error);
-    throw error;
-  }
-}
-async function main() {
-  try {
-    const imageUrl =
-      "http://res.cloudinary.com/drbnxuf21/video/upload/v1718107829/wndhwe5szteljmhtl3l8.mp4"; // Example image URL
-    const userId = "USER_ID"; // Replace with user-specific identifier
-
-    const downloadedFilePath = await downloadImage(imageUrl, 4);
-    console.log(`Image downloaded and saved to ${downloadedFilePath}`);
-  } catch (error) {
-    console.error("Download failed:", error);
-  }
-}
-//main();
-
-//console.log("unlinking....");
-// //fs.unlinkSync(
-//   "./uploads/1718107822506-IIT Dhanbad ki HOLI __ Holi Celebrations.mp4"
-// );
-//console.log("unlinked video successfully");
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.get("/login", async (request, response) => {
@@ -471,3 +429,104 @@ app.delete(
     }
   }
 );
+
+///////////////////////////////////////////////////////////////////////////////////
+// Function to download files from URLs
+
+const downloadFromUrl = async (fileUrl, videoId) => {
+  try {
+    const uniqueFilename = `${videoId}_${uuidv4()}.mp4`; // Assuming video files are in MP4 format
+    const filePath = `./videos/${uniqueFilename}`;
+
+    // Ensure the 'videos' directory exists
+    if (!fs.existsSync("./videos")) {
+      fs.mkdirSync("./videos");
+    }
+
+    const file = fs.createWriteStream(filePath);
+
+    await new Promise((resolve, reject) => {
+      http
+        .get(fileUrl, (response) => {
+          response.pipe(file);
+          file.on("finish", () => {
+            file.close();
+            resolve(filePath);
+          });
+        })
+        .on("error", (err) => {
+          fs.unlink(filePath, () => reject(err)); // Delete the file async if error occurs
+        });
+    });
+
+    return uniqueFilename;
+  } catch (error) {
+    console.error("Download failed:", error);
+    throw error;
+  }
+};
+
+app.post("/upload-video", async (req, res) => {
+  const {
+    videoId,
+    title,
+    description,
+    privacyStatus,
+    videoUrl,
+    thumbnailUrl,
+  } = req.body;
+
+  try {
+    // Download video to local storage
+    const videoFileName = await downloadFromUrl(videoUrl, videoId);
+
+    // Define the options for the request
+    const options = {
+      method: "POST",
+      url:
+        "https://www.googleapis.com/upload/youtube/v3/videos?part=snippet,status",
+      headers: {
+        Authorization: `Bearer ${req.user.accessToken}`, // Assuming accessToken is available in req.user
+      },
+      formData: {
+        snippet: JSON.stringify({
+          snippet: {
+            title: title,
+            description: description,
+          },
+          status: {
+            privacyStatus: privacyStatus,
+          },
+        }),
+        media: {
+          value: fs.createReadStream(`./videos/${videoFileName}`),
+          options: {
+            filename: path.basename(videoFileName),
+            contentType: "video/mp4", // MIME type of the video file
+          },
+        },
+      },
+    };
+
+    // Make the request to upload video to YouTube
+    request(options, (error, response, body) => {
+      if (error) {
+        console.error("Error uploading video:", error);
+        return res.status(500).json({ error: "Failed to upload video" });
+      }
+      console.log("Response from YouTube:", body);
+
+      // Clean up the downloaded video file
+      fs.unlink(`./videos/${videoFileName}`, (unlinkError) => {
+        if (unlinkError) {
+          console.error("Error deleting video file:", unlinkError);
+        }
+      });
+
+      res.json(JSON.parse(body)); // Respond with the JSON response from YouTube
+    });
+  } catch (error) {
+    console.error("Error uploading video:", error);
+    res.status(500).json({ error: "Failed to upload video" });
+  }
+});
