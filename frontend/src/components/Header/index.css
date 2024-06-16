@@ -1,14 +1,39 @@
 .header-container {
-  width: 100vw;
-  padding: 16px 25px;
-  background-color: beige;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0px 32px;
+  background-color: #f3eae3;
 }
-.header-list {
+
+.sections {
   display: flex;
   align-items: center;
 }
 
-li {
+.header-item {
   list-style-type: none;
-  margin: 0px 18px;
+  font-family: "Druk Trial", sans-serif;
+  margin: 0px 20px;
+  font-size: 16px;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.user-img {
+  height: 45px;
+  width: 45px;
+  border-radius: 50%;
+}
+
+.user-icon {
+  font-size: 22px;
 }

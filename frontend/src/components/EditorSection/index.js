@@ -9,6 +9,8 @@ class EditorSection extends Component {
     this.state = {
       loading: false,
       responseMessage: "",
+      videoUrl: "",
+      thumbnailUrl: "",
     };
   }
 
@@ -52,8 +54,40 @@ class EditorSection extends Component {
     }
   };
 
+  onVideoPreview = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        this.setState({
+          videoUrl: reader.result,
+        });
+      };
+      reader.onerror = (error) => {
+        console.error("Error reading video file:", error);
+      };
+    }
+  };
+
+  onThumbnailPreview = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        this.setState({
+          thumbnailUrl: reader.result,
+        });
+      };
+      reader.onerror = (error) => {
+        console.error("Error reading thumbnail file:", error);
+      };
+    }
+  };
+
   render() {
-    const { responseMessage, loading } = this.state;
+    const { responseMessage, loading, videoUrl, thumbnailUrl } = this.state;
 
     if (loading) {
       return <h1>Please wait for a moment. We are sending your request</h1>;
@@ -71,29 +105,59 @@ class EditorSection extends Component {
     }
 
     return (
-      <div className="editor-section">
+      <div className="bg-container">
         <Header />
-        <div className="editor-section-container">
+        <div className="editor-section">
+          <Link to="/editor_section/requests">
+            <button>Your Requests</button>
+          </Link>
+          {/* <div className='custom-input'>
+              <img id='chosen-img' alt='chosen-img-prev'/>
+              <p id='file-name'></p>
+              <input type='file' id='upload-button' accept='image/*' onChange={this.onUploadFile}/>
+              <label htmlFor='upload-button'>
+                  choose a file
+              </label>
+          </div> */}
           <div className="video-upload-section">
-            <h1 className="heading">THIS IS EDITOR SECTION</h1>
+            <h1 className="heading">Make a Request By: </h1>
             <form onSubmit={this.handleSubmit} encType="multipart/form-data">
               <div>
+                {videoUrl ? (
+                  <video width="640" height="360" controls preload="auto">
+                    <source src={videoUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <div className="preview-card">
+                    <p>Select Video</p>
+                  </div>
+                )}
                 <label htmlFor="video">Video:</label>
                 <input
                   type="file"
                   name="video"
                   id="video"
                   accept="video/mp4"
+                  onChange={this.onVideoPreview}
                   required
                 />
               </div>
               <div>
+                {thumbnailUrl ? (
+                  <img alt="thumbnail-prev" src={thumbnailUrl} />
+                ) : (
+                  <div className="preview-card">
+                    <p>Select Img</p>
+                  </div>
+                )}
                 <label htmlFor="thumbnail">Thumbnail:</label>
                 <input
                   type="file"
                   name="thumbnail"
                   id="thumbnail"
                   accept="image/jpeg, image/png"
+                  onChange={this.onThumbnailPreview}
                   required
                 />
               </div>
@@ -149,9 +213,6 @@ class EditorSection extends Component {
               <button type="submit">Submit</button>
             </form>
           </div>
-          <Link to="/editor_section/requests">
-            <button>Your Requests</button>
-          </Link>
         </div>
       </div>
     );

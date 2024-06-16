@@ -1,3 +1,10 @@
-.editor-section-container {
+.editor-section {
   display: flex;
+  flex-direction: column;
+  padding: 32px;
+}
+.preview-card {
+  height: 400px;
+  width: 500px;
+  border: dashed 2px black;
 }

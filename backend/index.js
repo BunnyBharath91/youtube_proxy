@@ -248,7 +248,9 @@ app.get("/logout", async (request, response) => {
       console.log(err);
     } else {
       request.session.destroy(() => {
-        response.redirect("/login");
+        response.send("logged out successfully");
+        console.log("logged out successfully");
+        //response.redirect("/login");
       });
     }
   });
