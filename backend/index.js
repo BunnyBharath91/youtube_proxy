@@ -45,6 +45,15 @@ app.use(passport.initialize());
 app.use(passport.session()); //integrates Passport.js with express-session to handle persistent login sessions by deserializing user information from the session on each request.
 // and we can only use this passport.session() only when we are working with session in our express application. i.e app.use(session({...}))
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "http://localhost:3000"); // updating match the domain  will make the request from
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
 passport.use(
   new GoogleStrategy(
     {
@@ -144,7 +153,7 @@ const initializeDBAndServer = async () => {
     });
 
     app.listen(5000, () => {
-      console.log("server is running on http://localhost:5000/login");
+      console.log("server is running on http://localhost:5000");
     });
   } catch (error) {
     console.log(`error: ${error.message}`);
@@ -223,7 +232,9 @@ app.post(
       ]);
 
       console.log("Inserted video details:", addingResponse.lastID);
-      response.status(200).json({ message: "Request made successfully" });
+      return response
+        .status(200)
+        .json({ message: "Request made successfully" });
     } catch (error) {
       console.error("Error inserting video details:", error);
       response.status(500).send("Error inserting video details");
@@ -233,24 +244,24 @@ app.post(
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-app.get("/login", async (request, response) => {
-  if (request.isAuthenticated()) {
-    // isAuthenticated() is a method which comes in passport module(which is accessed through request method)
-    response.redirect("/dashboard");
-  } else {
-    response.render(path.join(__dirname, "login.ejs"));
-  }
-});
+// app.get("/login", async (request, response) => {
+//   if (request.isAuthenticated()) {
+//     // isAuthenticated() is a method which comes in passport module(which is accessed through request method)
+//     response.redirect("/dashboard");
+//   } else {
+//     response.render(path.join(__dirname, "login.ejs"));
+//   }
+// });
 
 app.get("/logout", async (request, response) => {
-  request.logout(function (err) {
+  request.logout((err) => {
     if (err) {
       console.log(err);
     } else {
       request.session.destroy(() => {
         response.send("logged out successfully");
         console.log("logged out successfully");
-        //response.redirect("/login");
+        // response.redirect("http://localhost/login");
       });
     }
   });
@@ -272,15 +283,15 @@ app.get("/home", async (request, response) => {
   }
 });
 
-app.get("/dashboard", async (request, response) => {
-  if (request.isAuthenticated()) {
-    // isAuthenticated is a method which comes from the passport Module. It returns true if the user is authenticated or else it returns false
-    // console.log(request.user);
-    response.render(path.join(__dirname, "dashboard.ejs"), {
-      user: request.user,
-    });
-  }
-});
+// app.get("/dashboard", async (request, response) => {
+//   if (request.isAuthenticated()) {
+//     // isAuthenticated is a method which comes from the passport Module. It returns true if the user is authenticated or else it returns false
+//     // console.log(request.user);
+//     response.render(path.join(__dirname, "dashboard.ejs"), {
+//       user: request.user,
+//     });
+//   }
+// });
 
 app.get(
   "/oauth/google",
@@ -302,7 +313,7 @@ app.get(
   async (request, response) => {
     //console.log(request.user);
     //response.redirect("/dashboard");
-    response.send(request.user);
+    response.redirect("http://localhost:3000");
   }
 );
 
@@ -369,10 +380,10 @@ app.get(
       console.log(dbResponse);
 
       // Send the retrieved requests as the response
-      response.status(200).json(dbResponse);
+      return response.status(200).json(dbResponse);
     } catch (error) {
       console.error("Error retrieving video details:", error);
-      response.status(500).send("Error retrieving video details");
+      return response.status(500).send("Error retrieving video details");
     }
   }
 );
