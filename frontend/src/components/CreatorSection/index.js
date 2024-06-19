@@ -48,6 +48,52 @@ class CreatorSection extends Component {
     }
   };
 
+  onApprove = async (videoId) => {
+    try {
+      const response = await fetch(`/response/${videoId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ creatorResponse: true }),
+      });
+
+      if (response.ok) {
+        await this.getRequests();
+      } else {
+        throw new Error("Failed to process your request. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error processing approval:", error);
+      this.setState({
+        errorMessage: "Failed to process your request. Please try again.",
+      });
+    }
+  };
+
+  onReject = async (videoId) => {
+    try {
+      const response = await fetch(`/response/${videoId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ creatorResponse: false }),
+      });
+
+      if (response.ok) {
+        await this.getRequests();
+      } else {
+        throw new Error("Failed to process your request. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error processing approval:", error);
+      this.setState({
+        errorMessage: "Failed to process your request. Please try again.",
+      });
+    }
+  };
+
   renderRequest = (requestItem) => {
     const {
       videoId,
@@ -58,52 +104,14 @@ class CreatorSection extends Component {
       thumbnailUrl,
     } = requestItem;
 
-    const onApprove = async (event) => {
+    const onHandleApprove = (event) => {
       event.stopPropagation();
-      try {
-        const response = await fetch(`/response/${videoId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ creatorResponse: true }),
-        });
-
-        if (response.ok) {
-          await this.getRequests();
-        } else {
-          throw new Error("Failed to process your request. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error processing approval:", error);
-        this.setState({
-          errorMessage: "Failed to process your request. Please try again.",
-        });
-      }
+      this.onApprove(videoId);
     };
 
-    const onReject = async (event) => {
+    const onHandleReject = (event) => {
       event.stopPropagation();
-      try {
-        const response = await fetch(`/response/${videoId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ creatorResponse: false }),
-        });
-
-        if (response.ok) {
-          await this.getRequests();
-        } else {
-          throw new Error("Failed to process your request. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error processing approval:", error);
-        this.setState({
-          errorMessage: "Failed to process your request. Please try again.",
-        });
-      }
+      this.onReject(videoId);
     };
 
     return (
@@ -126,8 +134,8 @@ class CreatorSection extends Component {
         </video>
         {requestStatus === "pending" ? (
           <div>
-            <button onClick={onApprove}>Approve</button>
-            <button onClick={onReject}>Reject</button>
+            <button onClick={onHandleApprove}>Approve</button>
+            <button onClick={onHandleReject}>Reject</button>
           </div>
         ) : (
           <p>Request Status: {requestStatus}</p>

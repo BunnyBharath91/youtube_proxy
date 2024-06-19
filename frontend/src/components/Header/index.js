@@ -56,6 +56,11 @@ class Header extends Component {
               EDITOR
             </Link>
           </li>
+          <li className="header-item">
+            <Link to="/request_section" className="nav-link">
+              REQUEST
+            </Link>
+          </li>
         </ul>
 
         <ul className="sections">

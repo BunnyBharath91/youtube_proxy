@@ -17,6 +17,8 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const cors = require("cors");
 
 const request = require("request");
+const FormData = require("form-data");
+const fetch = require("node-fetch");
 
 const app = express();
 
@@ -61,29 +63,36 @@ passport.use(
 
       clientSecret: process.env.clientSecret,
       callbackURL: process.env.callbackURL,
+      scope: ["profile", "email", "offline_access"], // Ensure 'offline_access' is included for getting accessToken
     },
 
     async (accessToken, refreshToken, profile, cb) => {
       profile.accessToken = accessToken; // Add the accessToken to the profile object
-      console.log(accessToken);
+      profile.refreshToken = refreshToken; //Add the refreshToken to the profile obj
+      console.log("profile obj: ", profile);
+      console.log("access token: ", accessToken);
+      console.log("refresh token: ", refreshToken);
       const email = profile.emails[0].value;
 
       const userCheckQuery = `
       SELECT * FROM users WHERE email='${email}';
       `;
       const userResponse = await db.get(userCheckQuery);
-      if (userResponse === undefined) {
+      if (!userResponse) {
         const userName = `${profile.name.givenName}${uuidv4()}`;
         const userPassword = `${uuidv4()}`;
-        const addUserQuery = `
-          INSERT INTO users(username,email,password)
-          VALUES('${userName}','${email}','${userPassword}');
-          `;
-        const addResponse = await db.run(addUserQuery);
-        console.log("new user id: ", addResponse.lastID);
+        const addUserQuery = `INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)`;
+        profile.userName = userName;
+        await db.run(addUserQuery, [
+          userName,
+          email,
+          userPassword,
+          refreshToken,
+        ]);
       } else {
         profile.userName = userResponse.username;
-        console.log("old user details:", userResponse);
+        const updateRefreshTokenQuery = `UPDATE users SET refresh_token = ? WHERE email = ?`;
+        await db.run(updateRefreshTokenQuery, [refreshToken, email]);
       }
 
       cb(null, profile); // Pass the profile object to the serializeUser method
@@ -118,6 +127,41 @@ passport.deserializeUser(function (obj, cb) {
   // here obj is user
   cb(null, obj);
 });
+
+// get new AccessToken using refreshToken
+const getNewAccessToken = async (refreshToken) => {
+  const url = "https://oauth2.googleapis.com/token";
+  const params = new URLSearchParams({
+    client_id: process.env.clientID,
+    client_secret: process.env.clientSecret,
+    refresh_token: refreshToken,
+    grant_type: "refresh_token",
+  });
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: params,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Error refreshing access token:", errorData);
+      throw new Error(`Failed to refresh token: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log("new AccessToken: ", data.access_token);
+
+    return data.access_token;
+  } catch (error) {
+    console.error("Error refreshing access token:", error);
+    throw error;
+  }
+};
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -304,6 +348,7 @@ app.get(
       "https://www.googleapis.com/auth/youtube",
       "https://www.googleapis.com/auth/youtube.force-ssl",
     ],
+    accessType: "offline", // Ensure 'accessType' is set to 'offline' for refresh tokens
   })
 );
 
@@ -388,13 +433,17 @@ app.get(
   }
 );
 
-//update requestStatus
+//update Request Status along with accessToken
 app.put(
   "/response/:videoId",
   ensureAuthenticated,
   async (request, response) => {
     const { videoId } = request.params;
     const { creatorResponse } = request.body;
+    console.log(
+      "for approving request refreshToken: ",
+      request.user.refreshToken
+    );
 
     let editorRequestStatus;
 
@@ -405,13 +454,30 @@ app.put(
     }
 
     try {
-      const updateRequestStatusQuery = `
-        UPDATE videos SET request_status=? WHERE id=?;
-      `;
-      const dbResponse = await db.run(updateRequestStatusQuery, [
-        editorRequestStatus,
-        videoId,
-      ]);
+      let updateRequestStatusQuery;
+      let queryParams;
+      const dateTime = new Date().toISOString(); //changing date and time to ISO format
+
+      if (editorRequestStatus === "approved") {
+        const newAccessToken = await getNewAccessToken(
+          request.user.refreshToken
+        );
+        updateRequestStatusQuery = `
+          UPDATE videos 
+          SET request_status = ?,response_date_time=?, video_access_token = ? 
+          WHERE id = ?;
+        `;
+        queryParams = [editorRequestStatus, dateTime, newAccessToken, videoId];
+      } else {
+        updateRequestStatusQuery = `
+          UPDATE videos 
+          SET request_status = ? ,response_date_time=?
+          WHERE id = ?;
+        `;
+        queryParams = [editorRequestStatus, dateTime, videoId];
+      }
+
+      const dbResponse = await db.run(updateRequestStatusQuery, queryParams);
       response.send(dbResponse);
     } catch (error) {
       console.error("Error updating request status:", error);
@@ -419,6 +485,39 @@ app.put(
     }
   }
 );
+
+//resend request for approval due to expiry of accessToken
+app.get("/resend/:videoId", ensureAuthenticated, async (request, response) => {
+  const { videoId } = request.params;
+
+  try {
+    const updateResponseStatusQuery = `
+      UPDATE videos
+      SET request_status = 'pending'
+      WHERE id = ?;
+    `;
+
+    const dbResponse = await db.run(updateResponseStatusQuery, [videoId]);
+
+    // Check if the update was successful
+    if (dbResponse.changes > 0) {
+      response.status(200).json({
+        status: "success",
+        message: "Request status updated successfully",
+      });
+    } else {
+      response.status(400).json({
+        status: "failure",
+        message: "Failed to update request status",
+      });
+    }
+  } catch (error) {
+    console.error("Error in resending:", error);
+    response
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
 
 //delete the request
 app.delete(
@@ -489,55 +588,83 @@ app.post("/upload-video", async (req, res) => {
     thumbnailUrl,
   } = req.body;
 
+  console.log("video id is :", videoId);
+  console.log("title,description:", title, description);
+
+  const getAccessTokenQuery = `
+  select video_access_token from videos where id=?;
+  `;
+
+  const accessTokenResponse = await db.get(getAccessTokenQuery, [videoId]);
+  const videoAccessToken = accessTokenResponse.video_access_token;
+  console.log(
+    "this is the videoAccessToken while uploading video: ",
+    videoAccessToken
+  );
+
   try {
     // Download video to local storage
     const videoFileName = await downloadFromUrl(videoUrl, videoId);
 
-    // Define the options for the request
-    const options = {
-      method: "POST",
-      url:
-        "https://www.googleapis.com/upload/youtube/v3/videos?part=snippet,status",
-      headers: {
-        Authorization: `Bearer ${req.user.accessToken}`, // Assuming accessToken is available in req.user
-      },
-      formData: {
-        snippet: JSON.stringify({
-          snippet: {
-            title: title,
-            description: description,
-          },
-          status: {
-            privacyStatus: privacyStatus,
-          },
-        }),
-        media: {
-          value: fs.createReadStream(`./videos/${videoFileName}`),
-          options: {
-            filename: path.basename(videoFileName),
-            contentType: "video/mp4", // MIME type of the video file
-          },
+    // Create a FormData instance
+    const form = new FormData();
+    form.append(
+      "snippet",
+      JSON.stringify({
+        snippet: {
+          title: title,
+          description: description,
         },
-      },
-    };
+        status: {
+          privacyStatus: privacyStatus,
+        },
+      })
+    );
+    form.append("media", fs.createReadStream(`./videos/${videoFileName}`), {
+      filename: path.basename(videoFileName),
+      contentType: "video/mp4", // MIME type of the video file
+    });
 
     // Make the request to upload video to YouTube
-    request(options, (error, response, body) => {
-      if (error) {
-        console.error("Error uploading video:", error);
-        return res.status(500).json({ error: "Failed to upload video" });
+    const response = await fetch(
+      "https://www.googleapis.com/upload/youtube/v3/videos?part=snippet,status",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${videoAccessToken}`,
+        },
+        body: form,
       }
-      console.log("Response from YouTube:", body);
+    );
 
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error("Error uploading video:", errorBody);
       // Clean up the downloaded video file
       fs.unlink(`./videos/${videoFileName}`, (unlinkError) => {
         if (unlinkError) {
           console.error("Error deleting video file:", unlinkError);
         }
       });
+      return res.status(500).json({ error: "Failed to upload video" });
+    }
 
-      res.json(JSON.parse(body)); // Respond with the JSON response from YouTube
+    const responseBody = await response.json();
+    console.log("Response from YouTube:", responseBody);
+    const updateVideoUploadStatusQuery = `
+    UPDATE videos SET video_upload_status='uploaded' WHERE id=?;
+    `;
+    const dbResponse = await db.run(updateVideoUploadStatusQuery, [videoId]);
+    console.log("video update Status: ", dbResponse);
+
+    // Clean up the downloaded video file
+    fs.unlink(`./videos/${videoFileName}`, (unlinkError) => {
+      if (unlinkError) {
+        console.error("Error deleting video file:", unlinkError);
+      }
     });
+
+    res.json(responseBody); // Respond with the JSON response from YouTube
   } catch (error) {
     console.error("Error uploading video:", error);
     res.status(500).json({ error: "Failed to upload video" });

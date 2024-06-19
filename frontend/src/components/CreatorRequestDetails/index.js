@@ -45,6 +45,7 @@ class CreatorRequestDetails extends Component {
         responseDateTime: eachItem.response_date_time,
         videoAccessToken: eachItem.video_access_token,
         requestStatus: eachItem.request_status,
+        videoUploadStatus: eachItem.video_upload_status,
       };
       this.setState({
         isLoading: false,
@@ -119,6 +120,8 @@ class CreatorRequestDetails extends Component {
       categoryId,
       privacyStatus,
       requestedDateTime,
+      responseDateTime,
+      videoUploadStatus,
     } = requestDetails;
 
     if (isLoading) {
@@ -148,7 +151,12 @@ class CreatorRequestDetails extends Component {
         <p>Visibility: {visibility}</p>
         <p>Privacy Status: {privacyStatus}</p>
         <p>Requested DateTime: {requestedDateTime}</p>
+        <p>
+          Response DateTime:
+          {responseDateTime ? responseDateTime : "not yet responded"}
+        </p>
         <p>ResponseStatus: {requestStatus}</p>
+        {videoUploadStatus === "uploaded" && "your video is uploaded"}
         {requestStatus === "pending" && (
           <div>
             <button onClick={this.onApprove}>Approve</button>

@@ -1,8 +1,13 @@
-.editor-section {
+.request-section {
+  padding: 12px 5vw;
   display: flex;
   flex-direction: column;
-  padding: 32px;
+  align-items: center;
 }
+.request-heading {
+  margin: 0px;
+}
+
 .preview-card {
   height: 80px;
   width: 100px;

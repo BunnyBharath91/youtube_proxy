@@ -1,222 +1,236 @@
-import { Component } from "react";
-import { Link } from "react-router-dom";
+import React, { Component } from "react";
 import "./index.css";
 import Header from "../Header";
 
-class EditorSection extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      loading: false,
-      responseMessage: "",
-      videoUrl: "",
-      thumbnailUrl: "",
-    };
-  }
-
-  onNewRequest = () => {
-    this.setState({
-      responseMessage: "",
-    });
+class EditorSectionRequests extends Component {
+  state = {
+    requestsList: [],
+    loading: true,
   };
 
-  handleSubmit = async (event) => {
-    event.preventDefault();
+  componentDidMount() {
+    this.getRequests();
+  }
+
+  getRequests = async () => {
+    try {
+      const response = await fetch(`/requests?role=editor`);
+      if (!response.ok) {
+        throw new Error(`Request failed with status: ${response.status}`);
+      }
+      const data = await response.json();
+      const updatedData = data.map((eachItem) => ({
+        videoId: eachItem.id,
+        videoUrl: eachItem.video_url,
+        title: eachItem.title,
+        description: eachItem.description,
+        thumbnailUrl: eachItem.thumbnail_url,
+        playLists: eachItem.playLists,
+        visibility: eachItem.visibility,
+        tags: eachItem.tags,
+        categoryId: eachItem.category_id,
+        privacyStatus: eachItem.privacy_status,
+        fromUser: eachItem.from_user,
+        toUser: eachItem.to_user,
+        requestedDateTime: eachItem.requested_date_time,
+        responseDateTime: eachItem.response_date_time,
+        videoAccessToken: eachItem.video_access_token,
+        requestStatus: eachItem.request_status,
+        videoUploadStatus: eachItem.video_upload_status,
+      }));
+
+      this.setState({
+        loading: false,
+        requestsList: updatedData,
+      });
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+      this.setState({ loading: false });
+    }
+  };
+
+  onDeleteRequest = async (videoId) => {
+    try {
+      const response = await fetch(`/delete/${videoId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-type": "application/json",
+        },
+      });
+      if (response.ok) {
+        await this.getRequests();
+      } else {
+        throw new Error("Failed to process your request. Please try again.");
+      }
+    } catch (error) {
+      console.log("error occurred: ", error);
+    }
+  };
+
+  onUploadVideo = async (requestItem) => {
+    const {
+      videoId,
+      videoUrl,
+      title,
+      thumbnailUrl,
+      description,
+      privacyStatus,
+    } = requestItem;
+
+    const requestBody = {
+      videoId,
+      videoUrl,
+      title,
+      thumbnailUrl,
+      description,
+      privacyStatus,
+    };
     this.setState({
       loading: true,
     });
-
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-
     try {
-      const response = await fetch("/upload", {
+      const response = await fetch("/upload-video", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json", // Set the correct Content-Type header
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      this.setState({
+        loading: false,
       });
 
       if (response.ok) {
-        const data = await response.json();
-        this.setState({ responseMessage: data.message, loading: false });
+        const responseData = await response.json();
+        console.log("Video uploaded successfully:", responseData);
+        window.location.reload(); // Reload the page
+        alert("Video uploaded successfully");
       } else {
-        console.error("Upload failed with status:", response.status);
-        this.setState({
-          responseMessage: "Upload failed. Please try again.",
-          loading: false,
-        }); // Example error handling
+        console.log("response of error", response);
+        alert("Error while uploading");
       }
     } catch (error) {
-      console.error("Error uploading:", error);
+      console.error("Error uploading video:", error);
       this.setState({
-        responseMessage: "Error uploading. Please try again.",
-        loading: false,
-      }); // Example error handling
+        isLoading: false,
+      });
+      alert("Error uploading video");
     }
   };
 
-  onVideoPreview = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        this.setState({
-          videoUrl: reader.result,
-        });
-      };
-      reader.onerror = (error) => {
-        console.error("Error reading video file:", error);
-      };
+  resendRequest = async (videoId) => {
+    this.setState({ loading: true });
+
+    try {
+      const response = await fetch(`/resend/${videoId}`);
+      if (response.ok) {
+        alert("Resend successfully");
+        window.location.reload();
+      } else {
+        alert("Error in resending");
+        this.setState({ loading: false });
+      }
+    } catch (error) {
+      console.error("Error in resending:", error);
+      alert("Error in resending");
+      this.setState({ loading: false });
     }
   };
 
-  onThumbnailPreview = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        this.setState({
-          thumbnailUrl: reader.result,
-        });
-      };
-      reader.onerror = (error) => {
-        console.error("Error reading thumbnail file:", error);
-      };
-    }
+  renderRequest = (requestItem) => {
+    const {
+      videoId,
+      videoUrl,
+      requestStatus,
+      toUser,
+      title,
+      thumbnailUrl,
+      videoUploadStatus,
+      responseDateTime,
+    } = requestItem;
+
+    const handleUpload = (event) => {
+      event.stopPropagation();
+      this.onUploadVideo(requestItem);
+    };
+
+    const handleDelete = (event) => {
+      event.stopPropagation(); //prevents the event from bubbling up the DOM tree, effectively stopping any parent elements from handling the event.
+      this.onDeleteRequest(videoId);
+    };
+
+    const responseDateTimeMs = new Date(responseDateTime).getTime();
+    const currentTimeMs = new Date().getTime();
+    const timeLimitMs = 55 * 60 * 1000;
+
+    const handleResendRequest = (event) => {
+      event.stopPropagation();
+      this.resendRequest(videoId);
+    };
+
+    return (
+      <li
+        key={videoId}
+        className="request-card"
+        onClick={() => this.props.history.push(`/editor_section/${videoId}`)}
+      >
+        <p className="creator-id">TO: {toUser}</p>
+        <p className="video-title">VIDEO TITLE: {title}</p>
+        <video
+          width="640"
+          height="360"
+          controls
+          poster={thumbnailUrl}
+          preload="auto"
+        >
+          <source src={videoUrl} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        {requestStatus === "approved" && (
+          <div>
+            <p>Request Status: Approved</p>
+            {videoUploadStatus === "not uploaded" ? (
+              responseDateTimeMs + timeLimitMs > currentTimeMs ? (
+                <button onClick={handleUpload}>Upload</button>
+              ) : (
+                <button onClick={handleResendRequest}>Resend Request</button>
+              )
+            ) : (
+              <p>This video is uploaded</p>
+            )}
+          </div>
+        )}
+
+        {requestStatus === "pending" && <p>Request Status:Pending</p>}
+        {requestStatus === "rejected" && <p> Request Status: Rejected</p>}
+        <button onClick={handleDelete}>Delete request</button>
+      </li>
+    );
   };
 
   render() {
-    const { responseMessage, loading, videoUrl, thumbnailUrl } = this.state;
+    const { requestsList, loading } = this.state;
 
     if (loading) {
-      return <h1>Please wait for a moment. We are sending your request</h1>;
-    }
-
-    if (responseMessage) {
-      return (
-        <div>
-          <h1>{responseMessage}</h1>
-          <button onClick={this.onNewRequest}>
-            Retry or Send another request
-          </button>
-        </div>
-      );
+      return <h1>Loading...</h1>;
     }
 
     return (
-      <div className="bg-container">
+      <div className="creator-section">
         <Header />
-        <div className="editor-section">
-          <Link to="/editor_section/requests">
-            <button>Your Requests</button>
-          </Link>
-          {/* <div className='custom-input'>
-              <img id='chosen-img' alt='chosen-img-prev'/>
-              <p id='file-name'></p>
-              <input type='file' id='upload-button' accept='image/*' onChange={this.onUploadFile}/>
-              <label htmlFor='upload-button'>
-                  choose a file
-              </label>
-          </div> */}
-          <div className="video-upload-section">
-            <h1 className="heading">Make a Request By: </h1>
-            <form onSubmit={this.handleSubmit} encType="multipart/form-data">
-              <div>
-                {videoUrl ? (
-                  <video width="640" height="360" controls preload="auto">
-                    <source src={videoUrl} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                ) : (
-                  <div className="preview-card">
-                    <p>Select Video</p>
-                  </div>
-                )}
-                <label htmlFor="video">Video:</label>
-                <input
-                  type="file"
-                  name="video"
-                  id="video"
-                  accept="video/mp4"
-                  onChange={this.onVideoPreview}
-                  required
-                />
-              </div>
-              <div>
-                {thumbnailUrl ? (
-                  <img alt="thumbnail-prev" src={thumbnailUrl} />
-                ) : (
-                  <div className="preview-card">
-                    <p>Select Img</p>
-                  </div>
-                )}
-                <label htmlFor="thumbnail">Thumbnail:</label>
-                <input
-                  type="file"
-                  name="thumbnail"
-                  id="thumbnail"
-                  accept="image/jpeg, image/png"
-                  onChange={this.onThumbnailPreview}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="title">Title:</label>
-                <input
-                  type="text"
-                  name="title"
-                  id="title"
-                  placeholder="Your video title"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="description">Description:</label>
-                <input
-                  type="text"
-                  name="description"
-                  id="description"
-                  placeholder="Your video description"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="status">Visibility:</label>
-                <select name="privacy_status" id="status" required>
-                  <option value="" disabled selected>
-                    Select visibility
-                  </option>
-                  <option value="public">Public</option>
-                  <option value="private">Private</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="category">Category:</label>
-                <select name="category_id" id="category" required>
-                  <option value="" disabled selected>
-                    Select Category
-                  </option>
-                  <option value="22">Educational</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="creator">creator id:</label>
-                <input
-                  id="creator"
-                  name="creator_id"
-                  type="text"
-                  placeholder="fill creator id"
-                  required
-                />
-              </div>
-              <button type="submit">Submit</button>
-            </form>
-          </div>
-        </div>
+        <h1>Requests you made</h1>
+        {requestsList.length === 0 ? (
+          <h1>There are no requests</h1>
+        ) : (
+          <ul className="requests-list">
+            {requestsList.map((eachItem) => this.renderRequest(eachItem))}
+          </ul>
+        )}
       </div>
     );
   }
 }
 
-export default EditorSection;
+export default EditorSectionRequests;

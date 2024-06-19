@@ -3,8 +3,8 @@ import Home from "./components/Home";
 import EditorSection from "./components/EditorSection";
 import CreatorSection from "./components/CreatorSection";
 import CreatorRequestDetails from "./components/CreatorRequestDetails";
-import EditorSectionRequests from "./components/EditorSectionRequests";
 import EditorRequestDetails from "./components/EditorRequestDetails";
+import RequestSection from "./components/RequestSection";
 import Login from "./components/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
@@ -14,7 +14,6 @@ const App = () => (
     <Switch>
       <ProtectedRoute exact path="/" component={Home} />
       <Route exact path="/login" component={Login} />
-
       <ProtectedRoute
         exact
         path="/creator_section"
@@ -26,10 +25,11 @@ const App = () => (
         path="/creator_section/:videoId"
         component={CreatorRequestDetails}
       />
+
       <ProtectedRoute
         exact
-        path="/editor_section/requests"
-        component={EditorSectionRequests}
+        path="/request_section"
+        component={RequestSection}
       />
       <ProtectedRoute
         exact

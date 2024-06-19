@@ -36,6 +36,7 @@ class EditorSectionRequests extends Component {
         responseDateTime: eachItem.response_date_time,
         videoAccessToken: eachItem.video_access_token,
         requestStatus: eachItem.request_status,
+        videoUploadStatus: eachItem.video_upload_status,
       }));
 
       this.setState({
@@ -66,6 +67,77 @@ class EditorSectionRequests extends Component {
     }
   };
 
+  onUploadVideo = async (requestItem) => {
+    const {
+      videoId,
+      videoUrl,
+      title,
+      thumbnailUrl,
+      description,
+      privacyStatus,
+    } = requestItem;
+
+    const requestBody = {
+      videoId,
+      videoUrl,
+      title,
+      thumbnailUrl,
+      description,
+      privacyStatus,
+    };
+    this.setState({
+      loading: true,
+    });
+    try {
+      const response = await fetch("/upload-video", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // Set the correct Content-Type header
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      this.setState({
+        loading: false,
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log("Video uploaded successfully:", responseData);
+        window.location.reload(); // Reload the page
+        alert("Video uploaded successfully");
+      } else {
+        console.log("response of error", response);
+        alert("Error while uploading");
+      }
+    } catch (error) {
+      console.error("Error uploading video:", error);
+      this.setState({
+        isLoading: false,
+      });
+      alert("Error uploading video");
+    }
+  };
+
+  resendRequest = async (videoId) => {
+    this.setState({ loading: true });
+
+    try {
+      const response = await fetch(`/resend/${videoId}`);
+      if (response.ok) {
+        alert("Resend successfully");
+        window.location.reload();
+      } else {
+        alert("Error in resending");
+        this.setState({ loading: false });
+      }
+    } catch (error) {
+      console.error("Error in resending:", error);
+      alert("Error in resending");
+      this.setState({ loading: false });
+    }
+  };
+
   renderRequest = (requestItem) => {
     const {
       videoId,
@@ -74,11 +146,27 @@ class EditorSectionRequests extends Component {
       toUser,
       title,
       thumbnailUrl,
+      videoUploadStatus,
+      responseDateTime,
     } = requestItem;
+
+    const handleUpload = (event) => {
+      event.stopPropagation();
+      this.onUploadVideo(requestItem);
+    };
 
     const handleDelete = (event) => {
       event.stopPropagation(); //prevents the event from bubbling up the DOM tree, effectively stopping any parent elements from handling the event.
       this.onDeleteRequest(videoId);
+    };
+
+    const responseDateTimeMs = new Date(responseDateTime).getTime();
+    const currentTimeMs = new Date().getTime();
+    const timeLimitMs = 55 * 60 * 1000;
+
+    const handleResendRequest = (event) => {
+      event.stopPropagation();
+      this.resendRequest(videoId);
     };
 
     return (
@@ -102,12 +190,21 @@ class EditorSectionRequests extends Component {
 
         {requestStatus === "approved" && (
           <div>
-            <p>Your request has been approved</p>
-            <button>Upload</button>
+            <p>Request Status: Approved</p>
+            {videoUploadStatus === "not uploaded" ? (
+              responseDateTimeMs + timeLimitMs > currentTimeMs ? (
+                <button onClick={handleUpload}>Upload</button>
+              ) : (
+                <button onClick={handleResendRequest}>Resend Request</button>
+              )
+            ) : (
+              <p>This video is uploaded</p>
+            )}
           </div>
         )}
-        {requestStatus === "pending" && <p>Your request is pending</p>}
-        {requestStatus === "rejected" && <p> Your request is rejected</p>}
+
+        {requestStatus === "pending" && <p>Request Status:Pending</p>}
+        {requestStatus === "rejected" && <p> Request Status: Rejected</p>}
         <button onClick={handleDelete}>Delete request</button>
       </li>
     );

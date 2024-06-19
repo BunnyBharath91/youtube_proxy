@@ -1,5 +1,4 @@
 import { Component } from "react";
-import { Link } from "react-router-dom";
 import "./index.css";
 import Header from "../Header";
 
@@ -8,8 +7,7 @@ class EditorRequestDetails extends Component {
     super(props);
     this.state = {
       requestDetails: {},
-      isLoading: true,
-      errorMessage: "",
+      loading: true,
     };
   }
 
@@ -46,10 +44,11 @@ class EditorRequestDetails extends Component {
         responseDateTime: eachItem.response_date_time,
         videoAccessToken: eachItem.video_access_token,
         requestStatus: eachItem.request_status,
+        videoUploadStatus: eachItem.video_upload_status,
       };
 
       this.setState({
-        isLoading: false,
+        loading: false,
         requestDetails: updatedData,
       });
     } catch (error) {
@@ -68,21 +67,14 @@ class EditorRequestDetails extends Component {
         },
       });
       if (response.ok) {
-        return (
-          <div>
-            <h1>Your Request Deleted Successfully</h1>
-            <Link to="/editor_section/requests">
-              <button>Go to Requests</button>
-            </Link>
-          </div>
-        );
+        alert("Your Request Deleted Successfully");
+        this.props.history.push("/editor_section/requests");
       } else {
         throw new Error("Failed to process your request. Please try again.");
       }
     } catch (error) {
-      this.setState({
-        errorMessage: error,
-      });
+      console.error("Error deleting request:", error);
+      alert("Failed to delete request. Please try again.");
     }
   };
 
@@ -105,7 +97,7 @@ class EditorRequestDetails extends Component {
       privacyStatus,
     };
     this.setState({
-      isLoading: true,
+      loading: true,
     });
     try {
       const response = await fetch("/upload-video", {
@@ -117,12 +109,13 @@ class EditorRequestDetails extends Component {
       });
 
       this.setState({
-        isLoading: false,
+        loading: false,
       });
 
       if (response.ok) {
         const responseData = await response.json();
         console.log("Video uploaded successfully:", responseData);
+        window.location.reload(); // Reload the page
         alert("Video uploaded successfully");
       } else {
         console.log("Error while uploading:", response.status);
@@ -131,14 +124,35 @@ class EditorRequestDetails extends Component {
     } catch (error) {
       console.error("Error uploading video:", error);
       this.setState({
-        isLoading: false,
+        loading: false,
       });
       alert("Error uploading video");
     }
   };
 
+  resendRequest = async () => {
+    const { requestDetails } = this.state;
+    const { videoId } = requestDetails;
+    this.setState({ loading: true });
+
+    try {
+      const response = await fetch(`/resend/${videoId}`);
+      if (response.ok) {
+        alert("Resend successfully");
+        window.location.reload();
+      } else {
+        alert("Error in resending");
+        this.setState({ loading: false });
+      }
+    } catch (error) {
+      console.error("Error in resending:", error);
+      alert("Error in resending");
+      this.setState({ loading: false });
+    }
+  };
+
   render() {
-    const { isLoading, requestDetails, errorMessage } = this.state;
+    const { isLoading, requestDetails } = this.state;
     const {
       videoUrl,
       requestStatus,
@@ -151,7 +165,13 @@ class EditorRequestDetails extends Component {
       categoryId,
       privacyStatus,
       requestedDateTime,
+      responseDateTime,
+      videoUploadStatus,
     } = requestDetails;
+
+    const responseDateTimeMs = new Date(responseDateTime).getTime();
+    const currentTimeMs = new Date().getTime();
+    const timeLimitMs = 55 * 60 * 1000;
 
     if (isLoading) {
       return <h1>Getting Data</h1>;
@@ -180,21 +200,23 @@ class EditorRequestDetails extends Component {
         <p>Privacy Status: {privacyStatus}</p>
         <p>Requested DateTime: {requestedDateTime}</p>
         <p>ResponseStatus: {requestStatus}</p>
-        {requestStatus === "pending" && (
-          <div>
-            <button onClick={this.onApprove}>Approve</button>
-            <button onClick={this.onReject}>Reject</button>
-            {errorMessage && <p>Error: {errorMessage}</p>}
-          </div>
-        )}
+
         {requestStatus === "approved" && (
           <div>
-            <p>Your request has been approved</p>
-            <button onClick={this.onUploadVideo}>Upload</button>
+            <p>Request Status: Approved</p>
+            {videoUploadStatus === "not uploaded" ? (
+              responseDateTimeMs + timeLimitMs > currentTimeMs ? (
+                <button onClick={this.onUploadVideo}>Upload</button>
+              ) : (
+                <button onClick={this.resendRequest}>Resend Request</button>
+              )
+            ) : (
+              <p>This video is uploaded</p>
+            )}
           </div>
         )}
-        {requestStatus === "pending" && <p>Your request is pending</p>}
-        {requestStatus === "rejected" && <p> Your request is rejected</p>}
+        {requestStatus === "pending" && <p>Request Status: Pending</p>}
+        {requestStatus === "rejected" && <p> Request Status: Rejected</p>}
         <button onClick={this.onDeleteRequest}>Delete request</button>
       </div>
     );
