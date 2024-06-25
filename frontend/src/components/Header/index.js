@@ -1,11 +1,14 @@
 import { Component } from "react";
 import { Link } from "react-router-dom";
-import { CiUser } from "react-icons/ci";
+import { IoMdClose } from "react-icons/io";
+import { RxHamburgerMenu } from "react-icons/rx";
 import "./index.css";
 
 class Header extends Component {
   state = {
+    userName: "HELLO! USER",
     userImage: "",
+    showMenuContainer: false,
   };
 
   componentDidMount() {
@@ -13,13 +16,26 @@ class Header extends Component {
   }
 
   getUserDetails = async () => {
-    const response = await fetch("/home");
+    const response = await fetch("/user-details");
     if (response.ok) {
       const finalData = await response.json();
       this.setState({
         userImage: finalData.photos[0].value,
+        userName: finalData.displayName,
       });
     }
+  };
+
+  onToggleMenuContainer = () => {
+    this.setState((prevState) => ({
+      showMenuContainer: !prevState.showMenuContainer,
+    }));
+  };
+
+  onCloseMenuContainer = () => {
+    this.setState({
+      showMenuContainer: false,
+    });
   };
 
   onLogout = async () => {
@@ -31,60 +47,90 @@ class Header extends Component {
   };
 
   render() {
-    const { userImage } = this.state;
+    const { userName, userImage, showMenuContainer } = this.state;
 
     return (
       <nav className="header-container">
-        <ul className="sections">
-          <li className="header-item logo">
-            <Link to="/" className="nav-link">
-              PROXY.
-            </Link>
-          </li>
-          <li className="header-item">
-            <Link to="/" className="nav-link">
-              HOME
-            </Link>
-          </li>
-          <li className="header-item">
-            <Link to="/creator_section" className="nav-link">
-              CREATOR
-            </Link>
-          </li>
-          <li className="header-item">
-            <Link to="/editor_section" className="nav-link">
-              EDITOR
-            </Link>
-          </li>
-          <li className="header-item">
+        <Link to="/" className="nav-link">
+          <img
+            alt="proxy-logo"
+            src="https://media-content.ccbp.in/website/ccbp_website_logos/nxtwave_header_logo.png"
+            className="proxy-logo"
+          />
+        </Link>
+
+        <ul className="header-list">
+          <li className="header-item header-request">
             <Link to="/request_section" className="nav-link">
               REQUEST
             </Link>
           </li>
-        </ul>
+          <li className="header-item header-user-name">BORRA BHARATH KUMAR</li>
+          <li className="header-item menu">
+            <RxHamburgerMenu
+              className="menu-logo"
+              onClick={this.onToggleMenuContainer}
+            />
 
-        <ul className="sections">
-          <li className="header-item">
-            <Link to="/about_section" className="nav-link">
-              ABOUT
-            </Link>
-          </li>
-          <li className="header-item">
-            <Link to="/contact_section" className="nav-link">
-              CONTACT
-            </Link>
-          </li>
-          <li className="header-item" onClick={this.onLogout}>
-            Logout
-          </li>
-          <li className="header-item user-icon">
-            <Link to="/" className="nav-link">
-              {userImage ? (
-                <img alt="user-img" src={userImage} className="user-img" />
-              ) : (
-                <CiUser />
-              )}
-            </Link>
+            <img
+              alt="header-user-img"
+              src={userImage}
+              className="header-user-img"
+              onClick={this.onToggleMenuContainer}
+              onError={(err) => {
+                err.currentTarget.src =
+                  "/default-avatar-profile-icon-vector-social-media-user-image-182145777.webp";
+                err.currentTarget.onerror = null;
+              }}
+            />
+            <ul
+              className={`menu-container ${
+                showMenuContainer && "show-menu-container"
+              }`}
+            >
+              <li className="menu-item menu-user-item">
+                <img
+                  alt="menu-user-img"
+                  src={userImage}
+                  className="menu-user-image"
+                  onError={(err) => {
+                    err.currentTarget.src =
+                      "/default-avatar-profile-icon-vector-social-media-user-image-182145777.webp";
+                    err.currentTarget.onerror = null;
+                  }}
+                />
+
+                <p className="menu-user-name">{userName}</p>
+
+                <IoMdClose
+                  className="menu-close-icon"
+                  onClick={this.onCloseMenuContainer}
+                />
+              </li>
+              <li className="menu-item ">
+                <Link to="/" className="nav-link">
+                  HOME
+                </Link>
+              </li>
+              <li className="menu-item ">
+                <Link to="/creator_section" className="nav-link">
+                  CREATOR
+                </Link>
+              </li>
+              <li className="menu-item ">
+                <Link to="/editor_section" className="nav-link">
+                  EDITOR
+                </Link>
+              </li>
+              <li className="menu-item ">
+                <Link to="/request_section" className="nav-link">
+                  REQUEST
+                </Link>
+              </li>
+              <li className="menu-item " onClick={this.onLogout}>
+                Log Out
+              </li>
+            </ul>
           </li>
         </ul>
       </nav>

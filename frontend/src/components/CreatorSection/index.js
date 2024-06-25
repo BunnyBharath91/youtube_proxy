@@ -65,9 +65,7 @@ class CreatorSection extends Component {
       }
     } catch (error) {
       console.error("Error processing approval:", error);
-      this.setState({
-        errorMessage: "Failed to process your request. Please try again.",
-      });
+      throw new Error("Failed to process your request. Please try again.");
     }
   };
 
@@ -88,20 +86,19 @@ class CreatorSection extends Component {
       }
     } catch (error) {
       console.error("Error processing approval:", error);
-      this.setState({
-        errorMessage: "Failed to process your request. Please try again.",
-      });
+      throw new Error("Failed to process your request. Please try again.");
     }
   };
 
   renderRequest = (requestItem) => {
     const {
       videoId,
-      videoUrl,
       requestStatus,
       fromUser,
       title,
       thumbnailUrl,
+      requestedDateTime,
+      responseDateTime,
     } = requestItem;
 
     const onHandleApprove = (event) => {
@@ -120,26 +117,80 @@ class CreatorSection extends Component {
         className="request-card"
         onClick={() => this.props.history.push(`/creator_section/${videoId}`)}
       >
-        <p className="editor-id">{fromUser}</p>
-        <p className="video-title">{title}</p>
-        <video
-          width="640"
-          height="360"
-          controls
-          poster={thumbnailUrl}
-          preload="auto"
+        <img
+          alt="thumbnail"
+          src={thumbnailUrl}
+          className="request-card-thumbnail"
+        />
+        <div
+          className="request-card-text-container "
+          id="response-card-text-container"
         >
-          <source src={videoUrl} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-        {requestStatus === "pending" ? (
-          <div>
-            <button onClick={onHandleApprove}>Approve</button>
-            <button onClick={onHandleReject}>Reject</button>
+          <p className="video-title">
+            This is my video title nothing fancy words just for checking
+            text-overflow: ellipses property. I mean is it working or not{" "}
+            {title}
+          </p>
+          <p className="creator-id">From: {fromUser}</p>
+          <div className="status-response-buttons-container">
+            {requestStatus === "rejected" && (
+              <p className="response-text">Status: {requestStatus}</p>
+            )}
+            {requestStatus === "approved" && (
+              <p className="response-text">Status: {requestStatus}</p>
+            )}
+            {requestStatus === "pending" && (
+              <div className="pending-status-buttons-container">
+                <p className="response-text">Status: {requestStatus}</p>
+                <div className="response-buttons-container">
+                  <button
+                    onClick={onHandleApprove}
+                    className="request-approve-button"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={onHandleReject}
+                    className="request-reject-button"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        ) : (
-          <p>Request Status: {requestStatus}</p>
-        )}
+        </div>
+        <p className="extra-large-screen-response-date-time">
+          {requestedDateTime}
+        </p>
+        <p className="large-screen-response-status">{requestStatus}</p>
+        <p className="extra-large-screen-response-date-time">
+          {responseDateTime ? responseDateTime : "-"}
+        </p>
+        <div className="large-screen-response-button-container">
+          {requestStatus === "pending" ? (
+            <button
+              className="large-screen-response-button"
+              onClick={onHandleApprove}
+            >
+              Approve
+            </button>
+          ) : (
+            "-"
+          )}
+        </div>
+        <div className="large-screen-response-button-container">
+          {requestStatus === "pending" ? (
+            <button
+              className="large-screen-response-button"
+              onClick={onHandleReject}
+            >
+              Reject
+            </button>
+          ) : (
+            "-"
+          )}
+        </div>
       </li>
     );
   };
@@ -152,16 +203,34 @@ class CreatorSection extends Component {
     }
 
     return (
-      <div className="creator-section">
+      <div className="bg-container">
         <Header />
-        <h1>Requests for you</h1>
-        {requestsList.length === 0 ? (
-          <h1>There are no requests</h1>
-        ) : (
-          <ul className="requests-list">
-            {requestsList.map((eachItem) => this.renderRequest(eachItem))}
-          </ul>
-        )}
+        <div className="main-container">
+          <div className="editor-section">
+            <h1 className="editor-section-heading">Requests for you</h1>
+            {requestsList.length > 0 && (
+              <div className="requests-table-header">
+                <p className="creator-section-video-column">Video</p>
+                <p className="creator-section-requested-date-time-column">
+                  requested on
+                </p>
+                <p className="creator-section-status-column">Status</p>
+                <p className="creator-section-requested-date-time-column">
+                  responded on
+                </p>
+                <p className="creator-section-approve-column">Approve</p>
+                <p className="creator-section-reject-column">Reject</p>
+              </div>
+            )}
+            {requestsList.length === 0 ? (
+              <h1>There are no requests</h1>
+            ) : (
+              <ul className="requests-container">
+                {requestsList.map((eachItem) => this.renderRequest(eachItem))}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
     );
   }

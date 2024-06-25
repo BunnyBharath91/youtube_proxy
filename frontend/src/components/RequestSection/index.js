@@ -1,6 +1,9 @@
 import { Component } from "react";
-import "./index.css";
+import { RiVideoUploadLine } from "react-icons/ri";
+import { TbReplace } from "react-icons/tb";
+import { IoMdArrowDropdown } from "react-icons/io";
 import Header from "../Header";
+import "./index.css";
 
 class RequestSection extends Component {
   constructor(props) {
@@ -10,6 +13,10 @@ class RequestSection extends Component {
       responseMessage: "",
       videoUrl: "",
       thumbnailUrl: "",
+      videoTitle: "",
+      videoDescription: "",
+      thumbnailError: "",
+      videoError: "",
     };
   }
 
@@ -29,7 +36,7 @@ class RequestSection extends Component {
     const formData = new FormData(form);
 
     try {
-      const response = await fetch("/upload", {
+      const response = await fetch("/upload-request", {
         method: "POST",
         body: formData,
       });
@@ -56,6 +63,16 @@ class RequestSection extends Component {
   onVideoPreview = (event) => {
     const file = event.target.files[0];
     if (file) {
+      if (file.size > 256 * 1024 * 1024 * 1024) {
+        // Check if file size is greater than 2MB
+        this.setState({
+          videoError: "Video file size should not exceed 256GB.",
+          videoUrl: "", // Reset the thumbnail URL
+        });
+        event.target.value = null; // Reset the file input
+        return;
+      }
+
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => {
@@ -72,6 +89,16 @@ class RequestSection extends Component {
   onThumbnailPreview = (event) => {
     const file = event.target.files[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        // Check if file size is greater than 2MB
+        this.setState({
+          thumbnailError: "Thumbnail file size should not exceed 2MB.",
+          thumbnailUrl: "", // Reset the thumbnail URL
+        });
+        event.target.value = null; // Reset the file input
+        return;
+      }
+
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => {
@@ -85,73 +112,123 @@ class RequestSection extends Component {
     }
   };
 
-  render() {
-    const { responseMessage, loading, videoUrl, thumbnailUrl } = this.state;
+  onChangeTitle = (event) => {
+    this.setState({
+      videoTitle: event.target.value,
+    });
+  };
 
-    if (loading) {
-      return <h1>Please wait for a moment. We are sending your request</h1>;
-    }
+  onChangeDescription = (event) => {
+    this.setState({
+      videoDescription: event.target.value,
+    });
+  };
 
-    if (responseMessage) {
-      return (
-        <div>
-          <h1>{responseMessage}</h1>
-          <button onClick={this.onNewRequest}>
-            Retry or Send another request
-          </button>
-        </div>
-      );
-    }
+  renderSubmitMessage = () => {
+    const { responseMessage } = this.state;
+    return (
+      <div className="request-section loading-section">
+        <h1>{responseMessage}</h1>
+        <button onClick={this.onNewRequest}>Go Back</button>
+      </div>
+    );
+  };
+
+  renderLoading = () => {
+    return (
+      <div className="request-section loading-section">
+        <img
+          alt="loading img"
+          src="https://cdni.iconscout.com/illustration/premium/thumb/wait-a-minute-6771645-5639826.png"
+          className="loading-img"
+        />
+        <p className="loading-text">Please Wait!, We are on your request...</p>
+      </div>
+    );
+  };
+
+  renderRequestSection = () => {
+    const {
+      videoUrl,
+      thumbnailUrl,
+      videoTitle,
+      videoDescription,
+      thumbnailError,
+    } = this.state;
 
     return (
-      <div className="bg-container">
-        <Header />
-        <div className="request-section">
-          {/* <div className='custom-input'>
-              <img id='chosen-img' alt='chosen-img-prev'/>
-              <p id='file-name'></p>
-              <input type='file' id='upload-button' accept='image/*' onChange={this.onUploadFile}/>
-              <label htmlFor='upload-button'>
-                  choose a file
-              </label>
-          </div> */}
-
-          <h1 className="request-heading">Make a Request By: </h1>
-          <form onSubmit={this.handleSubmit} encType="multipart/form-data">
-            <div>
+      <div className="request-section">
+        <h1 className="request-heading">Make a Request By: </h1>
+        <form
+          onSubmit={this.handleSubmit}
+          encType="multipart/form-data"
+          className="form-container"
+        >
+          <div className="media-files-container">
+            <div className="media-container">
               {videoUrl ? (
-                <video width="100" height="100" controls preload="auto">
-                  <source src={videoUrl} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+                <div className="file-update-section">
+                  <TbReplace
+                    className="file-replace-icon"
+                    onClick={() => {
+                      document.getElementById("video").click(); // Trigger the file input click when the card is clicked
+                    }}
+                  />
+                  <video className="myFile" controls preload="auto">
+                    <source src={videoUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
               ) : (
-                <div className="preview-card">
-                  <p>Select Video</p>
+                <div
+                  className="myFile preview-card"
+                  onClick={() => {
+                    document.getElementById("video").click(); // Trigger the file input click when the card is clicked
+                  }}
+                >
+                  <RiVideoUploadLine className="upload-icon" />
+                  <p className="upload-text">Click here to Upload your video</p>
                 </div>
               )}
-              <label htmlFor="video">Video:</label>
               <input
                 type="file"
                 name="video"
                 id="video"
                 accept="video/mp4"
                 onChange={this.onVideoPreview}
+                className="file-button"
                 required
+                hidden
               />
             </div>
-            <div>
+            <div className="media-container">
               {thumbnailUrl ? (
-                <img
-                  alt="thumbnail-prev"
-                  src={thumbnailUrl}
-                  className="thumbnail-img"
-                />
+                <div className="file-update-section">
+                  <TbReplace
+                    className="file-replace-icon"
+                    onClick={() => {
+                      document.getElementById("thumbnail").click(); // Trigger the file input click when the card is clicked
+                    }}
+                  />
+                  <img
+                    alt="thumbnail-prev"
+                    src={thumbnailUrl}
+                    className="myFile"
+                  />
+                </div>
               ) : (
-                <div className="preview-card">
-                  <p>Select Img</p>
+                <div
+                  className="myFile preview-card"
+                  onClick={() => {
+                    document.getElementById("thumbnail").click(); // Trigger the file input click when the card is clicked
+                  }}
+                >
+                  <RiVideoUploadLine className="upload-icon" />
+                  <p className="upload-text">
+                    Click here to Upload your thumbnail
+                  </p>
                 </div>
               )}
-              <label htmlFor="thumbnail">Thumbnail:</label>
               <input
                 type="file"
                 name="thumbnail"
@@ -159,48 +236,93 @@ class RequestSection extends Component {
                 accept="image/jpeg, image/png"
                 onChange={this.onThumbnailPreview}
                 required
+                hidden
               />
             </div>
-            <div>
-              <label htmlFor="title">Title:</label>
-              <input
-                type="text"
-                name="title"
-                id="title"
-                placeholder="Your video title"
-                required
-              />
+          </div>
+          <div className="input-container">
+            <label htmlFor="title" className="title-label">
+              Title (required) <span className="info-icon">?</span>
+            </label>
+            <textarea
+              name="title"
+              id="title"
+              className="title-textarea"
+              maxLength={100}
+              value={videoTitle}
+              onChange={this.onChangeTitle}
+              rows={1} /* Start with a single row */
+              onInput={(e) => {
+                // Adjust the height of the textarea to fit the content
+                e.target.style.height = "auto";
+                e.target.style.height = `${e.target.scrollHeight}px`;
+              }}
+              placeholder=""
+              required
+            />
+            <div className="char-count">{videoTitle.length}/100</div>
+          </div>
+          <div className="input-container">
+            <label htmlFor="description" className="description-label">
+              Description (required) <span className="info-icon">?</span>
+            </label>
+            <textarea
+              name="description"
+              id="description"
+              className="description-textarea"
+              maxLength={5000}
+              value={videoDescription}
+              onChange={this.onChangeDescription}
+              rows={1} /* Start with a single row */
+              onInput={(e) => {
+                // Adjust the height of the textarea to fit the content
+                e.target.style.height = "auto";
+                e.target.style.height = `${e.target.scrollHeight}px`;
+              }}
+              placeholder=""
+              required
+            />
+            <div className="char-count">{videoDescription.length}/5000</div>
+          </div>
+          <div className="form-elements-container">
+            <div className="form-element-container">
+              <p className="form-element-heading">Audience (required)</p>
+              <label className="audience-type">
+                <input
+                  type="radio"
+                  name="audience"
+                  value="yes"
+                  className="audience-type-radio"
+                />
+                Yes, made for kids
+              </label>
+              <label className="audience-type">
+                <input
+                  type="radio"
+                  name="audience"
+                  value="no"
+                  className="audience-type-radio"
+                />
+                No, not made for kids
+              </label>
             </div>
-            <div>
-              <label htmlFor="description">Description:</label>
-              <input
-                type="text"
-                name="description"
-                id="description"
-                placeholder="Your video description"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="playlists">Playlists: </label>
-              <select name="playlists" id="playlists">
-                <option value="" disabled selected>
-                  Select Playlists
-                </option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="status">Visibility:</label>
+
+            <div className="form-element-container">
+              <label htmlFor="status" className="form-element-heading">
+                Visibility (required):
+              </label>
               <select name="privacy_status" id="status" required>
                 <option value="" disabled selected>
-                  Select visibility
+                  Select <IoMdArrowDropdown className="select-dropdown" />
                 </option>
                 <option value="public">Public</option>
                 <option value="private">Private</option>
               </select>
             </div>
-            <div>
-              <label htmlFor="category">Category:</label>
+            <div className="form-element-container">
+              <label htmlFor="category" className="form-element-heading">
+                Category (required):
+              </label>
               <select name="category_id" id="category" required>
                 <option value="" disabled selected>
                   Select Category
@@ -208,18 +330,38 @@ class RequestSection extends Component {
                 <option value="22">Educational</option>
               </select>
             </div>
-            <div>
-              <label htmlFor="creator">creator id:</label>
-              <input
-                id="creator"
-                name="creator_id"
-                type="text"
-                placeholder="fill creator id"
-                required
-              />
-            </div>
-            <button type="submit">Submit</button>
-          </form>
+          </div>
+          <div className="form-element-container">
+            <label htmlFor="creator" className="form-element-heading">
+              Creator id (required):
+            </label>
+            <input
+              id="creator"
+              name="creator_id"
+              type="text"
+              placeholder="fill creator id"
+              required
+            />
+          </div>
+
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+    );
+  };
+
+  render() {
+    const { responseMessage, loading } = this.state;
+
+    return (
+      <div className="bg-container">
+        <Header />
+        <div className="main-container">
+          {responseMessage
+            ? this.renderSubmitMessage()
+            : loading
+            ? this.renderLoading()
+            : this.renderRequestSection()}
         </div>
       </div>
     );

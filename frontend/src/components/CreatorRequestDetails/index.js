@@ -107,8 +107,21 @@ class CreatorRequestDetails extends Component {
     }
   };
 
-  render() {
-    const { isLoading, requestDetails, errorMessage } = this.state;
+  renderLoading = () => {
+    return (
+      <div className="request-section loading-section">
+        <img
+          alt="loading img"
+          src="https://cdni.iconscout.com/illustration/premium/thumb/wait-a-minute-6771645-5639826.png"
+          className="loading-img"
+        />
+        <p className="loading-text">Please Wait!, We are on your request...</p>
+      </div>
+    );
+  };
+
+  renderRequestDetailsSection = () => {
+    const { requestDetails, errorMessage } = this.state;
     const {
       videoUrl,
       requestStatus,
@@ -116,6 +129,7 @@ class CreatorRequestDetails extends Component {
       title,
       thumbnailUrl,
       description,
+      audience,
       visibility,
       categoryId,
       privacyStatus,
@@ -123,50 +137,104 @@ class CreatorRequestDetails extends Component {
       responseDateTime,
       videoUploadStatus,
     } = requestDetails;
-
-    if (isLoading) {
-      return <h1>Getting Data</h1>;
-    }
-
     return (
-      <div className="creator-request-details">
-        <Header />
-        <h1>Request Details</h1>
-        <p>Requested By: {fromUser}</p>
-        <p>Title: {title}</p>
-        <p>Description: {description}</p>
-        <p>From User: {fromUser}</p>
-        <video
-          width="640"
-          height="360"
-          controls
-          poster={thumbnailUrl}
-          preload="auto"
-        >
-          <source src={videoUrl} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-        <img alt="thumbnail" src={thumbnailUrl} />
-        <p>Category: {categoryId}</p>
-        <p>Visibility: {visibility}</p>
-        <p>Privacy Status: {privacyStatus}</p>
-        <p>Requested DateTime: {requestedDateTime}</p>
-        <p>
-          Response DateTime:
-          {responseDateTime ? responseDateTime : "not yet responded"}
-        </p>
-        <p>ResponseStatus: {requestStatus}</p>
-        {videoUploadStatus === "uploaded" && "your video is uploaded"}
+      <div className="request-details-section">
+        <h1 className="request-heading">Request Details</h1>
+        <div className="request-details-media-container">
+          <div className="request-details-media-card">
+            <h2 className="request-details-heading">Video: </h2>
+            <video
+              controls
+              poster={thumbnailUrl}
+              preload="auto"
+              className="media-item"
+            >
+              <source src={videoUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          <div className="request-details-media-card">
+            <h2 className="request-details-heading">Thumbnail:</h2>
+            <img alt="thumbnail" src={thumbnailUrl} className="media-item" />
+          </div>
+        </div>
+
+        <div id="text-container">
+          <h2 id="video-title-heading">Title</h2>
+          <p id="video-title">{title}</p>
+        </div>
+        <div id="text-container">
+          <h2 id="video-title-heading">Description</h2>
+          <p id="video-title">{description}</p>
+        </div>
+        <div className="request-details-elements-container">
+          <h2 className="small-heading">
+            Audience:<span>{audience === "yes" ? "kids" : "adults"}</span>
+          </h2>
+          <h2 className="small-heading">
+            Visibility:<span>{privacyStatus}</span>
+          </h2>
+          <h2 className="small-heading">
+            Category:<span>{categoryId}</span>
+          </h2>
+
+          <h2 className="small-heading">
+            Editor Id: <span>{fromUser}</span>
+          </h2>
+          <h2>
+            Requested on:
+            <span>{requestedDateTime}</span>
+          </h2>
+
+          <h2>
+            Request Status: <span>{requestStatus}</span>{" "}
+          </h2>
+          <h2>
+            Responded on:
+            <span>{responseDateTime ? responseDateTime : "NA"}</span>
+          </h2>
+          <h2>
+            Upload Status:
+            <span>
+              {videoUploadStatus === "uploaded" ? "uploaded" : "pending"}
+            </span>
+          </h2>
+        </div>
+
         {requestStatus === "pending" && (
-          <div>
+          <div className="creator-request-details-buttons-container">
             <button onClick={this.onApprove}>Approve</button>
             <button onClick={this.onReject}>Reject</button>
-            {errorMessage && <p>{errorMessage}</p>}
           </div>
         )}
+        {errorMessage && (
+          <p className="error-message">
+            <span className="error">Error:</span>
+            {errorMessage}
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  render() {
+    const { isLoading } = this.state;
+
+    return (
+      <div className="bg-container">
+        <Header />
+        <div className="main-container">
+          {isLoading
+            ? this.renderLoading()
+            : this.renderRequestDetailsSection()}
+        </div>
       </div>
     );
   }
 }
 
 export default CreatorRequestDetails;
+
+// {
+//   videoUploadStatus === "uploaded" && "your video is uploaded";
+// }

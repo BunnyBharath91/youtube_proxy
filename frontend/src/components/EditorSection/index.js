@@ -1,11 +1,18 @@
 import React, { Component } from "react";
 import "./index.css";
 import Header from "../Header";
+import apology from "../../images/apology.png";
+import errorWhileUploading from "../../images/errorWhileUploading.jpg";
+import forbidden from "../../images/noRequests.jpg";
+import successful from "../../images/successful.jpg";
 
 class EditorSectionRequests extends Component {
   state = {
     requestsList: [],
     loading: true,
+    uploadResponse: "",
+    uploadResponseMessage: "",
+    uploadResponseImage: "",
   };
 
   componentDidMount() {
@@ -26,8 +33,7 @@ class EditorSectionRequests extends Component {
         description: eachItem.description,
         thumbnailUrl: eachItem.thumbnail_url,
         playLists: eachItem.playLists,
-        visibility: eachItem.visibility,
-        tags: eachItem.tags,
+        audience: eachItem.audience,
         categoryId: eachItem.category_id,
         privacyStatus: eachItem.privacy_status,
         fromUser: eachItem.from_user,
@@ -67,23 +73,9 @@ class EditorSectionRequests extends Component {
     }
   };
 
-  onUploadVideo = async (requestItem) => {
-    const {
-      videoId,
-      videoUrl,
-      title,
-      thumbnailUrl,
-      description,
-      privacyStatus,
-    } = requestItem;
-
+  onUploadVideo = async (videoId) => {
     const requestBody = {
       videoId,
-      videoUrl,
-      title,
-      thumbnailUrl,
-      description,
-      privacyStatus,
     };
     this.setState({
       loading: true,
@@ -101,21 +93,55 @@ class EditorSectionRequests extends Component {
         loading: false,
       });
 
+      const responseData = await response.json();
+      console.log("upload response data: ", responseData);
       if (response.ok) {
-        const responseData = await response.json();
+        this.setState({
+          loading: false,
+          uploadResponse: "success",
+          uploadResponseMessage: responseData.message,
+        });
         console.log("Video uploaded successfully:", responseData);
-        window.location.reload(); // Reload the page
-        alert("Video uploaded successfully");
+        // window.location.reload(); // Reload the page
+        // alert("Video uploaded successfully");
       } else {
+        if (response.status === 403) {
+          if (responseData.reason === "quotaExceeded") {
+            this.setState({
+              loading: false,
+              uploadResponse: "failure",
+              uploadResponseMessage: responseData.message,
+              uploadResponseImage: apology,
+            });
+          } else {
+            this.setState({
+              loading: false,
+              uploadResponse: "failure",
+              uploadResponseMessage: responseData.message,
+              uploadResponseImage: forbidden,
+            });
+          }
+        } else {
+          this.setState({
+            loading: false,
+            uploadResponse: "failure",
+            uploadResponseMessage: responseData.message,
+            uploadResponseImage: errorWhileUploading,
+          });
+        }
+
         console.log("response of error", response);
-        alert("Error while uploading");
+        // alert("Error while uploading");
       }
     } catch (error) {
       console.error("Error uploading video:", error);
       this.setState({
-        isLoading: false,
+        loading: false,
+        uploadResponse: "failure",
+        uploadResponseMessage: "Error while uploading video",
+        uploadResponseImage: errorWhileUploading,
       });
-      alert("Error uploading video");
+      //   alert("Error uploading video");
     }
   };
 
@@ -125,15 +151,15 @@ class EditorSectionRequests extends Component {
     try {
       const response = await fetch(`/resend/${videoId}`);
       if (response.ok) {
-        alert("Resend successfully");
+        alert("Resent successfully");
         window.location.reload();
       } else {
-        alert("Error in resending");
+        throw new Error("Error in resending. Please try again.");
         this.setState({ loading: false });
       }
     } catch (error) {
       console.error("Error in resending:", error);
-      alert("Error in resending");
+      throw new Error("Error in resending. Please try again.");
       this.setState({ loading: false });
     }
   };
@@ -141,18 +167,18 @@ class EditorSectionRequests extends Component {
   renderRequest = (requestItem) => {
     const {
       videoId,
-      videoUrl,
       requestStatus,
       toUser,
       title,
       thumbnailUrl,
       videoUploadStatus,
+      requestedDateTime,
       responseDateTime,
     } = requestItem;
 
     const handleUpload = (event) => {
       event.stopPropagation();
-      this.onUploadVideo(requestItem);
+      this.onUploadVideo(videoId);
     };
 
     const handleDelete = (event) => {
@@ -163,6 +189,7 @@ class EditorSectionRequests extends Component {
     const responseDateTimeMs = new Date(responseDateTime).getTime();
     const currentTimeMs = new Date().getTime();
     const timeLimitMs = 55 * 60 * 1000;
+    console.log(responseDateTimeMs + timeLimitMs > currentTimeMs);
 
     const handleResendRequest = (event) => {
       event.stopPropagation();
@@ -175,59 +202,184 @@ class EditorSectionRequests extends Component {
         className="request-card"
         onClick={() => this.props.history.push(`/editor_section/${videoId}`)}
       >
-        <p className="creator-id">TO: {toUser}</p>
-        <p className="video-title">VIDEO TITLE: {title}</p>
-        <video
-          width="640"
-          height="360"
-          controls
-          poster={thumbnailUrl}
-          preload="auto"
-        >
-          <source src={videoUrl} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        <img
+          alt="thumbnail"
+          src={thumbnailUrl}
+          className="request-card-thumbnail"
+        />
+        <div className="request-card-text-container">
+          <p className="video-title">
+            This is my video title nothing fancy words just for checking
+            text-overflow: ellipses property. I mean is it working or not{" "}
+            {title}
+          </p>
+          <p className="creator-id">To: {toUser}</p>
+          <div className="status-delete-container">
+            {requestStatus === "approved" && <p>Status: Approved</p>}
+            {requestStatus === "pending" && <p>Status:Pending</p>}
+            {requestStatus === "rejected" && <p>Status: Rejected</p>}
+            <div className="request-card-buttons-container">
+              {videoUploadStatus === "not uploaded" &&
+                (responseDateTimeMs + timeLimitMs > currentTimeMs ? (
+                  <button onClick={handleUpload} className="upload-button">
+                    Upload
+                  </button>
+                ) : (
+                  requestStatus === "approved" && (
+                    <button
+                      onClick={handleResendRequest}
+                      className="resend-request-button"
+                    >
+                      Resend
+                    </button>
+                  )
+                ))}
 
-        {requestStatus === "approved" && (
-          <div>
-            <p>Request Status: Approved</p>
-            {videoUploadStatus === "not uploaded" ? (
+              {videoUploadStatus === "uploaded" && (
+                <p className="video-uploaded-text">video uploaded</p>
+              )}
+              {videoUploadStatus === "not uploaded" &&
+                requestStatus === "approved" && (
+                  <button
+                    onClick={handleDelete}
+                    className="delete-request-button"
+                  >
+                    Delete
+                  </button>
+                )}
+            </div>
+          </div>
+        </div>
+        <p className="extra-large-screen-requested-date-time">
+          {requestedDateTime}
+        </p>
+        <p className="large-screen-request-status">{requestStatus}</p>
+        <p className="extra-large-screen-requested-date-time">
+          {responseDateTime ? responseDateTime : "-"}
+        </p>
+        <div className="extra-large-screen-upload-button-container">
+          {requestStatus !== "rejected" && responseDateTime ? (
+            videoUploadStatus === "not uploaded" ? (
               responseDateTimeMs + timeLimitMs > currentTimeMs ? (
-                <button onClick={handleUpload}>Upload</button>
+                <button
+                  onClick={handleUpload}
+                  className="extra-large-screen-upload-button"
+                >
+                  Upload
+                </button>
+              ) : requestStatus === "approved" ? (
+                <button
+                  onClick={handleResendRequest}
+                  className="resend-request-button"
+                >
+                  Resend
+                </button>
               ) : (
-                <button onClick={handleResendRequest}>Resend Request</button>
+                "-"
               )
             ) : (
-              <p>This video is uploaded</p>
-            )}
-          </div>
-        )}
-
-        {requestStatus === "pending" && <p>Request Status:Pending</p>}
-        {requestStatus === "rejected" && <p> Request Status: Rejected</p>}
-        <button onClick={handleDelete}>Delete request</button>
+              "-"
+            )
+          ) : (
+            "-"
+          )}
+        </div>
+        <div className="large-screen-delete-button-container">
+          {videoUploadStatus === "not uploaded" ? (
+            <button
+              className="large-screen-delete-button"
+              onClick={handleDelete}
+            >
+              Delete
+            </button>
+          ) : (
+            "-"
+          )}
+        </div>
       </li>
     );
   };
 
-  render() {
-    const { requestsList, loading } = this.state;
+  renderLoading = () => {
+    return (
+      <div className="request-section loading-section">
+        <img
+          alt="loading img"
+          src="https://cdni.iconscout.com/illustration/premium/thumb/wait-a-minute-6771645-5639826.png"
+          className="loading-img"
+        />
+        <p className="loading-text">Please Wait!, We are on your request...</p>
+      </div>
+    );
+  };
 
-    if (loading) {
-      return <h1>Loading...</h1>;
-    }
+  onResetUploadResponse = () => {
+    this.setState({
+      uploadResponse: "",
+      uploadResponseMessage: "",
+    });
+    window.location.reload(); // Reload the page
+  };
+
+  renderUploadResponse = () => {
+    const {
+      uploadResponse,
+      uploadResponseMessage,
+      uploadResponseImage,
+    } = this.state;
 
     return (
-      <div className="creator-section">
-        <Header />
-        <h1>Requests you made</h1>
+      <div className="request-section loading-section">
+        <img
+          alt="loading img"
+          src={uploadResponse === "success" ? successful : uploadResponseImage}
+          className="loading-img"
+        />
+        <p className="loading-text">{uploadResponseMessage}</p>
+        <button onClick={this.onResetUploadResponse}>Go Back</button>
+      </div>
+    );
+  };
+
+  renderEditorSection = () => {
+    const { requestsList } = this.state;
+    return (
+      <div className="editor-section">
+        <h1 className="editor-section-heading">Requests you made</h1>
+        {requestsList.length > 0 && (
+          <div className="requests-table-header">
+            <p className="video-column">Video</p>
+            <p className="requested-date-time-column">requested on</p>
+            <p className="status-column">Status</p>
+            <p className="requested-date-time-column">responded on</p>
+            <p className="upload-video-column">Upload </p>
+            <p className="delete-request-column">Delete </p>
+          </div>
+        )}
         {requestsList.length === 0 ? (
           <h1>There are no requests</h1>
         ) : (
-          <ul className="requests-list">
+          <ul className="requests-container">
             {requestsList.map((eachItem) => this.renderRequest(eachItem))}
           </ul>
         )}
+      </div>
+    );
+  };
+
+  render() {
+    const { loading, uploadResponse } = this.state;
+
+    return (
+      <div className="bg-container">
+        <Header />
+        <div className="main-container">
+          {loading
+            ? this.renderLoading()
+            : uploadResponse
+            ? this.renderUploadResponse()
+            : this.renderEditorSection()}
+        </div>
       </div>
     );
   }

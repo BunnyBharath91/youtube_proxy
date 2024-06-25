@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./index.css";
 import Header from "../Header";
 
-class EditorSectionRequests extends Component {
+class EditorSection extends Component {
   state = {
     requestsList: [],
     loading: true,
@@ -233,4 +233,4 @@ class EditorSectionRequests extends Component {
   }
 }
 
-export default EditorSectionRequests;
+export default EditorSection;

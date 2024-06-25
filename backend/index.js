@@ -63,7 +63,15 @@ passport.use(
 
       clientSecret: process.env.clientSecret,
       callbackURL: process.env.callbackURL,
-      scope: ["profile", "email", "offline_access"], // Ensure 'offline_access' is included for getting accessToken
+      scope: [
+        "profile",
+        "email",
+        "https://www.googleapis.com/auth/youtube.upload",
+        "https://www.googleapis.com/auth/youtubepartner",
+        "https://www.googleapis.com/auth/youtube",
+        "https://www.googleapis.com/auth/youtube.force-ssl",
+      ],
+      accessType: "offline", //'accessType' is set to 'offline' for refresh tokens
     },
 
     async (accessToken, refreshToken, profile, cb) => {
@@ -229,7 +237,7 @@ const ensureAuthenticated = (request, response, next) => {
 
 //uploading the files into server(ie./uploads folder)
 app.post(
-  "/upload",
+  "/upload-request",
   upload.fields([
     { name: "thumbnail", maxCount: 1 },
     { name: "video", maxCount: 1 },
@@ -243,6 +251,8 @@ app.post(
       description,
       privacy_status: privacyStatus,
       creator_id: creatorId,
+      audience,
+      category_id: categoryId,
     } = request.body;
 
     // Example: Upload thumbnail to cloudinary
@@ -261,15 +271,17 @@ app.post(
     try {
       // Prepare and execute the SQL INSERT query using parameterized query
       const addDetailsQuery = `
-        INSERT INTO VIDEOS(video_url, title, description, thumbnail_url, visibility, category_id,
+        INSERT INTO VIDEOS(video_url, title, description, thumbnail_url, audience, category_id,
                             privacy_status,request_status, from_user, to_user) 
-        VALUES(?, ?, ?, ?, 'adult', 22, ?,'pending', ?, ?);
+        VALUES(?, ?, ?, ?, ?, ?, ?,'pending', ?, ?);
       `;
       const addingResponse = await db.run(addDetailsQuery, [
         videoUploadResponse.url,
         title,
         description,
         thumbnailUploadResponse.url,
+        audience,
+        categoryId,
         privacyStatus,
         request.user.userName,
         creatorId,
@@ -545,9 +557,9 @@ app.delete(
 ///////////////////////////////////////////////////////////////////////////////////
 // Function to download files from URLs
 
-const downloadFromUrl = async (fileUrl, videoId) => {
+const downloadFromUrl = async (fileUrl, videoId, fileType) => {
   try {
-    const uniqueFilename = `${videoId}_${uuidv4()}.mp4`; // Assuming video files are in MP4 format
+    const uniqueFilename = `${videoId}_${uuidv4()}.${fileType}`;
     const filePath = `./videos/${uniqueFilename}`;
 
     // Ensure the 'videos' directory exists
@@ -579,94 +591,186 @@ const downloadFromUrl = async (fileUrl, videoId) => {
 };
 
 app.post("/upload-video", async (req, res) => {
-  const {
-    videoId,
-    title,
-    description,
-    privacyStatus,
-    videoUrl,
-    thumbnailUrl,
-  } = req.body;
+  const { videoId } = req.body;
 
   console.log("video id is :", videoId);
-  console.log("title,description:", title, description);
 
-  const getAccessTokenQuery = `
-  select video_access_token from videos where id=?;
+  const getVideoDetails = `
+  select * from videos where id=?;
   `;
 
-  const accessTokenResponse = await db.get(getAccessTokenQuery, [videoId]);
-  const videoAccessToken = accessTokenResponse.video_access_token;
+  const getVideoDetailsResponse = await db.get(getVideoDetails, [videoId]);
+
+  const {
+    video_url,
+    title,
+    description,
+    thumbnail_url,
+    audience,
+    visibility,
+    category_id,
+    privacy_status,
+    video_access_token,
+  } = getVideoDetailsResponse;
+  console.log("title,description:", title, description);
   console.log(
     "this is the videoAccessToken while uploading video: ",
-    videoAccessToken
+    video_access_token
   );
 
   try {
     // Download video to local storage
-    const videoFileName = await downloadFromUrl(videoUrl, videoId);
+    const videoFileName = await downloadFromUrl(video_url, videoId, "mp4");
+    // Download thumbnail to local storage
+    const thumbnailFileName = await downloadFromUrl(
+      thumbnail_url,
+      videoId,
+      "jpg"
+    );
 
-    // Create a FormData instance
-    const form = new FormData();
-    form.append(
+    // Create a FormData instance for the video
+    const videoForm = new FormData();
+    videoForm.append(
       "snippet",
       JSON.stringify({
         snippet: {
           title: title,
           description: description,
+          categoryId: category_id,
         },
         status: {
-          privacyStatus: privacyStatus,
+          privacyStatus: privacy_status,
         },
       })
     );
-    form.append("media", fs.createReadStream(`./videos/${videoFileName}`), {
-      filename: path.basename(videoFileName),
-      contentType: "video/mp4", // MIME type of the video file
-    });
+    videoForm.append(
+      "media",
+      fs.createReadStream(`./videos/${videoFileName}`),
+      {
+        filename: path.basename(videoFileName),
+        contentType: "video/mp4", // MIME type of the video file
+      }
+    );
 
     // Make the request to upload video to YouTube
-    const response = await fetch(
+    const videoResponse = await fetch(
       "https://www.googleapis.com/upload/youtube/v3/videos?part=snippet,status",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${videoAccessToken}`,
+          Authorization: `Bearer ${video_access_token}`,
         },
-        body: form,
+        body: videoForm,
       }
     );
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error("Error uploading video:", errorBody);
+    if (!videoResponse.ok) {
+      const errorBody = await videoResponse.text();
+      const errorObj = JSON.parse(errorBody); //parsing it to obj
+      console.error("Error uploading video:", errorObj);
       // Clean up the downloaded video file
       fs.unlink(`./videos/${videoFileName}`, (unlinkError) => {
         if (unlinkError) {
           console.error("Error deleting video file:", unlinkError);
         }
       });
-      return res.status(500).json({ error: "Failed to upload video" });
+      // Clean up the downloaded thumbnail file
+      fs.unlink(`./videos/${thumbnailFileName}`, (unlinkError) => {
+        if (unlinkError) {
+          console.error("Error deleting thumbnail file:", unlinkError);
+        }
+      });
+      if (errorObj.error.code === 403) {
+        if (errorObj.error.errors[0].reason === "quotaExceeded") {
+          return res.status(403).json({
+            reason: "quotaExceeded",
+            message:
+              "Apologies! Our application has reached its quota for today. Please consider trying the upload again tomorrow. Thank you for your understanding!",
+          });
+        }
+        return res.status(403).json({ message: errorObj.error.message });
+      }
+      return res.status(500).json({ message: "Failed to upload thumbnail" });
     }
 
-    const responseBody = await response.json();
-    console.log("Response from YouTube:", responseBody);
+    const videoResponseBody = await videoResponse.json();
+    const youtubeVideoId = videoResponseBody.id;
+    console.log("Response from YouTube:", videoResponseBody);
+
+    //updating the video upload status in db
     const updateVideoUploadStatusQuery = `
     UPDATE videos SET video_upload_status='uploaded' WHERE id=?;
     `;
     const dbResponse = await db.run(updateVideoUploadStatusQuery, [videoId]);
     console.log("video update Status: ", dbResponse);
 
-    // Clean up the downloaded video file
+    // Clean up the downloaded video and thumbnail files
     fs.unlink(`./videos/${videoFileName}`, (unlinkError) => {
       if (unlinkError) {
         console.error("Error deleting video file:", unlinkError);
       }
     });
 
-    res.json(responseBody); // Respond with the JSON response from YouTube
+    // Upload thumbnail
+    const thumbnailForm = new FormData();
+    thumbnailForm.append(
+      "media",
+      fs.createReadStream(`./videos/${thumbnailFileName}`),
+      {
+        filename: path.basename(thumbnailFileName),
+        contentType: "image/jpeg", // MIME type of the thumbnail file
+      }
+    );
+
+    const thumbnailResponse = await fetch(
+      `https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${youtubeVideoId}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${video_access_token}`,
+        },
+        body: thumbnailForm,
+      }
+    );
+
+    if (!thumbnailResponse.ok) {
+      const errorBody = await thumbnailResponse.text();
+      const errorObj = JSON.parse(errorBody); //parsing it to obj
+      console.error("Error uploading thumbnail:", errorObj);
+      // Clean up the downloaded thumbnail file
+      fs.unlink(`./videos/${thumbnailFileName}`, (unlinkError) => {
+        if (unlinkError) {
+          console.error("Error deleting thumbnail file:", unlinkError);
+        }
+      });
+      if (errorObj.error.code === 403) {
+        if (errorObj.error.errors[0].reason === "quotaExceeded") {
+          return res.status(403).json({
+            reason: "quotaExceeded",
+            message:
+              "Apologies! Our application has reached its quota for today. Please consider trying the upload again tomorrow. Thank you for your understanding!",
+          });
+        }
+        return res.status(403).json({ message: errorObj.error.message });
+      }
+      return res.status(500).json({ message: "Failed to upload thumbnail" });
+    }
+
+    const thumbnailResponseBody = await thumbnailResponse.json();
+    console.log("Thumbnail uploaded successfully:", thumbnailResponseBody);
+
+    // Clean up the downloaded thumbnail file
+    fs.unlink(`./videos/${thumbnailFileName}`, (unlinkError) => {
+      if (unlinkError) {
+        console.error("Error deleting thumbnail file:", unlinkError);
+      }
+    });
+
+    res.json({
+      message: "video uploaded successfully",
+    });
   } catch (error) {
     console.error("Error uploading video:", error);
-    res.status(500).json({ error: "Failed to upload video" });
+    res.status(500).json({ message: "Failed to upload video" });
   }
 });

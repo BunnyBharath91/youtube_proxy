@@ -119,14 +119,14 @@ class EditorRequestDetails extends Component {
         alert("Video uploaded successfully");
       } else {
         console.log("Error while uploading:", response.status);
-        alert("Error while uploading");
+        throw new Error("Error while uploading. Please try again.");
       }
     } catch (error) {
       console.error("Error uploading video:", error);
       this.setState({
         loading: false,
       });
-      alert("Error uploading video");
+      throw new Error("Error while uploading. Please try again.");
     }
   };
 
@@ -138,25 +138,38 @@ class EditorRequestDetails extends Component {
     try {
       const response = await fetch(`/resend/${videoId}`);
       if (response.ok) {
-        alert("Resend successfully");
+        alert("Resent successfully");
         window.location.reload();
       } else {
-        alert("Error in resending");
+        throw new Error("Error in resending. Please try again.");
         this.setState({ loading: false });
       }
     } catch (error) {
       console.error("Error in resending:", error);
-      alert("Error in resending");
+      throw new Error("Error in resending. Please try again.");
       this.setState({ loading: false });
     }
   };
 
-  render() {
-    const { isLoading, requestDetails } = this.state;
+  renderLoading = () => {
+    return (
+      <div className="request-section loading-section">
+        <img
+          alt="loading img"
+          src="https://cdni.iconscout.com/illustration/premium/thumb/wait-a-minute-6771645-5639826.png"
+          className="loading-img"
+        />
+        <p className="loading-text">Please Wait!, We are on your request...</p>
+      </div>
+    );
+  };
+
+  renderRequestDetailsSection = () => {
+    const { requestDetails } = this.state;
     const {
       videoUrl,
       requestStatus,
-
+      audience,
       toUser,
       title,
       thumbnailUrl,
@@ -173,51 +186,98 @@ class EditorRequestDetails extends Component {
     const currentTimeMs = new Date().getTime();
     const timeLimitMs = 55 * 60 * 1000;
 
-    if (isLoading) {
-      return <h1>Getting Data</h1>;
-    }
+    return (
+      <div className="request-details-section">
+        <h1 className="request-heading">Request Details</h1>
+        <div className="request-details-media-container">
+          <div className="request-details-media-card">
+            <h2 className="request-details-heading">Video: </h2>
+            <video
+              controls
+              poster={thumbnailUrl}
+              preload="auto"
+              className="media-item"
+            >
+              <source src={videoUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          <div className="request-details-media-card">
+            <h2 className="request-details-heading">Thumbnail:</h2>
+            <img alt="thumbnail" src={thumbnailUrl} className="media-item" />
+          </div>
+        </div>
+
+        <div id="text-container">
+          <h2 id="video-title-heading">Title</h2>
+          <p id="video-title">{title}</p>
+        </div>
+        <div id="text-container">
+          <h2 id="video-title-heading">Description</h2>
+          <p id="video-title">{description}</p>
+        </div>
+        <div className="request-details-elements-container">
+          <h2>
+            Audience:<span>{audience === "yes" ? "kids" : "adults"}</span>
+          </h2>
+          <h2>
+            Visibility:<span>{privacyStatus}</span>
+          </h2>
+          <h2>
+            Category:<span>{categoryId}</span>
+          </h2>
+
+          <h2>
+            Creator Id:<span>{toUser}</span>
+          </h2>
+          <h2>
+            Requested on:
+            <span>{requestedDateTime}</span>
+          </h2>
+
+          <h2>
+            Request Status: <span>{requestStatus}</span>{" "}
+          </h2>
+          <h2>
+            Responded on:
+            <span>{responseDateTime ? responseDateTime : "NA"}</span>
+          </h2>
+          <h2>
+            Upload Status:
+            <span>
+              {videoUploadStatus === "uploaded" ? "uploaded" : "pending"}
+            </span>
+          </h2>
+        </div>
+        <div className="editor-request-details-buttons-container">
+          {requestStatus === "approved" &&
+            videoUploadStatus === "not uploaded" &&
+            (responseDateTimeMs + timeLimitMs > currentTimeMs ? (
+              <button onClick={this.onUploadVideo}>Upload</button>
+            ) : (
+              <button onClick={this.resendRequest}>Resend Request</button>
+            ))}
+
+          {videoUploadStatus === "not uploaded" &&
+            requestStatus === "approved" && (
+              <button onClick={this.onDeleteRequest}>Delete request</button>
+            )}
+        </div>
+      </div>
+    );
+  };
+
+  render() {
+    const { isLoading } = this.state;
 
     return (
-      <div className="creator-request-details">
+      <div className="bg-container">
         <Header />
-        <h1>Request Details</h1>
-        <p>Requested To: {toUser}</p>
-        <p>Title: {title}</p>
-        <p>Description: {description}</p>
-        <video
-          width="640"
-          height="360"
-          controls
-          poster={thumbnailUrl}
-          preload="auto"
-        >
-          <source src={videoUrl} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-        <img alt="thumbnail" src={thumbnailUrl} />
-        <p>Category: {categoryId}</p>
-        <p>Visibility: {visibility}</p>
-        <p>Privacy Status: {privacyStatus}</p>
-        <p>Requested DateTime: {requestedDateTime}</p>
-        <p>ResponseStatus: {requestStatus}</p>
-
-        {requestStatus === "approved" && (
-          <div>
-            <p>Request Status: Approved</p>
-            {videoUploadStatus === "not uploaded" ? (
-              responseDateTimeMs + timeLimitMs > currentTimeMs ? (
-                <button onClick={this.onUploadVideo}>Upload</button>
-              ) : (
-                <button onClick={this.resendRequest}>Resend Request</button>
-              )
-            ) : (
-              <p>This video is uploaded</p>
-            )}
-          </div>
-        )}
-        {requestStatus === "pending" && <p>Request Status: Pending</p>}
-        {requestStatus === "rejected" && <p> Request Status: Rejected</p>}
-        <button onClick={this.onDeleteRequest}>Delete request</button>
+        <div className="main-container">
+          {isLoading
+            ? this.renderLoading()
+            : this.renderRequestDetailsSection()}
+        </div>
       </div>
     );
   }
