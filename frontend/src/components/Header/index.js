@@ -2,12 +2,14 @@ import { Component } from "react";
 import { Link } from "react-router-dom";
 import { IoMdClose } from "react-icons/io";
 import { RxHamburgerMenu } from "react-icons/rx";
+import defaultUserImage from "./default-avatar-profile-icon-vector-social-media-user-image-182145777.webp";
 import "./index.css";
 
 class Header extends Component {
   state = {
     userName: "HELLO! USER",
     userImage: "",
+    invitationCode: "",
     showMenuContainer: false,
   };
 
@@ -16,12 +18,14 @@ class Header extends Component {
   }
 
   getUserDetails = async () => {
-    const response = await fetch("/user-details");
+    const response = await fetch("/user/details");
     if (response.ok) {
       const finalData = await response.json();
+      console.log("final Data: ", finalData);
       this.setState({
-        userImage: finalData.photos[0].value,
+        userImage: finalData.userImage,
         userName: finalData.displayName,
+        invitationCode: finalData.username,
       });
     }
   };
@@ -65,7 +69,7 @@ class Header extends Component {
               REQUEST
             </Link>
           </li>
-          <li className="header-item header-user-name">BORRA BHARATH KUMAR</li>
+          <li className="header-item header-user-name">{userName}</li>
           <li className="header-item menu">
             <RxHamburgerMenu
               className="menu-logo"
@@ -74,14 +78,14 @@ class Header extends Component {
 
             <img
               alt="header-user-img"
-              src={userImage}
+              src={userImage ? userImage : defaultUserImage}
               className="header-user-img"
               onClick={this.onToggleMenuContainer}
-              onError={(err) => {
-                err.currentTarget.src =
-                  "/default-avatar-profile-icon-vector-social-media-user-image-182145777.webp";
-                err.currentTarget.onerror = null;
-              }}
+              //   onError={(err) => {
+              //     err.currentTarget.src =
+              //       "/default-avatar-profile-icon-vector-social-media-user-image-182145777.webp";
+              //     err.currentTarget.onerror = null;
+              //   }}
             />
             <ul
               className={`menu-container ${
@@ -91,13 +95,13 @@ class Header extends Component {
               <li className="menu-item menu-user-item">
                 <img
                   alt="menu-user-img"
-                  src={userImage}
+                  src={userImage ? userImage : defaultUserImage}
                   className="menu-user-image"
-                  onError={(err) => {
-                    err.currentTarget.src =
-                      "/default-avatar-profile-icon-vector-social-media-user-image-182145777.webp";
-                    err.currentTarget.onerror = null;
-                  }}
+                  //   onError={(err) => {
+                  //     err.currentTarget.src =
+                  //       "/default-avatar-profile-icon-vector-social-media-user-image-182145777.webp";
+                  //     err.currentTarget.onerror = null;
+                  //   }}
                 />
 
                 <p className="menu-user-name">{userName}</p>

@@ -2,6 +2,9 @@ import { Component } from "react";
 import { RiVideoUploadLine } from "react-icons/ri";
 import { TbReplace } from "react-icons/tb";
 import { IoMdArrowDropdown } from "react-icons/io";
+import loading from "../../images/loading.png";
+import successful from "../../images/successful.jpg";
+import errorWhileUploading from "../../images/errorWhileUploading.jpg";
 import Header from "../Header";
 import "./index.css";
 
@@ -10,6 +13,7 @@ class RequestSection extends Component {
     super(props);
     this.state = {
       loading: false,
+      responseStatus: "",
       responseMessage: "",
       videoUrl: "",
       thumbnailUrl: "",
@@ -43,10 +47,15 @@ class RequestSection extends Component {
 
       if (response.ok) {
         const data = await response.json();
-        this.setState({ responseMessage: data.message, loading: false });
+        this.setState({
+          responseStatus: 200,
+          responseMessage: data.message,
+          loading: false,
+        });
       } else {
         console.error("Upload failed with status:", response.status);
         this.setState({
+          responseStatus: 500,
           responseMessage: "Upload failed. Please try again.",
           loading: false,
         }); // Example error handling
@@ -54,6 +63,7 @@ class RequestSection extends Component {
     } catch (error) {
       console.error("Error uploading:", error);
       this.setState({
+        responseStatus: 500,
         responseMessage: "Error uploading. Please try again.",
         loading: false,
       }); // Example error handling
@@ -125,11 +135,18 @@ class RequestSection extends Component {
   };
 
   renderSubmitMessage = () => {
-    const { responseMessage } = this.state;
+    const { responseStatus, responseMessage } = this.state;
     return (
       <div className="request-section loading-section">
-        <h1>{responseMessage}</h1>
-        <button onClick={this.onNewRequest}>Go Back</button>
+        <img
+          alt="loading img"
+          src={responseStatus === 200 ? successful : errorWhileUploading}
+          className="loading-img"
+        />
+        <p className="loading-text">{responseMessage}</p>
+        <button onClick={this.onNewRequest} className="go-back-button">
+          Go Back
+        </button>
       </div>
     );
   };
@@ -137,11 +154,7 @@ class RequestSection extends Component {
   renderLoading = () => {
     return (
       <div className="request-section loading-section">
-        <img
-          alt="loading img"
-          src="https://cdni.iconscout.com/illustration/premium/thumb/wait-a-minute-6771645-5639826.png"
-          className="loading-img"
-        />
+        <img alt="loading img" src={loading} className="loading-img" />
         <p className="loading-text">Please Wait!, We are on your request...</p>
       </div>
     );

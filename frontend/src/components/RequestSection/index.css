@@ -1,5 +1,5 @@
 .request-section {
-  min-height: 100vh;
+  min-height: calc(100vh - 60px);
   padding: 1vw 2vw;
   display: flex;
   flex-direction: column;
@@ -9,11 +9,13 @@
   justify-content: center;
 }
 .loading-img {
-  width: 50vw;
+  width: min(50vw, 50vh);
 }
 .loading-text {
   font-size: 16px;
   font-weight: 500;
+  text-align: center;
+  margin-bottom: 12px;
 }
 .request-heading {
   font-size: 24px;
@@ -262,6 +264,9 @@
 }
 
 @media (min-width: 992px) {
+  .request-section {
+    min-height: calc(100vh - 76px);
+  }
   .loading-text {
     font-size: 32px;
   }

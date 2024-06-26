@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import "./index.css";
 import Header from "../Header";
+import loading from "../../images/loading.png";
+import noRequests from "../../images/noRequests.jpg";
 
 class CreatorSection extends Component {
   state = {
@@ -60,6 +62,7 @@ class CreatorSection extends Component {
 
       if (response.ok) {
         await this.getRequests();
+        alert("Request approved successfully");
       } else {
         throw new Error("Failed to process your request. Please try again.");
       }
@@ -88,6 +91,15 @@ class CreatorSection extends Component {
       console.error("Error processing approval:", error);
       throw new Error("Failed to process your request. Please try again.");
     }
+  };
+
+  renderLoading = () => {
+    return (
+      <div className="request-section loading-section">
+        <img alt="loading img" src={loading} className="loading-img" />
+        <p className="loading-text">Please Wait!, We are on your request...</p>
+      </div>
+    );
   };
 
   renderRequest = (requestItem) => {
@@ -195,41 +207,47 @@ class CreatorSection extends Component {
     );
   };
 
-  render() {
-    const { requestsList, loading } = this.state;
+  renderEditorSection = () => {
+    const { requestsList } = this.state;
+    return (
+      <div className="editor-section">
+        <h1 className="editor-section-heading">Requests for you</h1>
+        {requestsList.length > 0 && (
+          <div className="requests-table-header">
+            <p className="creator-section-video-column">Video</p>
+            <p className="creator-section-requested-date-time-column">
+              requested on
+            </p>
+            <p className="creator-section-status-column">Status</p>
+            <p className="creator-section-requested-date-time-column">
+              responded on
+            </p>
+            <p className="creator-section-approve-column">Approve</p>
+            <p className="creator-section-reject-column">Reject</p>
+          </div>
+        )}
+        {requestsList.length === 0 ? (
+          <div className="request-section loading-section">
+            <img alt="loading img" src={noRequests} className="loading-img" />
+            <p className="loading-text">Sorry! there are no requests for you</p>
+          </div>
+        ) : (
+          <ul className="requests-container">
+            {requestsList.map((eachItem) => this.renderRequest(eachItem))}
+          </ul>
+        )}
+      </div>
+    );
+  };
 
-    if (loading) {
-      return <h1>Loading...</h1>;
-    }
+  render() {
+    const { loading } = this.state;
 
     return (
       <div className="bg-container">
         <Header />
         <div className="main-container">
-          <div className="editor-section">
-            <h1 className="editor-section-heading">Requests for you</h1>
-            {requestsList.length > 0 && (
-              <div className="requests-table-header">
-                <p className="creator-section-video-column">Video</p>
-                <p className="creator-section-requested-date-time-column">
-                  requested on
-                </p>
-                <p className="creator-section-status-column">Status</p>
-                <p className="creator-section-requested-date-time-column">
-                  responded on
-                </p>
-                <p className="creator-section-approve-column">Approve</p>
-                <p className="creator-section-reject-column">Reject</p>
-              </div>
-            )}
-            {requestsList.length === 0 ? (
-              <h1>There are no requests</h1>
-            ) : (
-              <ul className="requests-container">
-                {requestsList.map((eachItem) => this.renderRequest(eachItem))}
-              </ul>
-            )}
-          </div>
+          {loading ? this.renderLoading() : this.renderEditorSection()}
         </div>
       </div>
     );

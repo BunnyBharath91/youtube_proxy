@@ -1,6 +1,7 @@
 import { Component } from "react";
 import "./index.css";
 import Header from "../Header";
+import loading from "../../images/loading.png";
 
 class CreatorRequestDetails extends Component {
   constructor(props) {
@@ -110,11 +111,7 @@ class CreatorRequestDetails extends Component {
   renderLoading = () => {
     return (
       <div className="request-section loading-section">
-        <img
-          alt="loading img"
-          src="https://cdni.iconscout.com/illustration/premium/thumb/wait-a-minute-6771645-5639826.png"
-          className="loading-img"
-        />
+        <img alt="loading img" src={loading} className="loading-img" />
         <p className="loading-text">Please Wait!, We are on your request...</p>
       </div>
     );

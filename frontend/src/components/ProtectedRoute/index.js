@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import { Route, Redirect } from "react-router-dom";
+import loading from "../../images/loading.png";
+import { TailSpin } from "react-loader-spinner";
 
 class ProtectedRoute extends Component {
   constructor(props) {
@@ -38,12 +40,20 @@ class ProtectedRoute extends Component {
     }
   };
 
+  renderLoading = () => {
+    return (
+      <div className="request-section loading-section">
+        <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
+      </div>
+    );
+  };
+
   render() {
     const { component: Component, ...rest } = this.props;
     const { isAuthenticated, loading } = this.state;
 
     if (loading) {
-      return <div>Loading...</div>;
+      return this.renderLoading();
     }
 
     return (

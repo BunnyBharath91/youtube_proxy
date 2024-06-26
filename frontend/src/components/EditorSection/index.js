@@ -1,10 +1,13 @@
 import React, { Component } from "react";
+import { Link } from "react-router-dom";
 import "./index.css";
 import Header from "../Header";
+import loading from "../../images/loading.png";
 import apology from "../../images/apology.png";
 import errorWhileUploading from "../../images/errorWhileUploading.jpg";
-import forbidden from "../../images/noRequests.jpg";
+import forbidden from "../../images/forbidden.jpg";
 import successful from "../../images/successful.jpg";
+import noRequests from "../../images/noRequests.jpg";
 
 class EditorSectionRequests extends Component {
   state = {
@@ -151,16 +154,16 @@ class EditorSectionRequests extends Component {
     try {
       const response = await fetch(`/resend/${videoId}`);
       if (response.ok) {
-        alert("Resent successfully");
         window.location.reload();
+        alert("Resent successfully");
       } else {
-        throw new Error("Error in resending. Please try again.");
         this.setState({ loading: false });
+        throw new Error("Error in resending. Please try again.");
       }
     } catch (error) {
       console.error("Error in resending:", error);
-      throw new Error("Error in resending. Please try again.");
       this.setState({ loading: false });
+      throw new Error("Error in resending. Please try again.");
     }
   };
 
@@ -219,20 +222,23 @@ class EditorSectionRequests extends Component {
             {requestStatus === "pending" && <p>Status:Pending</p>}
             {requestStatus === "rejected" && <p>Status: Rejected</p>}
             <div className="request-card-buttons-container">
-              {videoUploadStatus === "not uploaded" &&
-                (responseDateTimeMs + timeLimitMs > currentTimeMs ? (
-                  <button onClick={handleUpload} className="upload-button">
-                    Upload
-                  </button>
-                ) : (
-                  requestStatus === "approved" && (
+              {requestStatus === "approved" &&
+                (responseDateTime ? (
+                  videoUploadStatus === "not uploaded" && (
                     <button
-                      onClick={handleResendRequest}
-                      className="resend-request-button"
+                      onClick={handleUpload}
+                      className="extra-large-screen-upload-button"
                     >
-                      Resend
+                      Upload
                     </button>
                   )
+                ) : (
+                  <button
+                    onClick={handleResendRequest}
+                    className="resend-request-button"
+                  >
+                    Resend
+                  </button>
                 ))}
 
               {videoUploadStatus === "uploaded" && (
@@ -258,27 +264,25 @@ class EditorSectionRequests extends Component {
           {responseDateTime ? responseDateTime : "-"}
         </p>
         <div className="extra-large-screen-upload-button-container">
-          {requestStatus !== "rejected" && responseDateTime ? (
-            videoUploadStatus === "not uploaded" ? (
-              responseDateTimeMs + timeLimitMs > currentTimeMs ? (
+          {requestStatus === "approved" ? (
+            responseDateTime ? (
+              videoUploadStatus === "not uploaded" ? (
                 <button
                   onClick={handleUpload}
                   className="extra-large-screen-upload-button"
                 >
                   Upload
                 </button>
-              ) : requestStatus === "approved" ? (
-                <button
-                  onClick={handleResendRequest}
-                  className="resend-request-button"
-                >
-                  Resend
-                </button>
               ) : (
                 "-"
               )
             ) : (
-              "-"
+              <button
+                onClick={handleResendRequest}
+                className="resend-request-button"
+              >
+                Resend
+              </button>
             )
           ) : (
             "-"
@@ -303,11 +307,7 @@ class EditorSectionRequests extends Component {
   renderLoading = () => {
     return (
       <div className="request-section loading-section">
-        <img
-          alt="loading img"
-          src="https://cdni.iconscout.com/illustration/premium/thumb/wait-a-minute-6771645-5639826.png"
-          className="loading-img"
-        />
+        <img alt="loading img" src={loading} className="loading-img" />
         <p className="loading-text">Please Wait!, We are on your request...</p>
       </div>
     );
@@ -336,7 +336,9 @@ class EditorSectionRequests extends Component {
           className="loading-img"
         />
         <p className="loading-text">{uploadResponseMessage}</p>
-        <button onClick={this.onResetUploadResponse}>Go Back</button>
+        <button onClick={this.onResetUploadResponse} className="go-back-button">
+          Go Back
+        </button>
       </div>
     );
   };
@@ -357,7 +359,13 @@ class EditorSectionRequests extends Component {
           </div>
         )}
         {requestsList.length === 0 ? (
-          <h1>There are no requests</h1>
+          <div className="request-section loading-section">
+            <img alt="loading img" src={noRequests} className="loading-img" />
+            <p className="loading-text">Sorry! you haven't made any requests</p>
+            <Link to="/request_section">
+              <button>Make a Request</button>
+            </Link>
+          </div>
         ) : (
           <ul className="requests-container">
             {requestsList.map((eachItem) => this.renderRequest(eachItem))}

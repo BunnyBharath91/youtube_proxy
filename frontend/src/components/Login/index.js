@@ -2,6 +2,7 @@ import { Component } from "react";
 import { Redirect } from "react-router-dom";
 import { IoMdClose } from "react-icons/io";
 import { RxHamburgerMenu } from "react-icons/rx";
+import { TailSpin } from "react-loader-spinner";
 import "./index.css";
 
 class Login extends Component {
@@ -53,12 +54,82 @@ class Login extends Component {
     });
   };
 
-  render() {
-    const { isAuthenticated, loading, showMenuContainer } = this.state;
+  renderLoading = () => {
+    return (
+      <div className="request-section loading-section">
+        <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
+      </div>
+    );
+  };
 
-    if (loading) {
-      return <h1>Loading...</h1>;
-    }
+  renderLoginSection = () => {
+    const { showMenuContainer } = this.state;
+    return (
+      <>
+        <nav className="header-container">
+          <img
+            alt="proxy-logo"
+            src="https://media-content.ccbp.in/website/ccbp_website_logos/nxtwave_header_logo.png"
+            className="proxy-logo"
+          />
+
+          <ul className="header-list">
+            <li className="header-item header-about">ABOUT</li>
+            <li className="header-item header-contact">CONTACT</li>
+            <li className="header-item header-sign-in">
+              <a href="http://localhost:5000/oauth/google">
+                <button className="sign-in-button">Sign In</button>
+              </a>
+            </li>
+            <li className="header-item menu">
+              <RxHamburgerMenu
+                className="login-menu-logo"
+                onClick={this.onToggleMenuContainer}
+              />
+              <ul
+                className={`menu-container ${
+                  showMenuContainer && "show-menu-container"
+                }`}
+              >
+                <li className="menu-item menu-sign-in-item">
+                  <a href="http://localhost:5000/oauth/google">Sign In</a>
+
+                  <IoMdClose
+                    className="menu-close-icon"
+                    onClick={this.onCloseMenuContainer}
+                  />
+                </li>
+                <li className="menu-item ">ABOUT</li>
+                <li className="menu-item ">CONTACT </li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+
+        <main className="home-container">
+          <p className="upper-description">
+            Streamlining YouTube Collaboration
+          </p>
+          <h1 className="main-description">
+            Empower editors to upload videos on behalf of creators with a
+            seamless approval process
+          </h1>
+          <p className="lower-description">
+            Effortlessly manage secure video uploads with creator consent. Boost
+            productivity and ensure seamless, trusted management with Proxy's
+            innovative platform.
+          </p>
+
+          <a href="http://localhost:5000/oauth/google">
+            <button className="get-started-button">Get Started</button>
+          </a>
+        </main>
+      </>
+    );
+  };
+
+  render() {
+    const { isAuthenticated, loading } = this.state;
 
     if (isAuthenticated) {
       return <Redirect to="/" />;
@@ -70,64 +141,7 @@ class Login extends Component {
     return (
       <div className="bg-container">
         <div className="main-container">
-          <nav className="header-container">
-            <img
-              alt="proxy-logo"
-              src="https://media-content.ccbp.in/website/ccbp_website_logos/nxtwave_header_logo.png"
-              className="proxy-logo"
-            />
-
-            <ul className="header-list">
-              <li className="header-item header-about">ABOUT</li>
-              <li className="header-item header-contact">CONTACT</li>
-              <li className="header-item header-sign-in">
-                <a href="http://localhost:5000/oauth/google">
-                  <button className="sign-in-button">Sign In</button>
-                </a>
-              </li>
-              <li className="header-item menu">
-                <RxHamburgerMenu
-                  className="login-menu-logo"
-                  onClick={this.onToggleMenuContainer}
-                />
-                <ul
-                  className={`menu-container ${
-                    showMenuContainer && "show-menu-container"
-                  }`}
-                >
-                  <li className="menu-item menu-sign-in-item">
-                    <a href="http://localhost:5000/oauth/google">Sign In</a>
-
-                    <IoMdClose
-                      className="menu-close-icon"
-                      onClick={this.onCloseMenuContainer}
-                    />
-                  </li>
-                  <li className="menu-item ">ABOUT</li>
-                  <li className="menu-item ">CONTACT </li>
-                </ul>
-              </li>
-            </ul>
-          </nav>
-
-          <main className="home-container">
-            <p className="upper-description">
-              Streamlining YouTube Collaboration
-            </p>
-            <h1 className="main-description">
-              Empower editors to upload videos on behalf of creators with a
-              seamless approval process
-            </h1>
-            <p className="lower-description">
-              Effortlessly manage secure video uploads with creator consent.
-              Boost productivity and ensure seamless, trusted management with
-              Proxy's innovative platform.
-            </p>
-
-            <a href="http://localhost:5000/oauth/google">
-              <button className="get-started-button">Get Started</button>
-            </a>
-          </main>
+          {loading ? this.renderLoading() : this.renderLoginSection()}
         </div>
       </div>
     );

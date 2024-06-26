@@ -158,7 +158,7 @@ const getNewAccessToken = async (refreshToken) => {
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Error refreshing access token:", errorData);
-      throw new Error(`Failed to refresh token: ${response.statusText}`);
+      return null; //indicate error while generating access_token
     }
 
     const data = await response.json();
@@ -167,7 +167,7 @@ const getNewAccessToken = async (refreshToken) => {
     return data.access_token;
   } catch (error) {
     console.error("Error refreshing access token:", error);
-    throw error;
+    return null;
   }
 };
 
@@ -374,12 +374,18 @@ app.get(
   }
 );
 
-app.get("/user/details", async (request, response) => {
+app.get("/user/details", ensureAuthenticated, async (request, response) => {
+  console.log("user email", request.user.emails[0].value);
   const query = `
-    SELECT * FROM users WHERE email='21je0219@iitism.ac.in';
+    SELECT username FROM users WHERE email='bunnybharath917@gmail.com';
     `;
-  const dbResponse = await db.all(query);
-  response.send(dbResponse);
+  const dbResponse = await db.get(query);
+  response.json({
+    username: dbResponse.username,
+    userEmail: request.user.emails[0].value,
+    userImage: request.user.photos[0].value,
+    displayName: request.user.displayName,
+  });
 });
 
 app.get("/videos", async (request, response) => {
@@ -390,6 +396,20 @@ app.get("/videos", async (request, response) => {
   response.send(dbResponse);
 });
 
+// Function to update response_date_time to NULL in the database
+const updateResponseDateTime = async (query, params) => {
+  return new Promise((resolve, reject) => {
+    db.run(query, params, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+};
+
+//..............................................base-line...................
 //getting requests
 app.get("/requests", ensureAuthenticated, async (request, response) => {
   try {
@@ -411,6 +431,26 @@ app.get("/requests", ensureAuthenticated, async (request, response) => {
       SELECT * FROM VIDEOS WHERE ${requestType} = ?;
     `;
     const requestsResponse = await db.all(getRequestsQuery, [userName]);
+
+    for (let eachItem of requestsResponse) {
+      if (
+        eachItem.video_upload_status === "not uploaded" &&
+        eachItem.request_status === "approved"
+      ) {
+        const newAccessToken = await getNewAccessToken(
+          eachItem.video_refresh_token
+        );
+        if (!newAccessToken) {
+          const updateResponseDateTimeQuery = `
+            UPDATE videos SET response_date_time=NULL WHERE id=?
+          `;
+          await updateResponseDateTime(updateResponseDateTimeQuery, [
+            eachItem.id,
+          ]);
+          eachItem.response_date_time = null; // Updating the response_date_time in the eachItem
+        }
+      }
+    }
 
     // Send the retrieved requests as the response
     response.status(200).json(requestsResponse);
@@ -471,15 +511,20 @@ app.put(
       const dateTime = new Date().toISOString(); //changing date and time to ISO format
 
       if (editorRequestStatus === "approved") {
-        const newAccessToken = await getNewAccessToken(
-          request.user.refreshToken
-        );
+        // const newAccessToken = await getNewAccessToken(
+        //   request.user.refreshToken
+        // );
         updateRequestStatusQuery = `
           UPDATE videos 
-          SET request_status = ?,response_date_time=?, video_access_token = ? 
+          SET request_status = ?,response_date_time=?, video_refresh_token = ? 
           WHERE id = ?;
         `;
-        queryParams = [editorRequestStatus, dateTime, newAccessToken, videoId];
+        queryParams = [
+          editorRequestStatus,
+          dateTime,
+          request.user.refreshToken,
+          videoId,
+        ];
       } else {
         updateRequestStatusQuery = `
           UPDATE videos 
@@ -611,12 +656,15 @@ app.post("/upload-video", async (req, res) => {
     category_id,
     privacy_status,
     video_access_token,
+    video_refresh_token,
   } = getVideoDetailsResponse;
   console.log("title,description:", title, description);
   console.log(
-    "this is the videoAccessToken while uploading video: ",
-    video_access_token
+    "this is the refreshToken while uploading video: ",
+    video_refresh_token
   );
+
+  const newAccessToken = await getNewAccessToken(video_refresh_token);
 
   try {
     // Download video to local storage
@@ -631,7 +679,7 @@ app.post("/upload-video", async (req, res) => {
     // Create a FormData instance for the video
     const videoForm = new FormData();
     videoForm.append(
-      "snippet",
+      "resource",
       JSON.stringify({
         snippet: {
           title: title,
@@ -641,7 +689,8 @@ app.post("/upload-video", async (req, res) => {
         status: {
           privacyStatus: privacy_status,
         },
-      })
+      }),
+      { contentType: "application/json" }
     );
     videoForm.append(
       "media",
@@ -658,7 +707,7 @@ app.post("/upload-video", async (req, res) => {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${video_access_token}`,
+          Authorization: `Bearer ${newAccessToken}`,
         },
         body: videoForm,
       }
@@ -727,7 +776,7 @@ app.post("/upload-video", async (req, res) => {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${video_access_token}`,
+          Authorization: `Bearer ${newAccessToken}`,
         },
         body: thumbnailForm,
       }
