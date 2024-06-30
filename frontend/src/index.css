@@ -18,7 +18,8 @@ body {
   box-sizing: border-box;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+.bg-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }

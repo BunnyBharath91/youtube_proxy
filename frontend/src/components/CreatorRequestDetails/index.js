@@ -1,7 +1,31 @@
 import { Component } from "react";
-import "./index.css";
+import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
+import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
 import loading from "../../images/loading.png";
+import {
+  CreatorRequestDetailsSection,
+  RequestHeading,
+  MediaContainer,
+  MediaCard,
+  RequestDetailsHeading,
+  MediaItem,
+  TextContainer,
+  VideoTitleHeading,
+  VideoTitle,
+  VideoDescriptionHeading,
+  VideoDescription,
+  ElementsContainer,
+  Element,
+  ElementValue,
+  ButtonsContainer,
+  Button,
+  ErrorMessage,
+  Err,
+  LoadingSection,
+  LoadingImage,
+  LoadingText,
+} from "./styledComponents";
 
 class CreatorRequestDetails extends Component {
   constructor(props) {
@@ -110,14 +134,14 @@ class CreatorRequestDetails extends Component {
 
   renderLoading = () => {
     return (
-      <div className="request-section loading-section">
-        <img alt="loading img" src={loading} className="loading-img" />
-        <p className="loading-text">Please Wait!, We are on your request...</p>
-      </div>
+      <LoadingSection>
+        <LoadingImage alt="loading img" src={loading} />
+        <LoadingText>Please Wait!, We are on your request...</LoadingText>
+      </LoadingSection>
     );
   };
 
-  renderRequestDetailsSection = () => {
+  renderRequestDetailsSection = (fsr) => {
     const { requestDetails, errorMessage } = this.state;
     const {
       videoUrl,
@@ -135,82 +159,91 @@ class CreatorRequestDetails extends Component {
       videoUploadStatus,
     } = requestDetails;
     return (
-      <div className="request-details-section">
-        <h1 className="request-heading">Request Details</h1>
-        <div className="request-details-media-container">
-          <div className="request-details-media-card">
-            <h2 className="request-details-heading">Video: </h2>
-            <video
-              controls
-              poster={thumbnailUrl}
-              preload="auto"
-              className="media-item"
-            >
+      <CreatorRequestDetailsSection>
+        <RequestHeading ratio={fsr}>Request Details</RequestHeading>
+        <MediaContainer>
+          <MediaCard>
+            <RequestDetailsHeading ratio={fsr}>Video: </RequestDetailsHeading>
+            <MediaItem controls poster={thumbnailUrl} preload="auto">
               <source src={videoUrl} type="video/mp4" />
               Your browser does not support the video tag.
-            </video>
-          </div>
-          <div className="request-details-media-card">
-            <h2 className="request-details-heading">Thumbnail:</h2>
-            <img alt="thumbnail" src={thumbnailUrl} className="media-item" />
-          </div>
-        </div>
+            </MediaItem>
+          </MediaCard>
+          <MediaCard>
+            <RequestDetailsHeading ratio={fsr}>
+              Thumbnail:
+            </RequestDetailsHeading>
+            <MediaItem alt="thumbnail" as="img" src={thumbnailUrl} />
+          </MediaCard>
+        </MediaContainer>
 
-        <div id="text-container">
-          <h2 id="video-title-heading">Title</h2>
-          <p id="video-title">{title}</p>
-        </div>
-        <div id="text-container">
-          <h2 id="video-title-heading">Description</h2>
-          <p id="video-title">{description}</p>
-        </div>
-        <div className="request-details-elements-container">
-          <h2 className="small-heading">
-            Audience:<span>{audience === "yes" ? "kids" : "adults"}</span>
-          </h2>
-          <h2 className="small-heading">
-            Visibility:<span>{privacyStatus}</span>
-          </h2>
-          <h2 className="small-heading">
-            Category:<span>{categoryId}</span>
-          </h2>
+        <TextContainer>
+          <VideoTitleHeading ratio={fsr}>Title</VideoTitleHeading>
+          <VideoTitle ratio={fsr}>{title}</VideoTitle>
+        </TextContainer>
+        <TextContainer>
+          <VideoDescriptionHeading ratio={fsr}>
+            Description
+          </VideoDescriptionHeading>
+          <VideoDescription ratio={fsr}>{description}</VideoDescription>
+        </TextContainer>
+        <ElementsContainer>
+          <Element ratio={fsr}>
+            Audience:
+            <ElementValue ratio={fsr}>
+              {audience === "yes" ? "kids" : "adults"}
+            </ElementValue>
+          </Element>
+          <Element ratio={fsr}>
+            Visibility:<ElementValue ratio={fsr}>{privacyStatus}</ElementValue>
+          </Element>
+          <Element ratio={fsr}>
+            Category:<ElementValue ratio={fsr}>{categoryId}</ElementValue>
+          </Element>
 
-          <h2 className="small-heading">
-            Editor Id: <span>{fromUser}</span>
-          </h2>
-          <h2>
+          <Element ratio={fsr}>
+            Editor Id: <ElementValue ratio={fsr}>{fromUser}</ElementValue>
+          </Element>
+          <Element ratio={fsr}>
             Requested on:
-            <span>{requestedDateTime}</span>
-          </h2>
+            <ElementValue ratio={fsr}>{requestedDateTime}</ElementValue>
+          </Element>
 
-          <h2>
-            Request Status: <span>{requestStatus}</span>{" "}
-          </h2>
-          <h2>
+          <Element ratio={fsr}>
+            Request Status:{" "}
+            <ElementValue ratio={fsr}>{requestStatus}</ElementValue>{" "}
+          </Element>
+          <Element ratio={fsr}>
             Responded on:
-            <span>{responseDateTime ? responseDateTime : "NA"}</span>
-          </h2>
-          <h2>
+            <ElementValue ratio={fsr}>
+              {responseDateTime ? responseDateTime : "NA"}
+            </ElementValue>
+          </Element>
+          <Element ratio={fsr}>
             Upload Status:
-            <span>
+            <ElementValue ratio={fsr}>
               {videoUploadStatus === "uploaded" ? "uploaded" : "pending"}
-            </span>
-          </h2>
-        </div>
+            </ElementValue>
+          </Element>
+        </ElementsContainer>
 
         {requestStatus === "pending" && (
-          <div className="creator-request-details-buttons-container">
-            <button onClick={this.onApprove}>Approve</button>
-            <button onClick={this.onReject}>Reject</button>
-          </div>
+          <ButtonsContainer>
+            <Button onClick={this.onApprove} ratio={fsr}>
+              Approve
+            </Button>
+            <Button onClick={this.onReject} ratio={fsr}>
+              Reject
+            </Button>
+          </ButtonsContainer>
         )}
         {errorMessage && (
-          <p className="error-message">
-            <span className="error">Error:</span>
+          <ErrorMessage>
+            <Err>Error:</Err>
             {errorMessage}
-          </p>
+          </ErrorMessage>
         )}
-      </div>
+      </CreatorRequestDetailsSection>
     );
   };
 
@@ -218,20 +251,26 @@ class CreatorRequestDetails extends Component {
     const { isLoading } = this.state;
 
     return (
-      <div className="bg-container">
-        <Header />
-        <div className="main-container">
-          {isLoading
-            ? this.renderLoading()
-            : this.renderRequestDetailsSection()}
-        </div>
-      </div>
+      <LanguageAndAccessibilityContext.Consumer>
+        {(value) => {
+          const { fontSizeRatio, showInGray } = value;
+          const fsr = fontSizeRatio;
+          console.log("creator request details ratio:", fontSizeRatio);
+          return (
+            <div className={`${showInGray && "show-in-gray"} bg-container`}>
+              <Header />
+              <div className="main-container">
+                {isLoading
+                  ? this.renderLoading()
+                  : this.renderRequestDetailsSection(fsr)}
+              </div>
+              <AccessibilitySection />
+            </div>
+          );
+        }}
+      </LanguageAndAccessibilityContext.Consumer>
     );
   }
 }
 
 export default CreatorRequestDetails;
-
-// {
-//   videoUploadStatus === "uploaded" && "your video is uploaded";
-// }

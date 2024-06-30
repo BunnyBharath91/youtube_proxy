@@ -1,6 +1,6 @@
 import React, { Component } from "react";
-import { Link } from "react-router-dom";
-import "./index.css";
+import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
+import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
 import loading from "../../images/loading.png";
 import apology from "../../images/apology.png";
@@ -8,6 +8,40 @@ import errorWhileUploading from "../../images/errorWhileUploading.jpg";
 import forbidden from "../../images/forbidden.jpg";
 import successful from "../../images/successful.jpg";
 import noRequests from "../../images/noRequests.jpg";
+import {
+  EditorSectionContainer,
+  EditorSectionHeading,
+  RequestsTableHeader,
+  TableElement,
+  NoRequestsContainer,
+  NoRequestsImage,
+  ApologiesText,
+  StyledLink,
+  RequestsContainer,
+  RequestCard,
+  RequestThumbnail,
+  RequestTextContainer,
+  VideoTitle,
+  CreatorId,
+  Id,
+  StatusAndButtonsContainer,
+  RequestStatus,
+  Status,
+  ButtonsContainer,
+  VideoUploadedText,
+  RequestedDateTime,
+  LargeScreenRequestStatus,
+  ResponseDateTime,
+  ExtraLargeScreenUploadButtonContainer,
+  LargeScreenDeleteButtonContainer,
+  LoadingSection,
+  LoadingImage,
+  LoadingText,
+  UploadResponseSection,
+  UploadResponseImage,
+  UploadResponseMessage,
+  Button,
+} from "./styledComponents";
 
 class EditorSectionRequests extends Component {
   state = {
@@ -15,7 +49,7 @@ class EditorSectionRequests extends Component {
     loading: true,
     uploadResponse: "",
     uploadResponseMessage: "",
-    uploadResponseImage: "",
+    uploadResponseImg: "",
   };
 
   componentDidMount() {
@@ -114,14 +148,14 @@ class EditorSectionRequests extends Component {
               loading: false,
               uploadResponse: "failure",
               uploadResponseMessage: responseData.message,
-              uploadResponseImage: apology,
+              uploadResponseImg: apology,
             });
           } else {
             this.setState({
               loading: false,
               uploadResponse: "failure",
               uploadResponseMessage: responseData.message,
-              uploadResponseImage: forbidden,
+              uploadResponseImg: forbidden,
             });
           }
         } else {
@@ -129,7 +163,7 @@ class EditorSectionRequests extends Component {
             loading: false,
             uploadResponse: "failure",
             uploadResponseMessage: responseData.message,
-            uploadResponseImage: errorWhileUploading,
+            uploadResponseImg: errorWhileUploading,
           });
         }
 
@@ -142,7 +176,7 @@ class EditorSectionRequests extends Component {
         loading: false,
         uploadResponse: "failure",
         uploadResponseMessage: "Error while uploading video",
-        uploadResponseImage: errorWhileUploading,
+        uploadResponseImg: errorWhileUploading,
       });
       //   alert("Error uploading video");
     }
@@ -167,7 +201,7 @@ class EditorSectionRequests extends Component {
     }
   };
 
-  renderRequest = (requestItem) => {
+  renderRequest = (requestItem, fsr) => {
     const {
       videoId,
       requestStatus,
@@ -189,127 +223,114 @@ class EditorSectionRequests extends Component {
       this.onDeleteRequest(videoId);
     };
 
-    const responseDateTimeMs = new Date(responseDateTime).getTime();
-    const currentTimeMs = new Date().getTime();
-    const timeLimitMs = 55 * 60 * 1000;
-    console.log(responseDateTimeMs + timeLimitMs > currentTimeMs);
-
     const handleResendRequest = (event) => {
       event.stopPropagation();
       this.resendRequest(videoId);
     };
 
+    const requestedDate = requestedDateTime.slice(0, 10);
+    const requestedTime = requestedDateTime.slice(11);
+
+    let responseDate, responseTime;
+    if (responseDateTime) {
+      responseDate = responseDateTime.slice(0, 10);
+      responseTime = responseDateTime.slice(11, 19);
+    }
+
     return (
-      <li
+      //RequestCard,RequestThumbnail,RequestTextContainer
+      <RequestCard
         key={videoId}
-        className="request-card"
         onClick={() => this.props.history.push(`/editor_section/${videoId}`)}
       >
-        <img
-          alt="thumbnail"
-          src={thumbnailUrl}
-          className="request-card-thumbnail"
-        />
-        <div className="request-card-text-container">
-          <p className="video-title">
+        <RequestThumbnail alt="thumbnail" src={thumbnailUrl} />
+        <RequestTextContainer className="request-card-text-container">
+          <VideoTitle ratio={fsr}>
             This is my video title nothing fancy words just for checking
             text-overflow: ellipses property. I mean is it working or not{" "}
             {title}
-          </p>
-          <p className="creator-id">To: {toUser}</p>
-          <div className="status-delete-container">
-            {requestStatus === "approved" && <p>Status: Approved</p>}
-            {requestStatus === "pending" && <p>Status:Pending</p>}
-            {requestStatus === "rejected" && <p>Status: Rejected</p>}
-            <div className="request-card-buttons-container">
+          </VideoTitle>
+          <CreatorId ratio={fsr}>
+            To: <Id>{toUser}</Id>
+          </CreatorId>
+          <StatusAndButtonsContainer>
+            <RequestStatus ratio={fsr}>
+              Request Status: <Status>{requestStatus}</Status>
+            </RequestStatus>
+
+            <ButtonsContainer className="request-card-buttons-container">
               {requestStatus === "approved" &&
                 (responseDateTime ? (
                   videoUploadStatus === "not uploaded" && (
-                    <button
-                      onClick={handleUpload}
-                      className="extra-large-screen-upload-button"
-                    >
-                      Upload
-                    </button>
+                    <Button onClick={handleUpload}>Upload</Button>
                   )
                 ) : (
-                  <button
-                    onClick={handleResendRequest}
-                    className="resend-request-button"
-                  >
-                    Resend
-                  </button>
+                  <Button onClick={handleResendRequest}>Resend</Button>
                 ))}
 
               {videoUploadStatus === "uploaded" && (
-                <p className="video-uploaded-text">video uploaded</p>
+                <VideoUploadedText className="video-uploaded-text" ratio={fsr}>
+                  video uploaded
+                </VideoUploadedText>
               )}
               {videoUploadStatus === "not uploaded" &&
-                requestStatus === "approved" && (
-                  <button
-                    onClick={handleDelete}
-                    className="delete-request-button"
-                  >
-                    Delete
-                  </button>
+                requestStatus !== "pending" && (
+                  <Button onClick={handleDelete}>Delete</Button>
                 )}
-            </div>
-          </div>
-        </div>
-        <p className="extra-large-screen-requested-date-time">
-          {requestedDateTime}
-        </p>
-        <p className="large-screen-request-status">{requestStatus}</p>
-        <p className="extra-large-screen-requested-date-time">
+            </ButtonsContainer>
+          </StatusAndButtonsContainer>
+        </RequestTextContainer>
+        <RequestedDateTime ratio={fsr}>
+          <span>{requestedDate}</span>
+          <span>{requestedTime}</span>
+        </RequestedDateTime>
+        <LargeScreenRequestStatus ratio={fsr}>
+          {requestStatus}
+        </LargeScreenRequestStatus>
+        {/* <ResponseDateTime>
           {responseDateTime ? responseDateTime : "-"}
-        </p>
-        <div className="extra-large-screen-upload-button-container">
+        </ResponseDateTime> */}
+        {responseDateTime ? (
+          <ResponseDateTime ratio={fsr}>
+            <span>{responseDate}</span>
+            <span>{responseTime}</span>
+          </ResponseDateTime>
+        ) : (
+          <ResponseDateTime>{"-"}</ResponseDateTime>
+        )}
+        <ExtraLargeScreenUploadButtonContainer>
           {requestStatus === "approved" ? (
             responseDateTime ? (
               videoUploadStatus === "not uploaded" ? (
-                <button
-                  onClick={handleUpload}
-                  className="extra-large-screen-upload-button"
-                >
-                  Upload
-                </button>
+                <Button onClick={handleUpload}>Upload</Button>
               ) : (
                 "-"
               )
             ) : (
-              <button
-                onClick={handleResendRequest}
-                className="resend-request-button"
-              >
-                Resend
-              </button>
+              <Button onClick={handleResendRequest}>Resend</Button>
             )
           ) : (
             "-"
           )}
-        </div>
-        <div className="large-screen-delete-button-container">
-          {videoUploadStatus === "not uploaded" ? (
-            <button
-              className="large-screen-delete-button"
-              onClick={handleDelete}
-            >
-              Delete
-            </button>
+        </ExtraLargeScreenUploadButtonContainer>
+        <LargeScreenDeleteButtonContainer>
+          {videoUploadStatus === "not uploaded" &&
+          requestStatus !== "pending" ? (
+            <Button onClick={handleDelete}>Delete</Button>
           ) : (
             "-"
           )}
-        </div>
-      </li>
+        </LargeScreenDeleteButtonContainer>
+      </RequestCard>
     );
   };
 
   renderLoading = () => {
     return (
-      <div className="request-section loading-section">
-        <img alt="loading img" src={loading} className="loading-img" />
-        <p className="loading-text">Please Wait!, We are on your request...</p>
-      </div>
+      <LoadingSection>
+        <LoadingImage alt="loading img" src={loading} />
+        <LoadingText>Please Wait!, We are on your request...</LoadingText>
+      </LoadingSection>
     );
   };
 
@@ -325,53 +346,54 @@ class EditorSectionRequests extends Component {
     const {
       uploadResponse,
       uploadResponseMessage,
-      uploadResponseImage,
+      uploadResponseImg,
     } = this.state;
-
     return (
-      <div className="request-section loading-section">
-        <img
+      <UploadResponseSection>
+        <UploadResponseImage
           alt="loading img"
-          src={uploadResponse === "success" ? successful : uploadResponseImage}
-          className="loading-img"
+          src={uploadResponse === "success" ? successful : uploadResponseImg}
         />
-        <p className="loading-text">{uploadResponseMessage}</p>
-        <button onClick={this.onResetUploadResponse} className="go-back-button">
-          Go Back
-        </button>
-      </div>
+        <UploadResponseMessage>{uploadResponseMessage}</UploadResponseMessage>
+        <Button onClick={this.onResetUploadResponse}>Go Back</Button>
+      </UploadResponseSection>
     );
   };
 
-  renderEditorSection = () => {
+  renderEditorSection = (fsr, sUl) => {
     const { requestsList } = this.state;
     return (
-      <div className="editor-section">
-        <h1 className="editor-section-heading">Requests you made</h1>
+      <EditorSectionContainer>
+        <EditorSectionHeading ratio={fsr}>
+          Requests you made
+        </EditorSectionHeading>
         {requestsList.length > 0 && (
-          <div className="requests-table-header">
-            <p className="video-column">Video</p>
-            <p className="requested-date-time-column">requested on</p>
-            <p className="status-column">Status</p>
-            <p className="requested-date-time-column">responded on</p>
-            <p className="upload-video-column">Upload </p>
-            <p className="delete-request-column">Delete </p>
-          </div>
+          <RequestsTableHeader ratio={fsr}>
+            <TableElement video>Video</TableElement>
+            <TableElement requestedDateTime>requested on</TableElement>
+            <TableElement status>Status</TableElement>
+            <TableElement respondedDateTime>responded on</TableElement>
+            <TableElement upload>Upload </TableElement>
+            <TableElement delete>Delete </TableElement>
+          </RequestsTableHeader>
         )}
         {requestsList.length === 0 ? (
-          <div className="request-section loading-section">
-            <img alt="loading img" src={noRequests} className="loading-img" />
-            <p className="loading-text">Sorry! you haven't made any requests</p>
-            <Link to="/request_section">
-              <button>Make a Request</button>
-            </Link>
-          </div>
+          //NoRequestsContainer,NoRequestsImage,ApologiesText
+          <NoRequestsContainer>
+            <NoRequestsImage alt="loading img" src={noRequests} />
+            <ApologiesText className="loading-text" ratio={fsr}>
+              Sorry! you haven't made any requests
+            </ApologiesText>
+            <StyledLink to="/request_section" sUl={sUl}>
+              <Button>Make a Request</Button>
+            </StyledLink>
+          </NoRequestsContainer>
         ) : (
-          <ul className="requests-container">
-            {requestsList.map((eachItem) => this.renderRequest(eachItem))}
-          </ul>
+          <RequestsContainer>
+            {requestsList.map((eachItem) => this.renderRequest(eachItem, fsr))}
+          </RequestsContainer>
         )}
-      </div>
+      </EditorSectionContainer>
     );
   };
 
@@ -379,16 +401,27 @@ class EditorSectionRequests extends Component {
     const { loading, uploadResponse } = this.state;
 
     return (
-      <div className="bg-container">
-        <Header />
-        <div className="main-container">
-          {loading
-            ? this.renderLoading()
-            : uploadResponse
-            ? this.renderUploadResponse()
-            : this.renderEditorSection()}
-        </div>
-      </div>
+      <LanguageAndAccessibilityContext.Consumer>
+        {(value) => {
+          const { fontSizeRatio, showInGray, showUnderLines: sUl } = value;
+          const fsr = fontSizeRatio;
+          console.log("editor section ratio: ", fontSizeRatio);
+
+          return (
+            <div className={`${showInGray && "show-in-gray"} bg-container`}>
+              <Header />
+              <div className="main-container">
+                {loading
+                  ? this.renderLoading()
+                  : uploadResponse
+                  ? this.renderUploadResponse()
+                  : this.renderEditorSection(fsr, sUl)}
+              </div>
+              <AccessibilitySection />
+            </div>
+          );
+        }}
+      </LanguageAndAccessibilityContext.Consumer>
     );
   }
 }

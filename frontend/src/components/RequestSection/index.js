@@ -1,12 +1,48 @@
 import { Component } from "react";
 import { RiVideoUploadLine } from "react-icons/ri";
-import { TbReplace } from "react-icons/tb";
 import { IoMdArrowDropdown } from "react-icons/io";
 import loading from "../../images/loading.png";
 import successful from "../../images/successful.jpg";
 import errorWhileUploading from "../../images/errorWhileUploading.jpg";
+import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
+import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
-import "./index.css";
+import {
+  RequestSectionContainer,
+  Heading,
+  RequestForm,
+  MediaFilesContainer,
+  MediaContainer,
+  FileUpdateSection,
+  StyledFileReplaceIcon,
+  MyFile,
+  PreviewCard,
+  UploadIcon,
+  UploadText,
+  FileButton,
+  InputContainer,
+  TitleLabel,
+  InfoIcon,
+  TitleTextArea,
+  CharCount,
+  DescriptionLabel,
+  DescriptionTextArea,
+  FormElementsContainer,
+  FormElementContainer,
+  FormElementHeading,
+  AudienceType,
+  AudienceTypeRadio,
+  FormElementSelect,
+  FormElementSelectOption,
+  InputCreator,
+  Button,
+  LoadingSection,
+  LoadingImage,
+  LoadingText,
+  SubmitResponseSection,
+  SubmitResponseImage,
+  SubmitResponseMessage,
+} from "./styledComponents";
 
 class RequestSection extends Component {
   constructor(props) {
@@ -25,9 +61,7 @@ class RequestSection extends Component {
   }
 
   onNewRequest = () => {
-    this.setState({
-      responseMessage: "",
-    });
+    window.location.reload();
   };
 
   handleSubmit = async (event) => {
@@ -79,6 +113,7 @@ class RequestSection extends Component {
           videoError: "Video file size should not exceed 256GB.",
           videoUrl: "", // Reset the thumbnail URL
         });
+        console.log("file size is more than 256GB");
         event.target.value = null; // Reset the file input
         return;
       }
@@ -88,7 +123,9 @@ class RequestSection extends Component {
       reader.onload = () => {
         this.setState({
           videoUrl: reader.result,
+          videoError: "",
         });
+        console.log(reader.result);
       };
       reader.onerror = (error) => {
         console.error("Error reading video file:", error);
@@ -114,6 +151,7 @@ class RequestSection extends Component {
       reader.onload = () => {
         this.setState({
           thumbnailUrl: reader.result,
+          thumbnailError: "",
         });
       };
       reader.onerror = (error) => {
@@ -137,30 +175,29 @@ class RequestSection extends Component {
   renderSubmitMessage = () => {
     const { responseStatus, responseMessage } = this.state;
     return (
-      <div className="request-section loading-section">
-        <img
+      <SubmitResponseSection>
+        <SubmitResponseImage
           alt="loading img"
           src={responseStatus === 200 ? successful : errorWhileUploading}
-          className="loading-img"
         />
-        <p className="loading-text">{responseMessage}</p>
-        <button onClick={this.onNewRequest} className="go-back-button">
+        <SubmitResponseMessage>{responseMessage}</SubmitResponseMessage>
+        <Button onClick={this.onNewRequest} goBack>
           Go Back
-        </button>
-      </div>
+        </Button>
+      </SubmitResponseSection>
     );
   };
 
   renderLoading = () => {
     return (
-      <div className="request-section loading-section">
-        <img alt="loading img" src={loading} className="loading-img" />
-        <p className="loading-text">Please Wait!, We are on your request...</p>
-      </div>
+      <LoadingSection>
+        <LoadingImage alt="loading img" src={loading} />
+        <LoadingText>Please Wait!, We are on your request...</LoadingText>
+      </LoadingSection>
     );
   };
 
-  renderRequestSection = () => {
+  renderRequestSection = (fsr) => {
     const {
       videoUrl,
       thumbnailUrl,
@@ -170,196 +207,200 @@ class RequestSection extends Component {
     } = this.state;
 
     return (
-      <div className="request-section">
-        <h1 className="request-heading">Make a Request By: </h1>
-        <form
-          onSubmit={this.handleSubmit}
-          encType="multipart/form-data"
-          className="form-container"
-        >
-          <div className="media-files-container">
-            <div className="media-container">
-              {videoUrl ? (
-                <div className="file-update-section">
-                  <TbReplace
-                    className="file-replace-icon"
+      <>
+        <RequestSectionContainer>
+          <Heading ratio={fsr}>Make a Request By: </Heading>
+          <RequestForm
+            onSubmit={this.handleSubmit}
+            encType="multipart/form-data"
+          >
+            <MediaFilesContainer>
+              <MediaContainer>
+                {videoUrl ? (
+                  <FileUpdateSection>
+                    <StyledFileReplaceIcon
+                      onClick={() => {
+                        document.getElementById("video").click(); // Trigger the file input click when the card is clicked
+                      }}
+                    />
+
+                    <MyFile controls preload="auto">
+                      <source src={videoUrl} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </MyFile>
+                  </FileUpdateSection>
+                ) : (
+                  <PreviewCard
                     onClick={() => {
                       document.getElementById("video").click(); // Trigger the file input click when the card is clicked
                     }}
-                  />
-                  <video className="myFile" controls preload="auto">
-                    <source src={videoUrl} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
-              ) : (
-                <div
-                  className="myFile preview-card"
-                  onClick={() => {
-                    document.getElementById("video").click(); // Trigger the file input click when the card is clicked
-                  }}
-                >
-                  <RiVideoUploadLine className="upload-icon" />
-                  <p className="upload-text">Click here to Upload your video</p>
-                </div>
-              )}
-              <input
-                type="file"
-                name="video"
-                id="video"
-                accept="video/mp4"
-                onChange={this.onVideoPreview}
-                className="file-button"
-                required
-                hidden
-              />
-            </div>
-            <div className="media-container">
-              {thumbnailUrl ? (
-                <div className="file-update-section">
-                  <TbReplace
-                    className="file-replace-icon"
+                  >
+                    <UploadIcon>
+                      <RiVideoUploadLine />
+                    </UploadIcon>
+
+                    <UploadText ratio={fsr}>
+                      Click here to Upload your video
+                    </UploadText>
+                  </PreviewCard>
+                )}
+                <FileButton
+                  type="file"
+                  name="video"
+                  id="video"
+                  accept="video/mp4"
+                  onChange={this.onVideoPreview}
+                  required
+                  hidden
+                />
+              </MediaContainer>
+              <MediaContainer>
+                {thumbnailUrl ? (
+                  <FileUpdateSection>
+                    <StyledFileReplaceIcon
+                      onClick={() => {
+                        document.getElementById("thumbnail").click(); // Trigger the file input click when the card is clicked
+                      }}
+                    />
+
+                    <MyFile alt="thumbnail-prev" as="img" src={thumbnailUrl} />
+                  </FileUpdateSection>
+                ) : (
+                  <PreviewCard
+                    className="myFile preview-card"
                     onClick={() => {
                       document.getElementById("thumbnail").click(); // Trigger the file input click when the card is clicked
                     }}
-                  />
-                  <img
-                    alt="thumbnail-prev"
-                    src={thumbnailUrl}
-                    className="myFile"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="myFile preview-card"
-                  onClick={() => {
-                    document.getElementById("thumbnail").click(); // Trigger the file input click when the card is clicked
-                  }}
-                >
-                  <RiVideoUploadLine className="upload-icon" />
-                  <p className="upload-text">
-                    Click here to Upload your thumbnail
-                  </p>
-                </div>
-              )}
-              <input
-                type="file"
-                name="thumbnail"
-                id="thumbnail"
-                accept="image/jpeg, image/png"
-                onChange={this.onThumbnailPreview}
+                  >
+                    <UploadIcon>
+                      <RiVideoUploadLine />
+                    </UploadIcon>
+
+                    <UploadText ratio={fsr}>
+                      Click here to Upload your thumbnail
+                    </UploadText>
+                  </PreviewCard>
+                )}
+                <FileButton
+                  type="file"
+                  name="thumbnail"
+                  id="thumbnail"
+                  accept="image/jpeg, image/png"
+                  onChange={this.onThumbnailPreview}
+                  required
+                  hidden
+                />
+              </MediaContainer>
+            </MediaFilesContainer>
+            <InputContainer>
+              <TitleLabel htmlFor="title" ratio={fsr}>
+                Title (required) <InfoIcon>?</InfoIcon>
+              </TitleLabel>
+              <TitleTextArea
+                name="title"
+                id="title"
+                maxLength={100}
+                value={videoTitle}
+                onChange={this.onChangeTitle}
+                rows={1} /* Start with a single row */
+                onInput={(e) => {
+                  // Adjust the height of the textarea to fit the content
+                  e.target.style.height = "auto";
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
+                placeholder=""
+                ratio={fsr}
                 required
-                hidden
               />
-            </div>
-          </div>
-          <div className="input-container">
-            <label htmlFor="title" className="title-label">
-              Title (required) <span className="info-icon">?</span>
-            </label>
-            <textarea
-              name="title"
-              id="title"
-              className="title-textarea"
-              maxLength={100}
-              value={videoTitle}
-              onChange={this.onChangeTitle}
-              rows={1} /* Start with a single row */
-              onInput={(e) => {
-                // Adjust the height of the textarea to fit the content
-                e.target.style.height = "auto";
-                e.target.style.height = `${e.target.scrollHeight}px`;
-              }}
-              placeholder=""
-              required
-            />
-            <div className="char-count">{videoTitle.length}/100</div>
-          </div>
-          <div className="input-container">
-            <label htmlFor="description" className="description-label">
-              Description (required) <span className="info-icon">?</span>
-            </label>
-            <textarea
-              name="description"
-              id="description"
-              className="description-textarea"
-              maxLength={5000}
-              value={videoDescription}
-              onChange={this.onChangeDescription}
-              rows={1} /* Start with a single row */
-              onInput={(e) => {
-                // Adjust the height of the textarea to fit the content
-                e.target.style.height = "auto";
-                e.target.style.height = `${e.target.scrollHeight}px`;
-              }}
-              placeholder=""
-              required
-            />
-            <div className="char-count">{videoDescription.length}/5000</div>
-          </div>
-          <div className="form-elements-container">
-            <div className="form-element-container">
-              <p className="form-element-heading">Audience (required)</p>
-              <label className="audience-type">
-                <input
-                  type="radio"
-                  name="audience"
-                  value="yes"
-                  className="audience-type-radio"
-                />
-                Yes, made for kids
-              </label>
-              <label className="audience-type">
-                <input
-                  type="radio"
-                  name="audience"
-                  value="no"
-                  className="audience-type-radio"
-                />
-                No, not made for kids
-              </label>
-            </div>
+              <CharCount ratio={fsr}>{videoTitle.length}/100</CharCount>
+            </InputContainer>
+            <InputContainer>
+              <DescriptionLabel htmlFor="description" ratio={fsr}>
+                Description (required) <InfoIcon>?</InfoIcon>
+              </DescriptionLabel>
+              <DescriptionTextArea
+                name="description"
+                id="description"
+                maxLength={5000}
+                value={videoDescription}
+                onChange={this.onChangeDescription}
+                rows={1} /* Start with a single row */
+                onInput={(e) => {
+                  // Adjust the height of the textarea to fit the content
+                  e.target.style.height = "auto";
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
+                placeholder=""
+                ratio={fsr}
+                required
+              />
+              <CharCount ratio={fsr}>{videoDescription.length}/5000</CharCount>
+            </InputContainer>
+            <FormElementsContainer>
+              <FormElementContainer>
+                <FormElementHeading ratio={fsr}>
+                  Audience (required)
+                </FormElementHeading>
+                <AudienceType ratio={fsr}>
+                  <AudienceTypeRadio type="radio" name="audience" value="yes" />
+                  Yes, made for kids
+                </AudienceType>
+                <AudienceType ratio={fsr}>
+                  <AudienceTypeRadio type="radio" name="audience" value="no" />
+                  No, not made for kids
+                </AudienceType>
+              </FormElementContainer>
 
-            <div className="form-element-container">
-              <label htmlFor="status" className="form-element-heading">
-                Visibility (required):
-              </label>
-              <select name="privacy_status" id="status" required>
-                <option value="" disabled selected>
-                  Select <IoMdArrowDropdown className="select-dropdown" />
-                </option>
-                <option value="public">Public</option>
-                <option value="private">Private</option>
-              </select>
-            </div>
-            <div className="form-element-container">
-              <label htmlFor="category" className="form-element-heading">
-                Category (required):
-              </label>
-              <select name="category_id" id="category" required>
-                <option value="" disabled selected>
-                  Select Category
-                </option>
-                <option value="22">Educational</option>
-              </select>
-            </div>
-          </div>
-          <div className="form-element-container">
-            <label htmlFor="creator" className="form-element-heading">
-              Creator id (required):
-            </label>
-            <input
-              id="creator"
-              name="creator_id"
-              type="text"
-              placeholder="fill creator id"
-              required
-            />
-          </div>
+              <FormElementContainer>
+                <FormElementHeading htmlFor="status" ratio={fsr}>
+                  Visibility (required):
+                </FormElementHeading>
+                <FormElementSelect name="privacy_status" id="status" required>
+                  <FormElementSelectOption value="" disabled selected>
+                    Select <IoMdArrowDropdown className="select-dropdown" />
+                  </FormElementSelectOption>
+                  <FormElementSelectOption value="public">
+                    Public
+                  </FormElementSelectOption>
+                  <FormElementSelectOption value="private">
+                    Private
+                  </FormElementSelectOption>
+                </FormElementSelect>
+              </FormElementContainer>
+              <FormElementContainer>
+                <FormElementHeading as="label" htmlFor="category" ratio={fsr}>
+                  Category (required):
+                </FormElementHeading>
+                <FormElementSelect name="category_id" id="category" required>
+                  <FormElementSelectOption value="" disabled selected>
+                    Select Category
+                  </FormElementSelectOption>
+                  <FormElementSelectOption value="22">
+                    Educational
+                  </FormElementSelectOption>
+                </FormElementSelect>
+              </FormElementContainer>
+            </FormElementsContainer>
+            <FormElementContainer>
+              <FormElementHeading htmlFor="creator" ratio={fsr}>
+                Creator id (required):
+              </FormElementHeading>
+              <InputCreator
+                id="creator"
+                name="creator_id"
+                type="text"
+                placeholder="fill creator id"
+                ratio={fsr}
+                required
+              />
+            </FormElementContainer>
 
-          <button type="submit">Submit</button>
-        </form>
-      </div>
+            <Button type="submit" submit ratio={fsr}>
+              Submit
+            </Button>
+          </RequestForm>
+        </RequestSectionContainer>
+      </>
     );
   };
 
@@ -367,16 +408,27 @@ class RequestSection extends Component {
     const { responseMessage, loading } = this.state;
 
     return (
-      <div className="bg-container">
-        <Header />
-        <div className="main-container">
-          {responseMessage
-            ? this.renderSubmitMessage()
-            : loading
-            ? this.renderLoading()
-            : this.renderRequestSection()}
-        </div>
-      </div>
+      <LanguageAndAccessibilityContext.Consumer>
+        {(value) => {
+          const { fontSizeRatio, showInGray } = value;
+          const fsr = fontSizeRatio;
+          console.log("request section ratio: ", fsr);
+
+          return (
+            <div className={`${showInGray && "show-in-gray"} bg-container`}>
+              <Header ratio={fsr} />
+              <div className="main-container">
+                {responseMessage
+                  ? this.renderSubmitMessage()
+                  : loading
+                  ? this.renderLoading()
+                  : this.renderRequestSection(fsr)}
+              </div>
+              <AccessibilitySection />
+            </div>
+          );
+        }}
+      </LanguageAndAccessibilityContext.Consumer>
     );
   }
 }

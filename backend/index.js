@@ -71,7 +71,8 @@ passport.use(
         "https://www.googleapis.com/auth/youtube",
         "https://www.googleapis.com/auth/youtube.force-ssl",
       ],
-      accessType: "offline", //'accessType' is set to 'offline' for refresh tokens
+      accessType: "offline", // Ensure 'accessType' is set to 'offline' for refresh tokens
+      prompt: "consent select_account", // Add prompt to force account selection and consent
     },
 
     async (accessToken, refreshToken, profile, cb) => {
@@ -351,6 +352,7 @@ app.get("/home", async (request, response) => {
 
 app.get(
   "/oauth/google",
+
   passport.authenticate("google", {
     scope: [
       "profile",
@@ -361,12 +363,15 @@ app.get(
       "https://www.googleapis.com/auth/youtube.force-ssl",
     ],
     accessType: "offline", // Ensure 'accessType' is set to 'offline' for refresh tokens
+    prompt: "consent select_account", // Add prompt to force account selection and consent
   })
 );
 
 app.get(
   "/oauth/redirect",
-  passport.authenticate("google", { failureRedirect: "/login" }),
+  passport.authenticate("google", {
+    failureRedirect: "http://localhost:3000/login",
+  }),
   async (request, response) => {
     //console.log(request.user);
     //response.redirect("/dashboard");
@@ -374,18 +379,20 @@ app.get(
   }
 );
 
-app.get("/user/details", ensureAuthenticated, async (request, response) => {
-  console.log("user email", request.user.emails[0].value);
-  const query = `
-    SELECT username FROM users WHERE email='bunnybharath917@gmail.com';
+app.get("/user/details", async (request, response) => {
+  if (request.isAuthenticated()) {
+    console.log("user email", request.user.emails[0].value);
+    const query = `
+    SELECT username FROM users WHERE email=?;
     `;
-  const dbResponse = await db.get(query);
-  response.json({
-    username: dbResponse.username,
-    userEmail: request.user.emails[0].value,
-    userImage: request.user.photos[0].value,
-    displayName: request.user.displayName,
-  });
+    const dbResponse = await db.get(query, request.user.emails[0].value);
+    response.json({
+      username: dbResponse.username,
+      userEmail: request.user.emails[0].value,
+      userImage: request.user.photos[0].value,
+      displayName: request.user.displayName,
+    });
+  }
 });
 
 app.get("/videos", async (request, response) => {

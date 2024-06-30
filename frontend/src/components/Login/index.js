@@ -1,9 +1,27 @@
 import { Component } from "react";
 import { Redirect } from "react-router-dom";
-import { IoMdClose } from "react-icons/io";
-import { RxHamburgerMenu } from "react-icons/rx";
+
 import { TailSpin } from "react-loader-spinner";
-import "./index.css";
+import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
+import AccessibilitySection from "../AccessibilitySection";
+import {
+  HeaderContainer,
+  ProxyLogo,
+  HeaderList,
+  HeaderItem,
+  LoginMenuLogo,
+  MenuContainer,
+  MenuItem,
+  MenuCloseIcon,
+  AnchorTag,
+  SignInButton,
+  SignInUserImg,
+  LoginContainer,
+  UpperDescription,
+  MainDescription,
+  LowerDescription,
+  GetStartedButton,
+} from "./styledComponents";
 
 class Login extends Component {
   constructor(props) {
@@ -62,68 +80,69 @@ class Login extends Component {
     );
   };
 
-  renderLoginSection = () => {
+  renderLoginSection = (fsr, sUl) => {
     const { showMenuContainer } = this.state;
     return (
       <>
-        <nav className="header-container">
-          <img
+        <HeaderContainer>
+          <ProxyLogo
             alt="proxy-logo"
             src="https://media-content.ccbp.in/website/ccbp_website_logos/nxtwave_header_logo.png"
-            className="proxy-logo"
           />
 
-          <ul className="header-list">
-            <li className="header-item header-about">ABOUT</li>
-            <li className="header-item header-contact">CONTACT</li>
-            <li className="header-item header-sign-in">
-              <a href="http://localhost:5000/oauth/google">
-                <button className="sign-in-button">Sign In</button>
-              </a>
-            </li>
-            <li className="header-item menu">
-              <RxHamburgerMenu
-                className="login-menu-logo"
-                onClick={this.onToggleMenuContainer}
-              />
-              <ul
-                className={`menu-container ${
-                  showMenuContainer && "show-menu-container"
-                }`}
-              >
-                <li className="menu-item menu-sign-in-item">
-                  <a href="http://localhost:5000/oauth/google">Sign In</a>
+          <HeaderList className="header-list">
+            <HeaderItem about ratio={fsr}>
+              ABOUT
+            </HeaderItem>
+            <HeaderItem contact ratio={fsr}>
+              CONTACT
+            </HeaderItem>
+            <HeaderItem ratio={fsr}>
+              <AnchorTag href="http://localhost:5000/oauth/google" sUl={sUl}>
+                <SignInButton className="sign-in-button" outline ratio={fsr}>
+                  <SignInUserImg />
+                  Sign In
+                </SignInButton>
+              </AnchorTag>
+            </HeaderItem>
+            <HeaderItem menu>
+              <LoginMenuLogo onClick={this.onToggleMenuContainer} />
 
-                  <IoMdClose
-                    className="menu-close-icon"
-                    onClick={this.onCloseMenuContainer}
-                  />
-                </li>
-                <li className="menu-item ">ABOUT</li>
-                <li className="menu-item ">CONTACT </li>
-              </ul>
-            </li>
-          </ul>
-        </nav>
+              <MenuContainer show={showMenuContainer} ratio={fsr}>
+                <MenuItem className="menu-item menu-sign-in-item">
+                  <a href="http://localhost:5000/oauth/google">
+                    <SignInButton className="sign-in-button">
+                      Sign In
+                    </SignInButton>
+                  </a>
+                  <MenuCloseIcon onClick={this.onCloseMenuContainer} />
+                </MenuItem>
+                <MenuItem>ABOUT</MenuItem>
+                <MenuItem>CONTACT </MenuItem>
+              </MenuContainer>
+            </HeaderItem>
+          </HeaderList>
+        </HeaderContainer>
+        <div className="main-container">
+          <LoginContainer>
+            <UpperDescription ratio={fsr}>
+              Streamlining YouTube Collaboration
+            </UpperDescription>
+            <MainDescription ratio={fsr}>
+              Empower editors to upload videos on behalf of creators with a
+              seamless approval process
+            </MainDescription>
+            <LowerDescription ratio={fsr}>
+              Effortlessly manage secure video uploads with creator consent.
+              Boost productivity and ensure seamless, trusted management with
+              Proxy's innovative platform.
+            </LowerDescription>
 
-        <main className="home-container">
-          <p className="upper-description">
-            Streamlining YouTube Collaboration
-          </p>
-          <h1 className="main-description">
-            Empower editors to upload videos on behalf of creators with a
-            seamless approval process
-          </h1>
-          <p className="lower-description">
-            Effortlessly manage secure video uploads with creator consent. Boost
-            productivity and ensure seamless, trusted management with Proxy's
-            innovative platform.
-          </p>
-
-          <a href="http://localhost:5000/oauth/google">
-            <button className="get-started-button">Get Started</button>
-          </a>
-        </main>
+            <a href="http://localhost:5000/oauth/google">
+              <GetStartedButton ratio={fsr}>Get Started</GetStartedButton>
+            </a>
+          </LoginContainer>
+        </div>
       </>
     );
   };
@@ -134,16 +153,24 @@ class Login extends Component {
     if (isAuthenticated) {
       return <Redirect to="/" />;
     }
-    // <a href="http://localhost:5000/oauth/google">
-    //         <button>Login With Google</button>
-    //       </a>
 
     return (
-      <div className="bg-container">
-        <div className="main-container">
-          {loading ? this.renderLoading() : this.renderLoginSection()}
-        </div>
-      </div>
+      <LanguageAndAccessibilityContext.Consumer>
+        {(value) => {
+          const { fontSizeRatio, showInGray, showUnderLines: sUl } = value;
+          const fsr = fontSizeRatio;
+          console.log(fontSizeRatio);
+
+          return (
+            <div className={`${showInGray && "show-in-gray"} bg-container`}>
+              {loading
+                ? this.renderLoading()
+                : this.renderLoginSection(fsr, sUl)}
+              <AccessibilitySection />
+            </div>
+          );
+        }}
+      </LanguageAndAccessibilityContext.Consumer>
     );
   }
 }

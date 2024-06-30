@@ -1,11 +1,36 @@
 import { Component } from "react";
-import "./index.css";
+import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
+import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
 import loading from "../../images/loading.png";
 import apology from "../../images/apology.png";
 import errorWhileUploading from "../../images/errorWhileUploading.jpg";
 import forbidden from "../../images/forbidden.jpg";
 import successful from "../../images/successful.jpg";
+import {
+  EditorRequestDetailsSection,
+  RequestHeading,
+  MediaContainer,
+  MediaCard,
+  RequestDetailsHeading,
+  MediaItem,
+  TextContainer,
+  VideoTitleHeading,
+  VideoTitle,
+  VideoDescriptionHeading,
+  VideoDescription,
+  ElementsContainer,
+  Element,
+  ElementValue,
+  ButtonsContainer,
+  LoadingSection,
+  LoadingImage,
+  LoadingText,
+  UploadResponseSection,
+  UploadResponseImage,
+  UploadResponseMessage,
+  Button,
+} from "./styledComponents";
 
 class EditorRequestDetails extends Component {
   constructor(props) {
@@ -15,7 +40,7 @@ class EditorRequestDetails extends Component {
       loading: true,
       uploadResponse: "",
       uploadResponseMessage: "",
-      uploadResponseImage: "",
+      uploadResponseImg: "",
     };
   }
 
@@ -126,14 +151,14 @@ class EditorRequestDetails extends Component {
               loading: false,
               uploadResponse: "failure",
               uploadResponseMessage: responseData.message,
-              uploadResponseImage: apology,
+              uploadResponseImg: apology,
             });
           } else {
             this.setState({
               loading: false,
               uploadResponse: "failure",
               uploadResponseMessage: responseData.message,
-              uploadResponseImage: forbidden,
+              uploadResponseImg: forbidden,
             });
           }
         } else {
@@ -141,7 +166,7 @@ class EditorRequestDetails extends Component {
             loading: false,
             uploadResponse: "failure",
             uploadResponseMessage: responseData.message,
-            uploadResponseImage: errorWhileUploading,
+            uploadResponseImg: errorWhileUploading,
           });
         }
 
@@ -154,7 +179,7 @@ class EditorRequestDetails extends Component {
         loading: false,
         uploadResponse: "failure",
         uploadResponseMessage: "Error while uploading video",
-        uploadResponseImage: errorWhileUploading,
+        uploadResponseImg: errorWhileUploading,
       });
       //   alert("Error uploading video");
     }
@@ -184,34 +209,41 @@ class EditorRequestDetails extends Component {
 
   renderLoading = () => {
     return (
-      <div className="request-section loading-section">
-        <img alt="loading img" src={loading} className="loading-img" />
-        <p className="loading-text">Please Wait!, We are on your request...</p>
-      </div>
+      <LoadingSection>
+        <LoadingImage alt="loading img" src={loading} />
+        <LoadingText>Please Wait!, We are on your request...</LoadingText>
+      </LoadingSection>
     );
+  };
+
+  onResetUploadResponse = () => {
+    this.setState({
+      uploadResponse: "",
+      uploadResponseMessage: "",
+    });
+    window.location.reload(); // Reload the page
   };
 
   renderUploadResponse = () => {
     const {
       uploadResponse,
       uploadResponseMessage,
-      uploadResponseImage,
+      uploadResponseImg,
     } = this.state;
 
     return (
-      <div className="request-section loading-section">
-        <img
+      <UploadResponseSection>
+        <UploadResponseImage
           alt="loading img"
-          src={uploadResponse === "success" ? successful : uploadResponseImage}
-          className="loading-img"
+          src={uploadResponse === "success" ? successful : uploadResponseImg}
         />
-        <p className="loading-text">{uploadResponseMessage}</p>
-        <button onClick={this.onResetUploadResponse}>Go Back</button>
-      </div>
+        <UploadResponseMessage>{uploadResponseMessage}</UploadResponseMessage>
+        <Button onClick={this.onResetUploadResponse}>Go Back</Button>
+      </UploadResponseSection>
     );
   };
 
-  renderRequestDetailsSection = () => {
+  renderRequestDetailsSection = (fsr) => {
     const { requestDetails } = this.state;
     const {
       videoUrl,
@@ -230,90 +262,104 @@ class EditorRequestDetails extends Component {
     } = requestDetails;
 
     return (
-      <div className="request-details-section">
-        <h1 className="request-heading">Request Details</h1>
-        <div className="request-details-media-container">
-          <div className="request-details-media-card">
-            <h2 className="request-details-heading">Video: </h2>
-            <video
-              controls
-              poster={thumbnailUrl}
-              preload="auto"
-              className="media-item"
-            >
-              <source src={videoUrl} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </div>
-          <div className="request-details-media-card">
-            <h2 className="request-details-heading">Thumbnail:</h2>
-            <img alt="thumbnail" src={thumbnailUrl} className="media-item" />
-          </div>
-        </div>
+      <>
+        <EditorRequestDetailsSection>
+          <RequestHeading ratio={fsr}>Request Details</RequestHeading>
+          <MediaContainer>
+            <MediaCard>
+              <RequestDetailsHeading ratio={fsr}>Video: </RequestDetailsHeading>
+              <MediaItem controls poster={thumbnailUrl} preload="auto">
+                <source src={videoUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </MediaItem>
+            </MediaCard>
+            <MediaCard>
+              <RequestDetailsHeading ratio={fsr}>
+                Thumbnail:
+              </RequestDetailsHeading>
+              <MediaItem alt="thumbnail" as="img" src={thumbnailUrl} />
+            </MediaCard>
+          </MediaContainer>
 
-        <div id="text-container">
-          <h2 id="video-title-heading">Title</h2>
-          <p id="video-title">{title}</p>
-        </div>
-        <div id="text-container">
-          <h2 id="video-title-heading">Description</h2>
-          <p id="video-title">{description}</p>
-        </div>
-        <div className="request-details-elements-container">
-          <h2>
-            Audience:<span>{audience === "yes" ? "kids" : "adults"}</span>
-          </h2>
-          <h2>
-            Visibility:<span>{privacyStatus}</span>
-          </h2>
-          <h2>
-            Category:<span>{categoryId}</span>
-          </h2>
+          <TextContainer>
+            <VideoTitleHeading ratio={fsr}>Title</VideoTitleHeading>
+            <VideoTitle ratio={fsr}>{title}</VideoTitle>
+          </TextContainer>
+          <TextContainer>
+            <VideoDescriptionHeading ratio={fsr}>
+              Description
+            </VideoDescriptionHeading>
+            <VideoDescription ratio={fsr}>{description}</VideoDescription>
+          </TextContainer>
+          <ElementsContainer>
+            <Element ratio={fsr}>
+              Audience:
+              <ElementValue ratio={fsr}>
+                {audience === "yes" ? "kids" : "adults"}
+              </ElementValue>
+            </Element>
+            <Element ratio={fsr}>
+              Visibility:
+              <ElementValue ratio={fsr}>{privacyStatus}</ElementValue>
+            </Element>
+            <Element ratio={fsr}>
+              Category:<ElementValue ratio={fsr}>{categoryId}</ElementValue>
+            </Element>
 
-          <h2>
-            Creator Id:<span>{toUser}</span>
-          </h2>
-          <h2>
-            Requested on:
-            <span>{requestedDateTime}</span>
-          </h2>
+            <Element ratio={fsr}>
+              Creator Id:<ElementValue ratio={fsr}>{toUser}</ElementValue>
+            </Element>
+            <Element ratio={fsr}>
+              Requested on:
+              <ElementValue ratio={fsr}>{requestedDateTime}</ElementValue>
+            </Element>
 
-          <h2>
-            Request Status: <span>{requestStatus}</span>{" "}
-          </h2>
-          <h2>
-            Responded on:
-            <span>{responseDateTime ? responseDateTime : "NA"}</span>
-          </h2>
-          <h2>
-            Upload Status:
-            <span>
-              {videoUploadStatus === "uploaded" ? "uploaded" : "pending"}
-            </span>
-          </h2>
-        </div>
-        <div className="editor-request-details-buttons-container">
-          {/* {videoUploadStatus === "not uploaded" && responseDateTime === null ? (
+            <Element ratio={fsr}>
+              Request Status:{" "}
+              <ElementValue ratio={fsr}>{requestStatus}</ElementValue>{" "}
+            </Element>
+            <Element ratio={fsr}>
+              Responded on:
+              <ElementValue ratio={fsr}>
+                {responseDateTime ? responseDateTime : "NA"}
+              </ElementValue>
+            </Element>
+            <Element ratio={fsr}>
+              Upload Status:
+              <ElementValue ratio={fsr}>
+                {videoUploadStatus === "uploaded" ? "uploaded" : "pending"}
+              </ElementValue>
+            </Element>
+          </ElementsContainer>
+          <ButtonsContainer>
+            {/* {videoUploadStatus === "not uploaded" && responseDateTime === null ? (
             <button onClick={this.resendRequest}>Resend Request</button>
           ) : (
             <button onClick={this.onUploadVideo}>Upload</button>
           )} */}
 
-          {requestStatus === "approved" &&
-            (responseDateTime ? (
-              videoUploadStatus === "not uploaded" && (
-                <button onClick={this.onUploadVideo}>Upload</button>
-              )
-            ) : (
-              <button onClick={this.resendRequest}>Resend Request</button>
-            ))}
+            {requestStatus === "approved" &&
+              (responseDateTime ? (
+                videoUploadStatus === "not uploaded" && (
+                  <Button onClick={this.onUploadVideo} upload>
+                    Upload
+                  </Button>
+                )
+              ) : (
+                <Button onClick={this.resendRequest} resend>
+                  Resend Request
+                </Button>
+              ))}
 
-          {videoUploadStatus === "not uploaded" &&
-            requestStatus === "approved" && (
-              <button onClick={this.onDeleteRequest}>Delete request</button>
-            )}
-        </div>
-      </div>
+            {videoUploadStatus === "not uploaded" &&
+              requestStatus !== "pending" && (
+                <Button onClick={this.onDeleteRequest} ratio={fsr} delete>
+                  Delete request
+                </Button>
+              )}
+          </ButtonsContainer>
+        </EditorRequestDetailsSection>
+      </>
     );
   };
 
@@ -321,16 +367,27 @@ class EditorRequestDetails extends Component {
     const { loading, uploadResponse } = this.state;
 
     return (
-      <div className="bg-container">
-        <Header />
-        <div className="main-container">
-          {loading
-            ? this.renderLoading()
-            : uploadResponse
-            ? this.renderUploadResponse()
-            : this.renderRequestDetailsSection()}
-        </div>
-      </div>
+      <LanguageAndAccessibilityContext.Consumer>
+        {(value) => {
+          const { fontSizeRatio, showInGray } = value;
+          const fsr = fontSizeRatio;
+          console.log("editor request details ratio:", fontSizeRatio);
+
+          return (
+            <div className={`${showInGray && "show-in-gray"} bg-container`}>
+              <Header />
+              <div className="main-container">
+                {loading
+                  ? this.renderLoading()
+                  : uploadResponse
+                  ? this.renderUploadResponse()
+                  : this.renderRequestDetailsSection(fsr)}
+              </div>
+              <AccessibilitySection />
+            </div>
+          );
+        }}
+      </LanguageAndAccessibilityContext.Consumer>
     );
   }
 }
