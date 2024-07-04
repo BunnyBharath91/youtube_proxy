@@ -8,6 +8,7 @@ import errorWhileUploading from "../../images/errorWhileUploading.jpg";
 import forbidden from "../../images/forbidden.jpg";
 import successful from "../../images/successful.jpg";
 import noRequests from "../../images/noRequests.jpg";
+import { TailSpin } from "react-loader-spinner";
 import {
   EditorSectionContainer,
   EditorSectionHeading,
@@ -35,18 +36,20 @@ import {
   ExtraLargeScreenUploadButtonContainer,
   LargeScreenDeleteButtonContainer,
   LoadingSection,
-  LoadingImage,
-  LoadingText,
+  FetchingErrorImage,
+  FetchingErrorMessage,
   UploadResponseSection,
   UploadResponseImage,
   UploadResponseMessage,
   Button,
 } from "./styledComponents";
+import { requestsSectionContent, postRequestContent } from "./languageContent";
 
 class EditorSectionRequests extends Component {
   state = {
     requestsList: [],
     loading: true,
+    fetchingErrorStatus: "",
     uploadResponse: "",
     uploadResponseMessage: "",
     uploadResponseImg: "",
@@ -56,13 +59,83 @@ class EditorSectionRequests extends Component {
     this.getRequests();
   }
 
+  getEditorSectionData = (activeLanguage) => {
+    switch (activeLanguage) {
+      case "AR":
+        return requestsSectionContent.AR;
+      case "BN":
+        return requestsSectionContent.BN;
+      case "ZH":
+        return requestsSectionContent.ZH;
+      case "EN":
+        return requestsSectionContent.EN;
+      case "FR":
+        return requestsSectionContent.FR;
+      case "HI":
+        return requestsSectionContent.HI;
+      case "PT":
+        return requestsSectionContent.PT;
+      case "RU":
+        return requestsSectionContent.RU;
+      case "ES":
+        return requestsSectionContent.ES;
+      case "TE":
+        return requestsSectionContent.TE;
+      case "UR":
+        return requestsSectionContent.UR;
+
+      default:
+        return null;
+    }
+  };
+
+  getPostRequestContent = (activeLanguage) => {
+    switch (activeLanguage) {
+      case "AR":
+        return postRequestContent.AR;
+      case "BN":
+        return postRequestContent.BN;
+      case "ZH":
+        return postRequestContent.ZH;
+      case "EN":
+        return postRequestContent.EN;
+      case "FR":
+        return postRequestContent.FR;
+      case "HI":
+        return postRequestContent.HI;
+      case "PT":
+        return postRequestContent.PT;
+      case "RU":
+        return postRequestContent.RU;
+      case "ES":
+        return postRequestContent.ES;
+      case "TE":
+        return postRequestContent.TE;
+      case "UR":
+        return postRequestContent.UR;
+
+      default:
+        return null;
+    }
+  };
+
   getRequests = async () => {
+    this.setState({
+      loading: true,
+    });
+    console.log("editor section loading: true ");
     try {
       const response = await fetch(`/requests?role=editor`);
+
       if (!response.ok) {
-        throw new Error(`Request failed with status: ${response.status}`);
+        this.setState({
+          loading: false,
+          fetchingErrorStatus: response.status,
+        });
+        return;
       }
       const data = await response.json();
+
       const updatedData = data.map((eachItem) => ({
         videoId: eachItem.id,
         videoUrl: eachItem.video_url,
@@ -87,8 +160,7 @@ class EditorSectionRequests extends Component {
         requestsList: updatedData,
       });
     } catch (error) {
-      console.error("Error fetching requests:", error);
-      this.setState({ loading: false });
+      this.setState({ loading: false, fetchingErrorStatus: 400 });
     }
   };
 
@@ -110,12 +182,22 @@ class EditorSectionRequests extends Component {
     }
   };
 
-  onUploadVideo = async (videoId) => {
+  onUploadVideo = async (activeLanguage, videoId) => {
+    const {
+      successMessage,
+      videoQuotaExceeded,
+      videoForbidden,
+      error500,
+      thumbnailQuotaExceeded,
+      thumbnailForbidden,
+      error409,
+    } = this.getPostRequestContent(activeLanguage);
+
     const requestBody = {
       videoId,
     };
     this.setState({
-      loading: true,
+      uploadResponse: "IN_PROGRESS",
     });
     try {
       const response = await fetch("/upload-video", {
@@ -126,43 +208,53 @@ class EditorSectionRequests extends Component {
         body: JSON.stringify(requestBody),
       });
 
-      this.setState({
-        loading: false,
-      });
-
       const responseData = await response.json();
       console.log("upload response data: ", responseData);
       if (response.ok) {
         this.setState({
-          loading: false,
-          uploadResponse: "success",
-          uploadResponseMessage: responseData.message,
+          uploadResponse: "SUCCESS",
+          uploadResponseMessage: successMessage,
         });
         console.log("Video uploaded successfully:", responseData);
         // window.location.reload(); // Reload the page
         // alert("Video uploaded successfully");
       } else {
         if (response.status === 403) {
-          if (responseData.reason === "quotaExceeded") {
+          if (responseData.reason === "video quotaExceeded") {
             this.setState({
-              loading: false,
-              uploadResponse: "failure",
-              uploadResponseMessage: responseData.message,
+              uploadResponse: "FAILURE",
+              uploadResponseMessage: videoQuotaExceeded,
               uploadResponseImg: apology,
+            });
+          } else if (responseData.reason === "thumbnail quotaExceeded") {
+            this.setState({
+              uploadResponse: "FAILURE",
+              uploadResponseMessage: thumbnailQuotaExceeded,
+              uploadResponseImg: apology,
+            });
+          } else if (responseData.reason === "video upload forbidden") {
+            this.setState({
+              uploadResponse: "FAILURE",
+              uploadResponseMessage: videoForbidden,
+              uploadResponseImg: forbidden,
             });
           } else {
             this.setState({
-              loading: false,
-              uploadResponse: "failure",
-              uploadResponseMessage: responseData.message,
+              uploadResponse: "FAILURE",
+              uploadResponseMessage: thumbnailForbidden,
               uploadResponseImg: forbidden,
             });
           }
+        } else if (response.status === 409) {
+          this.setState({
+            uploadResponse: "FAILURE",
+            uploadResponseMessage: error409,
+            uploadResponseImg: apology,
+          });
         } else {
           this.setState({
-            loading: false,
-            uploadResponse: "failure",
-            uploadResponseMessage: responseData.message,
+            uploadResponse: "FAILURE",
+            uploadResponseMessage: error500,
             uploadResponseImg: errorWhileUploading,
           });
         }
@@ -173,8 +265,7 @@ class EditorSectionRequests extends Component {
     } catch (error) {
       console.error("Error uploading video:", error);
       this.setState({
-        loading: false,
-        uploadResponse: "failure",
+        uploadResponse: "FAILURE",
         uploadResponseMessage: "Error while uploading video",
         uploadResponseImg: errorWhileUploading,
       });
@@ -201,7 +292,7 @@ class EditorSectionRequests extends Component {
     }
   };
 
-  renderRequest = (requestItem, fsr) => {
+  renderRequest = (activeLanguage, renderRequestContent, requestItem, fsr) => {
     const {
       videoId,
       requestStatus,
@@ -212,10 +303,21 @@ class EditorSectionRequests extends Component {
       requestedDateTime,
       responseDateTime,
     } = requestItem;
+    const {
+      to,
+      requestStatus_,
+      approved,
+      pending,
+      rejected,
+      upload,
+      resend,
+      delete_,
+      videoUploaded,
+    } = renderRequestContent;
 
     const handleUpload = (event) => {
       event.stopPropagation();
-      this.onUploadVideo(videoId);
+      this.onUploadVideo(activeLanguage, videoId);
     };
 
     const handleDelete = (event) => {
@@ -251,31 +353,38 @@ class EditorSectionRequests extends Component {
             {title}
           </VideoTitle>
           <CreatorId ratio={fsr}>
-            To: <Id>{toUser}</Id>
+            {to}: <Id>{toUser}</Id>
           </CreatorId>
           <StatusAndButtonsContainer>
             <RequestStatus ratio={fsr}>
-              Request Status: <Status>{requestStatus}</Status>
+              {requestStatus_}:{" "}
+              <Status>
+                {requestStatus === "approved"
+                  ? approved
+                  : requestStatus === "pending"
+                  ? pending
+                  : rejected}
+              </Status>
             </RequestStatus>
 
             <ButtonsContainer className="request-card-buttons-container">
               {requestStatus === "approved" &&
                 (responseDateTime ? (
                   videoUploadStatus === "not uploaded" && (
-                    <Button onClick={handleUpload}>Upload</Button>
+                    <Button onClick={handleUpload}>{upload}</Button>
                   )
                 ) : (
-                  <Button onClick={handleResendRequest}>Resend</Button>
+                  <Button onClick={handleResendRequest}>{resend}</Button>
                 ))}
 
               {videoUploadStatus === "uploaded" && (
                 <VideoUploadedText className="video-uploaded-text" ratio={fsr}>
-                  video uploaded
+                  {videoUploaded}
                 </VideoUploadedText>
               )}
               {videoUploadStatus === "not uploaded" &&
                 requestStatus !== "pending" && (
-                  <Button onClick={handleDelete}>Delete</Button>
+                  <Button onClick={handleDelete}>{delete_}</Button>
                 )}
             </ButtonsContainer>
           </StatusAndButtonsContainer>
@@ -285,7 +394,11 @@ class EditorSectionRequests extends Component {
           <span>{requestedTime}</span>
         </RequestedDateTime>
         <LargeScreenRequestStatus ratio={fsr}>
-          {requestStatus}
+          {requestStatus === "approved"
+            ? approved
+            : requestStatus === "pending"
+            ? pending
+            : rejected}
         </LargeScreenRequestStatus>
         {/* <ResponseDateTime>
           {responseDateTime ? responseDateTime : "-"}
@@ -302,12 +415,12 @@ class EditorSectionRequests extends Component {
           {requestStatus === "approved" ? (
             responseDateTime ? (
               videoUploadStatus === "not uploaded" ? (
-                <Button onClick={handleUpload}>Upload</Button>
+                <Button onClick={handleUpload}>{upload}</Button>
               ) : (
                 "-"
               )
             ) : (
-              <Button onClick={handleResendRequest}>Resend</Button>
+              <Button onClick={handleResendRequest}>{resend}</Button>
             )
           ) : (
             "-"
@@ -316,7 +429,7 @@ class EditorSectionRequests extends Component {
         <LargeScreenDeleteButtonContainer>
           {videoUploadStatus === "not uploaded" &&
           requestStatus !== "pending" ? (
-            <Button onClick={handleDelete}>Delete</Button>
+            <Button onClick={handleDelete}>{delete_}</Button>
           ) : (
             "-"
           )}
@@ -328,8 +441,24 @@ class EditorSectionRequests extends Component {
   renderLoading = () => {
     return (
       <LoadingSection>
-        <LoadingImage alt="loading img" src={loading} />
-        <LoadingText>Please Wait!, We are on your request...</LoadingText>
+        <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
+      </LoadingSection>
+    );
+  };
+
+  renderFetchingError = (renderFetchingErrorContent) => {
+    const { error500, retry } = renderFetchingErrorContent;
+
+    const retryFetching = () => {
+      this.getRequests();
+    };
+
+    return (
+      <LoadingSection>
+        <FetchingErrorImage alt="fetching error img" src={apology} />
+        <FetchingErrorMessage>{error500}</FetchingErrorMessage>
+
+        <Button onClick={retryFetching}>{retry}</Button>
       </LoadingSection>
     );
   };
@@ -342,39 +471,73 @@ class EditorSectionRequests extends Component {
     window.location.reload(); // Reload the page
   };
 
-  renderUploadResponse = () => {
+  renderUploadResponse = (renderUploadResponseContent) => {
     const {
       uploadResponse,
       uploadResponseMessage,
       uploadResponseImg,
     } = this.state;
+    const { inProgressMessage, goBack } = renderUploadResponseContent;
     return (
       <UploadResponseSection>
         <UploadResponseImage
           alt="loading img"
-          src={uploadResponse === "success" ? successful : uploadResponseImg}
+          src={
+            uploadResponse === "IN_PROGRESS"
+              ? loading
+              : uploadResponse === "SUCCESS"
+              ? successful
+              : uploadResponseImg
+          }
         />
-        <UploadResponseMessage>{uploadResponseMessage}</UploadResponseMessage>
-        <Button onClick={this.onResetUploadResponse}>Go Back</Button>
+        {uploadResponse === "IN_PROGRESS" ? (
+          <>
+            <UploadResponseMessage>{inProgressMessage}</UploadResponseMessage>
+          </>
+        ) : (
+          <>
+            <UploadResponseMessage>
+              {uploadResponseMessage}
+            </UploadResponseMessage>
+            <Button onClick={this.onResetUploadResponse}>{goBack}</Button>
+          </>
+        )}
       </UploadResponseSection>
     );
   };
 
-  renderEditorSection = (fsr, sUl) => {
+  renderEditorSection = (
+    renderRequestsSectionContent,
+    activeLanguage,
+    fsr,
+    sUl
+  ) => {
     const { requestsList } = this.state;
+    const {
+      sectionHeading,
+      video,
+      status,
+      upload,
+      delete_,
+      requestedOn,
+      respondedOn,
+      editorApologiesText,
+      makeARequest,
+      renderRequestContent,
+    } = renderRequestsSectionContent;
     return (
       <EditorSectionContainer>
         <EditorSectionHeading ratio={fsr}>
-          Requests you made
+          {sectionHeading}
         </EditorSectionHeading>
         {requestsList.length > 0 && (
           <RequestsTableHeader ratio={fsr}>
-            <TableElement video>Video</TableElement>
-            <TableElement requestedDateTime>requested on</TableElement>
-            <TableElement status>Status</TableElement>
-            <TableElement respondedDateTime>responded on</TableElement>
-            <TableElement upload>Upload </TableElement>
-            <TableElement delete>Delete </TableElement>
+            <TableElement video>{video}</TableElement>
+            <TableElement requestedDateTime>{requestedOn}</TableElement>
+            <TableElement status>{status}</TableElement>
+            <TableElement respondedDateTime>{respondedOn}</TableElement>
+            <TableElement upload>{upload} </TableElement>
+            <TableElement delete>{delete_} </TableElement>
           </RequestsTableHeader>
         )}
         {requestsList.length === 0 ? (
@@ -382,15 +545,22 @@ class EditorSectionRequests extends Component {
           <NoRequestsContainer>
             <NoRequestsImage alt="loading img" src={noRequests} />
             <ApologiesText className="loading-text" ratio={fsr}>
-              Sorry! you haven't made any requests
+              {editorApologiesText}
             </ApologiesText>
             <StyledLink to="/request_section" sUl={sUl}>
-              <Button>Make a Request</Button>
+              <Button>{makeARequest}</Button>
             </StyledLink>
           </NoRequestsContainer>
         ) : (
           <RequestsContainer>
-            {requestsList.map((eachItem) => this.renderRequest(eachItem, fsr))}
+            {requestsList.map((eachItem) =>
+              this.renderRequest(
+                activeLanguage,
+                renderRequestContent,
+                eachItem,
+                fsr
+              )
+            )}
           </RequestsContainer>
         )}
       </EditorSectionContainer>
@@ -398,14 +568,24 @@ class EditorSectionRequests extends Component {
   };
 
   render() {
-    const { loading, uploadResponse } = this.state;
+    const { loading, fetchingErrorStatus, uploadResponse } = this.state;
 
     return (
       <LanguageAndAccessibilityContext.Consumer>
         {(value) => {
-          const { fontSizeRatio, showInGray, showUnderLines: sUl } = value;
+          const {
+            activeLanguage,
+            fontSizeRatio,
+            showInGray,
+            showUnderLines: sUl,
+          } = value;
           const fsr = fontSizeRatio;
           console.log("editor section ratio: ", fontSizeRatio);
+          const {
+            renderRequestsSectionContent,
+            renderFetchingErrorContent,
+            renderUploadResponseContent,
+          } = this.getEditorSectionData(activeLanguage);
 
           return (
             <div className={`${showInGray && "show-in-gray"} bg-container`}>
@@ -413,9 +593,16 @@ class EditorSectionRequests extends Component {
               <div className="main-container">
                 {loading
                   ? this.renderLoading()
+                  : fetchingErrorStatus
+                  ? this.renderFetchingError(renderFetchingErrorContent)
                   : uploadResponse
-                  ? this.renderUploadResponse()
-                  : this.renderEditorSection(fsr, sUl)}
+                  ? this.renderUploadResponse(renderUploadResponseContent)
+                  : this.renderEditorSection(
+                      renderRequestsSectionContent,
+                      activeLanguage,
+                      fsr,
+                      sUl
+                    )}
               </div>
               <AccessibilitySection />
             </div>

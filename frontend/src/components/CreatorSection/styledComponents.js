@@ -79,6 +79,8 @@ export const TableElement = styled.li`
       props.approve || props.reject ? "center" : "flex-start"};
   }
 
+  padding-left: ${(props) => (props.video ? "12px" : "0px")};
+
   @media screen and (min-width: 1200px) {
     display: block;
 
@@ -272,23 +274,6 @@ export const Id = styled.span`
   padding-left: 4px;
 `;
 
-// export const StatusAndButtonsContainer = styled.div`
-//   display: flex;
-//   align-items: center;
-//   justify-content: space-between;
-
-//   margin-top: 4px;
-//   @media screen and (min-width: 576px) {
-//     flex-direction: column;
-//     justify-content: space-around;
-//     align-items: flex-start;
-//     row-gap: 20px;
-//   }
-//   @media screen and (min-width: 992px) {
-//     display: none;
-//   }
-// `;
-
 export const RequestStatus = styled.h2`
   font-size: ${(props) => {
     return props.ratio * 14;
@@ -394,11 +379,13 @@ export const LoadingSection = styled(CreatorSectionContainer)`
   align-items: center;
   justify-content: center;
 `;
-export const LoadingImage = styled.img`
-  width: min(50vw, 50vh);
-`;
 
-export const LoadingText = styled.p`
+//fetchingError section styling
+
+export const FetchingErrorImage = styled.img`
+  width: min(60vw, 60vh);
+`;
+export const FetchingErrorMessage = styled.p`
   font-size: 16px;
   font-weight: 500;
   text-align: center;

@@ -3,6 +3,8 @@ import LanguageAndAccessibilityContext from "../../context/languageAndAccessibil
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
 import loading from "../../images/loading.png";
+import { TailSpin } from "react-loader-spinner";
+import notFound from "../../images/notFound.png";
 import apology from "../../images/apology.png";
 import errorWhileUploading from "../../images/errorWhileUploading.jpg";
 import forbidden from "../../images/forbidden.jpg";
@@ -24,13 +26,16 @@ import {
   ElementValue,
   ButtonsContainer,
   LoadingSection,
-  LoadingImage,
-  LoadingText,
+  FetchingErrorImage,
+  FetchingErrorMessage,
   UploadResponseSection,
   UploadResponseImage,
   UploadResponseMessage,
   Button,
 } from "./styledComponents";
+import { requestDetailsContent } from "./languageContent";
+import { postRequestContent } from "../EditorSection/languageContent";
+import { youtubeCategories } from "../RequestSection/languageContent";
 
 class EditorRequestDetails extends Component {
   constructor(props) {
@@ -38,6 +43,7 @@ class EditorRequestDetails extends Component {
     this.state = {
       requestDetails: {},
       loading: true,
+      fetchingErrorStatus: "",
       uploadResponse: "",
       uploadResponseMessage: "",
       uploadResponseImg: "",
@@ -52,11 +58,78 @@ class EditorRequestDetails extends Component {
     this.getRequestDetails(videoId);
   }
 
+  getRequestDetailsSectionData = (activeLanguage) => {
+    switch (activeLanguage) {
+      case "AR":
+        return requestDetailsContent.AR;
+      case "BN":
+        return requestDetailsContent.BN;
+      case "ZH":
+        return requestDetailsContent.ZH;
+      case "EN":
+        return requestDetailsContent.EN;
+      case "FR":
+        return requestDetailsContent.FR;
+      case "HI":
+        return requestDetailsContent.HI;
+      case "PT":
+        return requestDetailsContent.PT;
+      case "RU":
+        return requestDetailsContent.RU;
+      case "ES":
+        return requestDetailsContent.ES;
+      case "TE":
+        return requestDetailsContent.TE;
+      case "UR":
+        return requestDetailsContent.UR;
+
+      default:
+        return null;
+    }
+  };
+
+  getPostRequestContent = (activeLanguage) => {
+    switch (activeLanguage) {
+      case "AR":
+        return postRequestContent.AR;
+      case "BN":
+        return postRequestContent.BN;
+      case "ZH":
+        return postRequestContent.ZH;
+      case "EN":
+        return postRequestContent.EN;
+      case "FR":
+        return postRequestContent.FR;
+      case "HI":
+        return postRequestContent.HI;
+      case "PT":
+        return postRequestContent.PT;
+      case "RU":
+        return postRequestContent.RU;
+      case "ES":
+        return postRequestContent.ES;
+      case "TE":
+        return postRequestContent.TE;
+      case "UR":
+        return postRequestContent.UR;
+
+      default:
+        return null;
+    }
+  };
+
   getRequestDetails = async (videoId) => {
+    this.setState({
+      loading: true,
+    });
     try {
       const response = await fetch(`/requests/${videoId}`);
       if (!response.ok) {
-        throw new Error(`Request failed with status: ${response.status}`);
+        this.setState({
+          loading: false,
+          fetchingErrorStatus: response.status,
+        });
+        return;
       }
       const eachItem = await response.json();
       console.log("fetched data: ", eachItem);
@@ -66,7 +139,7 @@ class EditorRequestDetails extends Component {
         title: eachItem.title,
         description: eachItem.description,
         thumbnailUrl: eachItem.thumbnail_url,
-        playLists: eachItem.playLists,
+        audience: eachItem.audience,
         visibility: eachItem.visibility,
         tags: eachItem.tags,
         categoryId: eachItem.category_id,
@@ -86,7 +159,7 @@ class EditorRequestDetails extends Component {
       });
     } catch (error) {
       console.error("Error fetching requests:", error);
-      this.setState({ loading: false });
+      this.setState({ loading: false, fetchingErrorStatus: 500 }); //just kept the errorStatus as 500 to show the fetchingError component
     }
   };
 
@@ -111,14 +184,24 @@ class EditorRequestDetails extends Component {
     }
   };
 
-  onUploadVideo = async () => {
+  onUploadVideo = async (activeLanguage) => {
+    const {
+      successMessage,
+      videoQuotaExceeded,
+      videoForbidden,
+      error500,
+      thumbnailQuotaExceeded,
+      thumbnailForbidden,
+      error409,
+    } = this.getPostRequestContent(activeLanguage);
+
     const { requestDetails } = this.state;
     const { videoId } = requestDetails;
     const requestBody = {
       videoId,
     };
     this.setState({
-      loading: true,
+      uploadResponse: "IN_PROGRESS",
     });
     try {
       const response = await fetch("/upload-video", {
@@ -129,43 +212,53 @@ class EditorRequestDetails extends Component {
         body: JSON.stringify(requestBody),
       });
 
-      this.setState({
-        loading: false,
-      });
-
       const responseData = await response.json();
       console.log("upload response data: ", responseData);
       if (response.ok) {
         this.setState({
-          loading: false,
-          uploadResponse: "success",
-          uploadResponseMessage: responseData.message,
+          uploadResponse: "SUCCESS",
+          uploadResponseMessage: successMessage,
         });
         console.log("Video uploaded successfully:", responseData);
         // window.location.reload(); // Reload the page
         // alert("Video uploaded successfully");
       } else {
         if (response.status === 403) {
-          if (responseData.reason === "quotaExceeded") {
+          if (responseData.reason === "video quotaExceeded") {
             this.setState({
-              loading: false,
-              uploadResponse: "failure",
-              uploadResponseMessage: responseData.message,
+              uploadResponse: "FAILURE",
+              uploadResponseMessage: videoQuotaExceeded,
               uploadResponseImg: apology,
+            });
+          } else if (responseData.reason === "thumbnail quotaExceeded") {
+            this.setState({
+              uploadResponse: "FAILURE",
+              uploadResponseMessage: thumbnailQuotaExceeded,
+              uploadResponseImg: apology,
+            });
+          } else if (responseData.reason === "video upload forbidden") {
+            this.setState({
+              uploadResponse: "FAILURE",
+              uploadResponseMessage: videoForbidden,
+              uploadResponseImg: forbidden,
             });
           } else {
             this.setState({
-              loading: false,
-              uploadResponse: "failure",
-              uploadResponseMessage: responseData.message,
+              uploadResponse: "FAILURE",
+              uploadResponseMessage: thumbnailForbidden,
               uploadResponseImg: forbidden,
             });
           }
+        } else if (response.status === 409) {
+          this.setState({
+            uploadResponse: "FAILURE",
+            uploadResponseMessage: error409,
+            uploadResponseImg: apology,
+          });
         } else {
           this.setState({
-            loading: false,
-            uploadResponse: "failure",
-            uploadResponseMessage: responseData.message,
+            uploadResponse: "FAILURE",
+            uploadResponseMessage: error500,
             uploadResponseImg: errorWhileUploading,
           });
         }
@@ -176,9 +269,8 @@ class EditorRequestDetails extends Component {
     } catch (error) {
       console.error("Error uploading video:", error);
       this.setState({
-        loading: false,
-        uploadResponse: "failure",
-        uploadResponseMessage: "Error while uploading video",
+        uploadResponse: "FAILURE",
+        uploadResponseMessage: error500,
         uploadResponseImg: errorWhileUploading,
       });
       //   alert("Error uploading video");
@@ -210,8 +302,32 @@ class EditorRequestDetails extends Component {
   renderLoading = () => {
     return (
       <LoadingSection>
-        <LoadingImage alt="loading img" src={loading} />
-        <LoadingText>Please Wait!, We are on your request...</LoadingText>
+        <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
+      </LoadingSection>
+    );
+  };
+
+  renderFetchingError = (renderFetchingErrorContent) => {
+    const { fetchingErrorStatus } = this.state;
+    const { notFoundError, otherError, retry } = renderFetchingErrorContent;
+
+    const retryFetching = () => {
+      const { videoId } = this.props.match.params;
+      this.getRequestDetails(videoId);
+    };
+
+    return (
+      <LoadingSection>
+        <FetchingErrorImage
+          alt="fetching error img"
+          src={fetchingErrorStatus === 404 ? notFound : apology}
+        />
+        <FetchingErrorMessage>
+          {fetchingErrorStatus === 404 ? notFoundError : otherError}
+        </FetchingErrorMessage>
+        {fetchingErrorStatus !== 404 && (
+          <Button onClick={retryFetching}>{retry}</Button>
+        )}
       </LoadingSection>
     );
   };
@@ -224,27 +340,73 @@ class EditorRequestDetails extends Component {
     window.location.reload(); // Reload the page
   };
 
-  renderUploadResponse = () => {
+  renderUploadResponse = (renderUploadResponseContent) => {
     const {
       uploadResponse,
       uploadResponseMessage,
       uploadResponseImg,
     } = this.state;
+    const { inProgressMessage, goBack } = renderUploadResponseContent;
 
     return (
       <UploadResponseSection>
         <UploadResponseImage
           alt="loading img"
-          src={uploadResponse === "success" ? successful : uploadResponseImg}
+          src={
+            uploadResponse === "IN_PROGRESS"
+              ? loading
+              : uploadResponse === "SUCCESS"
+              ? successful
+              : uploadResponseImg
+          }
         />
-        <UploadResponseMessage>{uploadResponseMessage}</UploadResponseMessage>
-        <Button onClick={this.onResetUploadResponse}>Go Back</Button>
+        {uploadResponse === "IN_PROGRESS" ? (
+          <>
+            <UploadResponseMessage>{inProgressMessage}</UploadResponseMessage>
+          </>
+        ) : (
+          <>
+            <UploadResponseMessage>
+              {uploadResponseMessage}
+            </UploadResponseMessage>
+            <Button onClick={this.onResetUploadResponse}>{goBack}</Button>
+          </>
+        )}
       </UploadResponseSection>
     );
   };
 
-  renderRequestDetailsSection = (fsr) => {
+  renderRequestDetailsSection = (
+    renderRequestDetailsContent,
+    activeLanguage,
+    fsr
+  ) => {
     const { requestDetails } = this.state;
+    const {
+      requestHeading,
+      video,
+      mediaItemText,
+      thumbnail,
+      title_,
+      description_,
+      audience_,
+      kids,
+      adults,
+      visibility_,
+      category,
+      creator,
+      requestedOn,
+      requestStatus_,
+      uploaded,
+      pending,
+      respondedOn,
+      uploadStatus,
+      upload,
+      deleteRequest,
+      resendRequest,
+      approved,
+      rejected,
+    } = renderRequestDetailsContent;
     const {
       videoUrl,
       requestStatus,
@@ -261,73 +423,90 @@ class EditorRequestDetails extends Component {
       videoUploadStatus,
     } = requestDetails;
 
+    const categoryName = youtubeCategories.filter(
+      (eachItem) => eachItem.id === categoryId
+    )[0].category;
+
     return (
       <>
         <EditorRequestDetailsSection>
-          <RequestHeading ratio={fsr}>Request Details</RequestHeading>
+          <RequestHeading ratio={fsr}>{requestHeading}</RequestHeading>
           <MediaContainer>
             <MediaCard>
-              <RequestDetailsHeading ratio={fsr}>Video: </RequestDetailsHeading>
+              <RequestDetailsHeading ratio={fsr}>
+                {video}:{" "}
+              </RequestDetailsHeading>
               <MediaItem controls poster={thumbnailUrl} preload="auto">
                 <source src={videoUrl} type="video/mp4" />
-                Your browser does not support the video tag.
+                {mediaItemText}
               </MediaItem>
             </MediaCard>
             <MediaCard>
               <RequestDetailsHeading ratio={fsr}>
-                Thumbnail:
+                {thumbnail}:
               </RequestDetailsHeading>
               <MediaItem alt="thumbnail" as="img" src={thumbnailUrl} />
             </MediaCard>
           </MediaContainer>
 
           <TextContainer>
-            <VideoTitleHeading ratio={fsr}>Title</VideoTitleHeading>
+            <VideoTitleHeading ratio={fsr}>{title_}</VideoTitleHeading>
             <VideoTitle ratio={fsr}>{title}</VideoTitle>
           </TextContainer>
           <TextContainer>
             <VideoDescriptionHeading ratio={fsr}>
-              Description
+              {description_}
             </VideoDescriptionHeading>
             <VideoDescription ratio={fsr}>{description}</VideoDescription>
           </TextContainer>
           <ElementsContainer>
             <Element ratio={fsr}>
-              Audience:
+              {audience_}:
               <ElementValue ratio={fsr}>
-                {audience === "yes" ? "kids" : "adults"}
+                {audience === "yes" ? kids : adults}
               </ElementValue>
             </Element>
             <Element ratio={fsr}>
-              Visibility:
+              {visibility_}:
               <ElementValue ratio={fsr}>{privacyStatus}</ElementValue>
             </Element>
             <Element ratio={fsr}>
-              Category:<ElementValue ratio={fsr}>{categoryId}</ElementValue>
+              {category}:<ElementValue ratio={fsr}>{categoryName}</ElementValue>
             </Element>
 
             <Element ratio={fsr}>
-              Creator Id:<ElementValue ratio={fsr}>{toUser}</ElementValue>
+              {creator}:<ElementValue ratio={fsr}>{toUser}</ElementValue>
             </Element>
             <Element ratio={fsr}>
-              Requested on:
+              {requestedOn}:
               <ElementValue ratio={fsr}>{requestedDateTime}</ElementValue>
             </Element>
 
             <Element ratio={fsr}>
-              Request Status:{" "}
-              <ElementValue ratio={fsr}>{requestStatus}</ElementValue>{" "}
+              {requestStatus_}:{" "}
+              <ElementValue ratio={fsr}>
+                {requestStatus === "approved"
+                  ? approved
+                  : requestStatus === "pending"
+                  ? pending
+                  : rejected}
+              </ElementValue>{" "}
             </Element>
             <Element ratio={fsr}>
-              Responded on:
+              {respondedOn}:
               <ElementValue ratio={fsr}>
-                {responseDateTime ? responseDateTime : "NA"}
+                {responseDateTime
+                  ? `${responseDateTime.slice(0, 10)} ${responseDateTime.slice(
+                      11,
+                      19
+                    )}`
+                  : "NA"}
               </ElementValue>
             </Element>
             <Element ratio={fsr}>
-              Upload Status:
+              {uploadStatus}:
               <ElementValue ratio={fsr}>
-                {videoUploadStatus === "uploaded" ? "uploaded" : "pending"}
+                {videoUploadStatus === "uploaded" ? uploaded : pending}
               </ElementValue>
             </Element>
           </ElementsContainer>
@@ -341,20 +520,23 @@ class EditorRequestDetails extends Component {
             {requestStatus === "approved" &&
               (responseDateTime ? (
                 videoUploadStatus === "not uploaded" && (
-                  <Button onClick={this.onUploadVideo} upload>
-                    Upload
+                  <Button
+                    onClick={() => this.onUploadVideo(activeLanguage)}
+                    upload
+                  >
+                    {upload}
                   </Button>
                 )
               ) : (
                 <Button onClick={this.resendRequest} resend>
-                  Resend Request
+                  {resendRequest}
                 </Button>
               ))}
 
             {videoUploadStatus === "not uploaded" &&
               requestStatus !== "pending" && (
                 <Button onClick={this.onDeleteRequest} ratio={fsr} delete>
-                  Delete request
+                  {deleteRequest}
                 </Button>
               )}
           </ButtonsContainer>
@@ -364,14 +546,19 @@ class EditorRequestDetails extends Component {
   };
 
   render() {
-    const { loading, uploadResponse } = this.state;
+    const { loading, fetchingErrorStatus, uploadResponse } = this.state;
 
     return (
       <LanguageAndAccessibilityContext.Consumer>
         {(value) => {
-          const { fontSizeRatio, showInGray } = value;
+          const { activeLanguage, fontSizeRatio, showInGray } = value;
           const fsr = fontSizeRatio;
           console.log("editor request details ratio:", fontSizeRatio);
+          const {
+            renderRequestDetailsContent,
+            renderFetchingErrorContent,
+            renderUploadResponseContent,
+          } = this.getRequestDetailsSectionData(activeLanguage);
 
           return (
             <div className={`${showInGray && "show-in-gray"} bg-container`}>
@@ -379,9 +566,15 @@ class EditorRequestDetails extends Component {
               <div className="main-container">
                 {loading
                   ? this.renderLoading()
+                  : fetchingErrorStatus
+                  ? this.renderFetchingError(renderFetchingErrorContent)
                   : uploadResponse
-                  ? this.renderUploadResponse()
-                  : this.renderRequestDetailsSection(fsr)}
+                  ? this.renderUploadResponse(renderUploadResponseContent)
+                  : this.renderRequestDetailsSection(
+                      renderRequestDetailsContent,
+                      activeLanguage,
+                      fsr
+                    )}
               </div>
               <AccessibilitySection />
             </div>

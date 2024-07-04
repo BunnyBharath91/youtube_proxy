@@ -72,23 +72,23 @@ export const RequestDetailsHeading = styled.h2`
   padding-left: 4px;
   @media screen and (min-width: 576px) {
     font-size: ${(props) => {
-    return props.ratio * 15;
-  }}px;
+      return props.ratio * 15;
+    }}px;
     line-height: 24px;
   }
 
   @media screen and (min-width: 768px) {
     width: 45%;
     font-size: ${(props) => {
-    return props.ratio * 16;
-  }}px;
+      return props.ratio * 16;
+    }}px;
     line-height: 28px;
     padding-left: 6px;
   }
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
-    return props.ratio * 18;
-  }}px;
+      return props.ratio * 18;
+    }}px;
     line-height: 32px;
   }
 `;
@@ -120,7 +120,7 @@ export const TextContainer = styled.div`
 `;
 export const VideoTitleHeading = styled.h2`
   margin-bottom: 5px;
-   font-size: ${(props) => {
+  font-size: ${(props) => {
     return props.ratio * 12;
   }}px;
   font-weight: 600;
@@ -128,18 +128,18 @@ export const VideoTitleHeading = styled.h2`
   color: rgb(71, 85, 105);
   @media screen and (min-width: 576px) {
     font-size: ${(props) => {
-    return props.ratio * 13;
-  }}px;
+      return props.ratio * 13;
+    }}px;
   }
   @media screen and (min-width: 768px) {
     font-size: ${(props) => {
-    return props.ratio * 14;
-  }}px;
+      return props.ratio * 14;
+    }}px;
   }
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
-    return props.ratio * 15;
-  }}px;
+      return props.ratio * 15;
+    }}px;
   }
 `;
 export const VideoTitle = styled.p`
@@ -153,13 +153,13 @@ export const VideoTitle = styled.p`
 
   @media screen and (min-width: 768px) {
     font-size: ${(props) => {
-    return props.ratio * 15;
-  }}px;
+      return props.ratio * 15;
+    }}px;
   }
   @media screen and (min-width: 992px) {
-     font-size: ${(props) => {
-    return props.ratio * 17;
-  }}px;
+    font-size: ${(props) => {
+      return props.ratio * 17;
+    }}px;
   }
 `;
 
@@ -184,22 +184,22 @@ export const Element = styled.h2`
   line-height: 22px;
   @media screen and (min-width: 576px) {
     font-size: ${(props) => {
-    return props.ratio * 15;
-  }}px;
+      return props.ratio * 15;
+    }}px;
     line-height: 24px;
   }
 
   @media screen and (min-width: 768px) {
     width: 45%;
     font-size: ${(props) => {
-    return props.ratio * 16;
-  }}px;
+      return props.ratio * 16;
+    }}px;
     line-height: 28px;
   }
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
-    return props.ratio * 18;
-  }}px;
+      return props.ratio * 18;
+    }}px;
     line-height: 32px;
   }
 `;
@@ -211,13 +211,13 @@ export const ElementValue = styled.span`
   @media screen and (min-width: 768px) {
     width: 45%;
     font-size: ${(props) => {
-    return props.ratio * 14;
-  }}px;
+      return props.ratio * 14;
+    }}px;
   }
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
-    return props.ratio * 16;
-  }}px;
+      return props.ratio * 16;
+    }}px;
   }
 `;
 export const ButtonsContainer = styled.div`
@@ -253,6 +253,28 @@ export const LoadingText = styled.p`
   }
 `;
 
+//fetchingError section styling
+
+export const FetchingErrorImage = styled.img`
+  width: min(60vw, 60vh);
+`;
+export const FetchingErrorMessage = styled.p`
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 12px;
+
+  @media screen and (min-width: 576px) {
+    font-size: 20px;
+  }
+  @media screen and (min-width: 768px) {
+    font-size: 24px;
+  }
+  @media screen and (min-width: 992px) {
+    font-size: 32px;
+  }
+`;
+
 //Render upload Response
 export const UploadResponseSection = styled(EditorRequestDetailsSection)`
   align-items: center;
@@ -262,12 +284,12 @@ export const UploadResponseImage = styled(LoadingImage)``;
 export const UploadResponseMessage = styled(LoadingText)``;
 
 export const Button = styled.button`
-  align-self:${props=>{
-      if(props.upload || props.delete || props.resend){
-          return 'flex-start'
-      }
+  align-self: ${(props) => {
+    if (props.upload || props.delete || props.resend) {
+      return "flex-start";
+    }
   }};
-  
+
   font-size: 14px;
   font-weight: 500;
   border: 1px solid gray;

@@ -13,9 +13,16 @@ import "./App.css";
 
 class App extends Component {
   state = {
+    activeLanguage: "EN",
     fontSizeRatio: 1,
     showInGray: false,
     showUnderLines: false,
+  };
+
+  changeLanguage = (newLanguage) => {
+    this.setState({
+      activeLanguage: newLanguage,
+    });
   };
 
   increaseRatio = () => {
@@ -61,12 +68,19 @@ class App extends Component {
   };
 
   render() {
-    const { fontSizeRatio, showInGray, showUnderLines } = this.state;
+    const {
+      activeLanguage,
+      fontSizeRatio,
+      showInGray,
+      showUnderLines,
+    } = this.state;
     console.log("app.js file fontRatio: ", fontSizeRatio);
     return (
       <BrowserRouter>
         <LanguageAndAccessibilityContext.Provider
           value={{
+            activeLanguage,
+            changeLanguage: this.changeLanguage,
             fontSizeRatio,
             increaseRatio: this.increaseRatio,
             decreaseRatio: this.decreaseRatio,

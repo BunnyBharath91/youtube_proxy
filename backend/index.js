@@ -88,14 +88,21 @@ passport.use(
       `;
       const userResponse = await db.get(userCheckQuery);
       if (!userResponse) {
-        const userName = `${profile.name.givenName}${uuidv4()}`;
-        const userPassword = `${uuidv4()}`;
-        const addUserQuery = `INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)`;
+        const maxIdQuery = `
+          SELECT max(id) as maximum_id from users;
+          `;
+        const maxIdResponse = await db.get(maxIdQuery);
+        const userName = `${profile.name.givenName}${
+          maxIdResponse.maximum_id + 1
+        }`;
+        const userInvitationCode = userName;
+
+        const addUserQuery = `INSERT INTO users (username, email, invitation_code, refresh_token) VALUES (?, ?, ?, ?)`;
         profile.userName = userName;
         await db.run(addUserQuery, [
           userName,
           email,
-          userPassword,
+          userInvitationCode,
           refreshToken,
         ]);
       } else {
@@ -205,6 +212,29 @@ const initializeDBAndServer = async () => {
       driver: sqlite3.Database,
     });
 
+    const createTablesQuery = `
+    CREATE TABLE IF NOT EXISTS videos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    video_url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    thumbnail_url TEXT,
+    audience TEXT,
+    tags TEXT,
+    category_id INTEGER,
+    privacy_status TEXT NOT NULL,
+    from_user TEXT,
+    to_user TEXT,
+    requested_date_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    response_date_time DATETIME,
+    video_access_token TEXT,
+    request_status TEXT,
+    video_upload_status TEXT DEFAULT 'not uploaded',
+    video_refresh_token TEXT,
+    FOREIGN KEY (from_user) REFERENCES users(id),
+    FOREIGN KEY (to_user) REFERENCES users(id);
+    `;
+
     app.listen(5000, () => {
       console.log("server is running on http://localhost:5000");
     });
@@ -251,10 +281,19 @@ app.post(
       title,
       description,
       privacy_status: privacyStatus,
-      creator_id: creatorId,
+      creator_invitation_code: creatorInvitationCode,
       audience,
       category_id: categoryId,
     } = request.body;
+
+    const creatorUserNameQuery = `
+    SELECT username from USERS where invitation_code=?;
+    `;
+    const creatorUserNameResponse = await db.get(creatorUserNameQuery, [
+      creatorInvitationCode,
+    ]);
+    console.log("creator user name Response: ", creatorUserNameResponse);
+    const creatorUserName = creatorUserNameResponse.username;
 
     // Example: Upload thumbnail to cloudinary
     const thumbnailPath = request.files["thumbnail"][0].path;
@@ -285,16 +324,14 @@ app.post(
         categoryId,
         privacyStatus,
         request.user.userName,
-        creatorId,
+        creatorUserName,
       ]);
 
       console.log("Inserted video details:", addingResponse.lastID);
-      return response
-        .status(200)
-        .json({ message: "Request made successfully" });
+      return response.status(200).send({ message: "Upload successful" });
     } catch (error) {
       console.error("Error inserting video details:", error);
-      response.status(500).send("Error inserting video details");
+      return response.status(500).send({ message: "Upload failed" });
     }
   }
 );
@@ -482,6 +519,9 @@ app.get(
     `;
       const dbResponse = await db.get(getRequestDetailsQuery, [videoId]);
       console.log(dbResponse);
+      if (dbResponse === undefined) {
+        return response.status(404).send({ message: "details not found" });
+      }
 
       // Send the retrieved requests as the response
       return response.status(200).json(dbResponse);
@@ -647,10 +687,7 @@ app.post("/upload-video", async (req, res) => {
 
   console.log("video id is :", videoId);
 
-  const getVideoDetails = `
-  select * from videos where id=?;
-  `;
-
+  const getVideoDetails = `select * from videos where id=?;`;
   const getVideoDetailsResponse = await db.get(getVideoDetails, [videoId]);
 
   const {
@@ -658,13 +695,11 @@ app.post("/upload-video", async (req, res) => {
     title,
     description,
     thumbnail_url,
-    audience,
-    visibility,
     category_id,
     privacy_status,
-    video_access_token,
     video_refresh_token,
   } = getVideoDetailsResponse;
+
   console.log("title,description:", title, description);
   console.log(
     "this is the refreshToken while uploading video: ",
@@ -672,11 +707,28 @@ app.post("/upload-video", async (req, res) => {
   );
 
   const newAccessToken = await getNewAccessToken(video_refresh_token);
+  let isVideoUploaded = false;
+
+  const cleanupFiles = (videoFileName, thumbnailFileName) => {
+    if (videoFileName) {
+      fs.unlink(`./videos/${videoFileName}`, (unlinkError) => {
+        if (unlinkError) {
+          console.error("Error deleting video file:", unlinkError);
+        }
+      });
+    }
+    if (thumbnailFileName) {
+      fs.unlink(`./videos/${thumbnailFileName}`, (unlinkError) => {
+        if (unlinkError) {
+          console.error("Error deleting thumbnail file:", unlinkError);
+        }
+      });
+    }
+  };
 
   try {
-    // Download video to local storage
+    // Download video and thumbnail to local storage
     const videoFileName = await downloadFromUrl(video_url, videoId, "mp4");
-    // Download thumbnail to local storage
     const thumbnailFileName = await downloadFromUrl(
       thumbnail_url,
       videoId,
@@ -704,7 +756,7 @@ app.post("/upload-video", async (req, res) => {
       fs.createReadStream(`./videos/${videoFileName}`),
       {
         filename: path.basename(videoFileName),
-        contentType: "video/mp4", // MIME type of the video file
+        contentType: "video/mp4",
       }
     );
 
@@ -722,50 +774,37 @@ app.post("/upload-video", async (req, res) => {
 
     if (!videoResponse.ok) {
       const errorBody = await videoResponse.text();
-      const errorObj = JSON.parse(errorBody); //parsing it to obj
+      const errorObj = JSON.parse(errorBody);
       console.error("Error uploading video:", errorObj);
-      // Clean up the downloaded video file
-      fs.unlink(`./videos/${videoFileName}`, (unlinkError) => {
-        if (unlinkError) {
-          console.error("Error deleting video file:", unlinkError);
-        }
-      });
-      // Clean up the downloaded thumbnail file
-      fs.unlink(`./videos/${thumbnailFileName}`, (unlinkError) => {
-        if (unlinkError) {
-          console.error("Error deleting thumbnail file:", unlinkError);
-        }
-      });
+      cleanupFiles(videoFileName, thumbnailFileName);
+
       if (errorObj.error.code === 403) {
         if (errorObj.error.errors[0].reason === "quotaExceeded") {
           return res.status(403).json({
-            reason: "quotaExceeded",
+            reason: "video quotaExceeded",
             message:
               "Apologies! Our application has reached its quota for today. Please consider trying the upload again tomorrow. Thank you for your understanding!",
           });
         }
-        return res.status(403).json({ message: errorObj.error.message });
+        return res.status(403).json({
+          reason: "video upload forbidden",
+          message: "The user does not have permission to upload video",
+        });
       }
-      return res.status(500).json({ message: "Failed to upload thumbnail" });
+      return res.status(500).json({ message: "Failed to upload video" });
     }
 
     const videoResponseBody = await videoResponse.json();
     const youtubeVideoId = videoResponseBody.id;
     console.log("Response from YouTube:", videoResponseBody);
+    isVideoUploaded = true;
 
-    //updating the video upload status in db
-    const updateVideoUploadStatusQuery = `
-    UPDATE videos SET video_upload_status='uploaded' WHERE id=?;
-    `;
-    const dbResponse = await db.run(updateVideoUploadStatusQuery, [videoId]);
-    console.log("video update Status: ", dbResponse);
+    // Update the video upload status in the database
+    const updateVideoUploadStatusQuery = `UPDATE videos SET video_upload_status='uploaded' WHERE id=?;`;
+    await db.run(updateVideoUploadStatusQuery, [videoId]);
 
-    // Clean up the downloaded video and thumbnail files
-    fs.unlink(`./videos/${videoFileName}`, (unlinkError) => {
-      if (unlinkError) {
-        console.error("Error deleting video file:", unlinkError);
-      }
-    });
+    // Clean up the downloaded video file
+    cleanupFiles(videoFileName, null);
 
     // Upload thumbnail
     const thumbnailForm = new FormData();
@@ -774,7 +813,7 @@ app.post("/upload-video", async (req, res) => {
       fs.createReadStream(`./videos/${thumbnailFileName}`),
       {
         filename: path.basename(thumbnailFileName),
-        contentType: "image/jpeg", // MIME type of the thumbnail file
+        contentType: "image/jpeg",
       }
     );
 
@@ -791,42 +830,47 @@ app.post("/upload-video", async (req, res) => {
 
     if (!thumbnailResponse.ok) {
       const errorBody = await thumbnailResponse.text();
-      const errorObj = JSON.parse(errorBody); //parsing it to obj
+      const errorObj = JSON.parse(errorBody);
       console.error("Error uploading thumbnail:", errorObj);
-      // Clean up the downloaded thumbnail file
-      fs.unlink(`./videos/${thumbnailFileName}`, (unlinkError) => {
-        if (unlinkError) {
-          console.error("Error deleting thumbnail file:", unlinkError);
-        }
-      });
+      cleanupFiles(null, thumbnailFileName);
+
       if (errorObj.error.code === 403) {
         if (errorObj.error.errors[0].reason === "quotaExceeded") {
           return res.status(403).json({
-            reason: "quotaExceeded",
+            reason: "thumbnail quotaExceeded",
             message:
-              "Apologies! Our application has reached its quota for today. Please consider trying the upload again tomorrow. Thank you for your understanding!",
+              "Apologies! Our application has reached its quota for today. For that reason, we couldn't upload the thumbnail. Thank you for your understanding!",
           });
         }
-        return res.status(403).json({ message: errorObj.error.message });
+        return res.status(403).json({
+          reason: "thumbnail upload forbidden",
+          message: "The user does not have permission to upload thumbnails.",
+        });
+      } else {
+        return res.status(409).json({
+          message:
+            "Video uploaded successfully. But, error while uploading thumbnail.",
+        });
       }
-      return res.status(500).json({ message: "Failed to upload thumbnail" });
     }
 
-    const thumbnailResponseBody = await thumbnailResponse.json();
-    console.log("Thumbnail uploaded successfully:", thumbnailResponseBody);
+    console.log(
+      "Thumbnail uploaded successfully:",
+      await thumbnailResponse.json()
+    );
+    cleanupFiles(null, thumbnailFileName);
 
-    // Clean up the downloaded thumbnail file
-    fs.unlink(`./videos/${thumbnailFileName}`, (unlinkError) => {
-      if (unlinkError) {
-        console.error("Error deleting thumbnail file:", unlinkError);
-      }
-    });
-
-    res.json({
-      message: "video uploaded successfully",
-    });
+    res.json({ message: "Video and thumbnail uploaded successfully." });
   } catch (error) {
     console.error("Error uploading video:", error);
-    res.status(500).json({ message: "Failed to upload video" });
+    if (isVideoUploaded) {
+      cleanupFiles(null, thumbnailFileName);
+      return res
+        .status(409)
+        .json({ message: "Video uploaded, but thumbnail upload failed." });
+    }
+
+    cleanupFiles(videoFileName, thumbnailFileName);
+    res.status(500).json({ message: "Failed to upload video." });
   }
 });

@@ -276,12 +276,15 @@ export const Err = styled.span`
 export const LoadingSection = styled(CreatorRequestDetailsSection)`
   align-items: center;
   justify-content: center;
-`;
-export const LoadingImage = styled.img`
-  width: min(50vw, 50vh);
+  background-color: #f9fafc;
 `;
 
-export const LoadingText = styled.p`
+//fetchingError section styling
+
+export const FetchingErrorImage = styled.img`
+  width: min(60vw, 60vh);
+`;
+export const FetchingErrorMessage = styled.p`
   font-size: 16px;
   font-weight: 500;
   text-align: center;

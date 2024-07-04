@@ -2,7 +2,9 @@ import { Component } from "react";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
-import loading from "../../images/loading.png";
+import { TailSpin } from "react-loader-spinner";
+import notFound from "../../images/notFound.png";
+import apology from "../../images/apology.png";
 import {
   CreatorRequestDetailsSection,
   RequestHeading,
@@ -23,16 +25,19 @@ import {
   ErrorMessage,
   Err,
   LoadingSection,
-  LoadingImage,
-  LoadingText,
+  FetchingErrorImage,
+  FetchingErrorMessage,
 } from "./styledComponents";
+import { requestDetailsContent } from "../EditorRequestDetails/languageContent";
+import { youtubeCategories } from "../RequestSection/languageContent";
 
 class CreatorRequestDetails extends Component {
   constructor(props) {
     super(props);
     this.state = {
       requestDetails: {},
-      isLoading: true,
+      loading: true,
+      fetchingErrorStatus: "",
       errorMessage: "",
     };
   }
@@ -45,21 +50,60 @@ class CreatorRequestDetails extends Component {
     this.getRequestDetails(videoId);
   }
 
+  getRequestDetailsSectionData = (activeLanguage) => {
+    switch (activeLanguage) {
+      case "AR":
+        return requestDetailsContent.AR;
+      case "BN":
+        return requestDetailsContent.BN;
+      case "ZH":
+        return requestDetailsContent.ZH;
+      case "EN":
+        return requestDetailsContent.EN;
+      case "FR":
+        return requestDetailsContent.FR;
+      case "HI":
+        return requestDetailsContent.HI;
+      case "PT":
+        return requestDetailsContent.PT;
+      case "RU":
+        return requestDetailsContent.RU;
+      case "ES":
+        return requestDetailsContent.ES;
+      case "TE":
+        return requestDetailsContent.TE;
+      case "UR":
+        return requestDetailsContent.UR;
+
+      default:
+        return null;
+    }
+  };
+
   getRequestDetails = async (videoId) => {
+    this.setState({
+      loading: true,
+    });
     try {
       const response = await fetch(`/requests/${videoId}`);
+
       if (!response.ok) {
-        throw new Error(`Request failed with status: ${response.status}`);
+        this.setState({
+          loading: false,
+          fetchingErrorStatus: response.status,
+        });
+        return;
       }
       const eachItem = await response.json();
       console.log("fetched data: ", eachItem);
       const updatedData = {
         videoId: eachItem.id,
         videoUrl: eachItem.video_url,
+        thumbnailUrl: eachItem.thumbnail_url,
         title: eachItem.title,
         description: eachItem.description,
-        thumbnailUrl: eachItem.thumbnail_url,
-        playLists: eachItem.playLists,
+
+        audience: eachItem.audience,
         visibility: eachItem.visibility,
         tags: eachItem.tags,
         categoryId: eachItem.category_id,
@@ -73,12 +117,12 @@ class CreatorRequestDetails extends Component {
         videoUploadStatus: eachItem.video_upload_status,
       };
       this.setState({
-        isLoading: false,
+        loading: false,
         requestDetails: updatedData,
       });
     } catch (error) {
       console.error("Error fetching requests:", error);
-      this.setState({ loading: false });
+      this.setState({ loading: false, fetchingErrorStatus: 500 }); //just kept the errorStatus as 500 to show the fetchingError component
     }
   };
 
@@ -135,14 +179,63 @@ class CreatorRequestDetails extends Component {
   renderLoading = () => {
     return (
       <LoadingSection>
-        <LoadingImage alt="loading img" src={loading} />
-        <LoadingText>Please Wait!, We are on your request...</LoadingText>
+        <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
       </LoadingSection>
     );
   };
 
-  renderRequestDetailsSection = (fsr) => {
+  renderFetchingError = (renderFetchingErrorContent) => {
+    const { fetchingErrorStatus } = this.state;
+    const { notFoundError, otherError, retry } = renderFetchingErrorContent;
+
+    const retryFetching = () => {
+      const { videoId } = this.props.match.params;
+      this.getRequestDetails(videoId);
+    };
+
+    return (
+      <LoadingSection>
+        <FetchingErrorImage
+          alt="fetching error img"
+          src={fetchingErrorStatus === 404 ? notFound : apology}
+        />
+        <FetchingErrorMessage>
+          {fetchingErrorStatus === 404 ? notFoundError : otherError}
+        </FetchingErrorMessage>
+        {fetchingErrorStatus !== 404 && (
+          <Button onClick={retryFetching}>{retry}</Button>
+        )}
+      </LoadingSection>
+    );
+  };
+
+  renderRequestDetailsSection = (renderRequestDetailsContent, fsr) => {
     const { requestDetails, errorMessage } = this.state;
+    const {
+      requestHeading,
+      video,
+      mediaItemText,
+      thumbnail,
+      title_,
+      description_,
+      audience_,
+      kids,
+      adults,
+      visibility_,
+      category,
+      editor,
+      requestedOn,
+      requestStatus_,
+      uploaded,
+      pending,
+      respondedOn,
+      uploadStatus,
+      approve,
+      reject,
+      approved,
+      rejected,
+    } = renderRequestDetailsContent;
+
     const {
       videoUrl,
       requestStatus,
@@ -151,78 +244,96 @@ class CreatorRequestDetails extends Component {
       thumbnailUrl,
       description,
       audience,
-      visibility,
+
       categoryId,
       privacyStatus,
       requestedDateTime,
       responseDateTime,
       videoUploadStatus,
     } = requestDetails;
+
+    const categoryName = youtubeCategories.filter(
+      (eachItem) => eachItem.id === categoryId
+    )[0].category;
+
     return (
       <CreatorRequestDetailsSection>
-        <RequestHeading ratio={fsr}>Request Details</RequestHeading>
+        <RequestHeading ratio={fsr}>{requestHeading}</RequestHeading>
         <MediaContainer>
           <MediaCard>
-            <RequestDetailsHeading ratio={fsr}>Video: </RequestDetailsHeading>
+            <RequestDetailsHeading ratio={fsr}>{video}: </RequestDetailsHeading>
             <MediaItem controls poster={thumbnailUrl} preload="auto">
               <source src={videoUrl} type="video/mp4" />
-              Your browser does not support the video tag.
+              {mediaItemText}
             </MediaItem>
           </MediaCard>
           <MediaCard>
             <RequestDetailsHeading ratio={fsr}>
-              Thumbnail:
+              {thumbnail}:
             </RequestDetailsHeading>
             <MediaItem alt="thumbnail" as="img" src={thumbnailUrl} />
           </MediaCard>
         </MediaContainer>
 
         <TextContainer>
-          <VideoTitleHeading ratio={fsr}>Title</VideoTitleHeading>
+          <VideoTitleHeading ratio={fsr}>{title_}</VideoTitleHeading>
           <VideoTitle ratio={fsr}>{title}</VideoTitle>
         </TextContainer>
         <TextContainer>
           <VideoDescriptionHeading ratio={fsr}>
-            Description
+            {description_}
           </VideoDescriptionHeading>
           <VideoDescription ratio={fsr}>{description}</VideoDescription>
         </TextContainer>
         <ElementsContainer>
           <Element ratio={fsr}>
-            Audience:
+            {audience_}:
             <ElementValue ratio={fsr}>
-              {audience === "yes" ? "kids" : "adults"}
+              {audience === "yes" ? kids : adults}
             </ElementValue>
           </Element>
           <Element ratio={fsr}>
-            Visibility:<ElementValue ratio={fsr}>{privacyStatus}</ElementValue>
+            {visibility_}:
+            <ElementValue ratio={fsr}>{privacyStatus}</ElementValue>
           </Element>
           <Element ratio={fsr}>
-            Category:<ElementValue ratio={fsr}>{categoryId}</ElementValue>
+            {category}:<ElementValue ratio={fsr}>{categoryName}</ElementValue>
           </Element>
 
           <Element ratio={fsr}>
-            Editor Id: <ElementValue ratio={fsr}>{fromUser}</ElementValue>
+            {editor}: <ElementValue ratio={fsr}>{fromUser}</ElementValue>
           </Element>
           <Element ratio={fsr}>
-            Requested on:
+            {requestedOn}:
             <ElementValue ratio={fsr}>{requestedDateTime}</ElementValue>
           </Element>
 
           <Element ratio={fsr}>
-            Request Status:{" "}
-            <ElementValue ratio={fsr}>{requestStatus}</ElementValue>{" "}
-          </Element>
-          <Element ratio={fsr}>
-            Responded on:
+            {requestStatus_}:{" "}
             <ElementValue ratio={fsr}>
-              {responseDateTime ? responseDateTime : "NA"}
+              {" "}
+              {requestStatus === "approved"
+                ? approved
+                : requestStatus === "pending"
+                ? pending
+                : rejected}
             </ElementValue>
           </Element>
           <Element ratio={fsr}>
-            Upload Status:
+            {respondedOn}:
             <ElementValue ratio={fsr}>
-              {videoUploadStatus === "uploaded" ? "uploaded" : "pending"}
+              {responseDateTime
+                ? `${responseDateTime.slice(0, 10)} ${responseDateTime.slice(
+                    11,
+                    19
+                  )}`
+                : "NA"}
+            </ElementValue>
+          </Element>
+          <Element ratio={fsr}>
+            {uploadStatus}:
+            <ElementValue ratio={fsr}>
+              {videoUploadStatus === "uploaded" ? uploaded : pending}
             </ElementValue>
           </Element>
         </ElementsContainer>
@@ -230,10 +341,10 @@ class CreatorRequestDetails extends Component {
         {requestStatus === "pending" && (
           <ButtonsContainer>
             <Button onClick={this.onApprove} ratio={fsr}>
-              Approve
+              {approve}
             </Button>
             <Button onClick={this.onReject} ratio={fsr}>
-              Reject
+              {reject}
             </Button>
           </ButtonsContainer>
         )}
@@ -248,21 +359,29 @@ class CreatorRequestDetails extends Component {
   };
 
   render() {
-    const { isLoading } = this.state;
+    const { loading, fetchingErrorStatus } = this.state;
 
     return (
       <LanguageAndAccessibilityContext.Consumer>
         {(value) => {
-          const { fontSizeRatio, showInGray } = value;
-          const fsr = fontSizeRatio;
-          console.log("creator request details ratio:", fontSizeRatio);
+          const { activeLanguage, fontSizeRatio: fsr, showInGray } = value;
+          const {
+            renderRequestDetailsContent,
+            renderFetchingErrorContent,
+          } = this.getRequestDetailsSectionData(activeLanguage);
+
           return (
             <div className={`${showInGray && "show-in-gray"} bg-container`}>
               <Header />
               <div className="main-container">
-                {isLoading
+                {loading
                   ? this.renderLoading()
-                  : this.renderRequestDetailsSection(fsr)}
+                  : fetchingErrorStatus
+                  ? this.renderFetchingError(renderFetchingErrorContent)
+                  : this.renderRequestDetailsSection(
+                      renderRequestDetailsContent,
+                      fsr
+                    )}
               </div>
               <AccessibilitySection />
             </div>

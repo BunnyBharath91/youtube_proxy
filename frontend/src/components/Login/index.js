@@ -1,6 +1,5 @@
 import { Component } from "react";
 import { Redirect } from "react-router-dom";
-
 import { TailSpin } from "react-loader-spinner";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
@@ -22,6 +21,7 @@ import {
   LowerDescription,
   GetStartedButton,
 } from "./styledComponents";
+import { loginSectionContent } from "./languageContent";
 
 class Login extends Component {
   constructor(props) {
@@ -32,6 +32,36 @@ class Login extends Component {
       showMenuContainer: false,
     };
   }
+
+  getLoginSectionData = (activeLanguage) => {
+    switch (activeLanguage) {
+      case "AR":
+        return loginSectionContent.AR;
+      case "BN":
+        return loginSectionContent.BN;
+      case "ZH":
+        return loginSectionContent.ZH;
+      case "EN":
+        return loginSectionContent.EN;
+      case "FR":
+        return loginSectionContent.FR;
+      case "HI":
+        return loginSectionContent.HI;
+      case "PT":
+        return loginSectionContent.PT;
+      case "RU":
+        return loginSectionContent.RU;
+      case "ES":
+        return loginSectionContent.ES;
+      case "TE":
+        return loginSectionContent.TE;
+      case "UR":
+        return loginSectionContent.UR;
+
+      default:
+        return null;
+    }
+  };
 
   componentDidMount() {
     this.checkAuthStatus();
@@ -80,8 +110,15 @@ class Login extends Component {
     );
   };
 
-  renderLoginSection = (fsr, sUl) => {
+  renderLoginSection = (activeLanguage, fsr, sUl) => {
     const { showMenuContainer } = this.state;
+    const {
+      upperDescription,
+      mainDescription,
+      lowerDescription,
+      headerItems,
+    } = this.getLoginSectionData(activeLanguage);
+    const { about, contact, signIn } = headerItems;
     return (
       <>
         <HeaderContainer>
@@ -92,16 +129,16 @@ class Login extends Component {
 
           <HeaderList className="header-list">
             <HeaderItem about ratio={fsr}>
-              ABOUT
+              {about}
             </HeaderItem>
             <HeaderItem contact ratio={fsr}>
-              CONTACT
+              {contact}
             </HeaderItem>
             <HeaderItem ratio={fsr}>
               <AnchorTag href="http://localhost:5000/oauth/google" sUl={sUl}>
                 <SignInButton className="sign-in-button" outline ratio={fsr}>
                   <SignInUserImg />
-                  Sign In
+                  {signIn}
                 </SignInButton>
               </AnchorTag>
             </HeaderItem>
@@ -112,31 +149,22 @@ class Login extends Component {
                 <MenuItem className="menu-item menu-sign-in-item">
                   <a href="http://localhost:5000/oauth/google">
                     <SignInButton className="sign-in-button">
-                      Sign In
+                      {signIn}
                     </SignInButton>
                   </a>
                   <MenuCloseIcon onClick={this.onCloseMenuContainer} />
                 </MenuItem>
-                <MenuItem>ABOUT</MenuItem>
-                <MenuItem>CONTACT </MenuItem>
+                <MenuItem>{about}</MenuItem>
+                <MenuItem>{contact} </MenuItem>
               </MenuContainer>
             </HeaderItem>
           </HeaderList>
         </HeaderContainer>
         <div className="main-container">
           <LoginContainer>
-            <UpperDescription ratio={fsr}>
-              Streamlining YouTube Collaboration
-            </UpperDescription>
-            <MainDescription ratio={fsr}>
-              Empower editors to upload videos on behalf of creators with a
-              seamless approval process
-            </MainDescription>
-            <LowerDescription ratio={fsr}>
-              Effortlessly manage secure video uploads with creator consent.
-              Boost productivity and ensure seamless, trusted management with
-              Proxy's innovative platform.
-            </LowerDescription>
+            <UpperDescription ratio={fsr}>{upperDescription}</UpperDescription>
+            <MainDescription ratio={fsr}>{mainDescription}</MainDescription>
+            <LowerDescription ratio={fsr}>{lowerDescription}</LowerDescription>
 
             <a href="http://localhost:5000/oauth/google">
               <GetStartedButton ratio={fsr}>Get Started</GetStartedButton>
@@ -157,7 +185,12 @@ class Login extends Component {
     return (
       <LanguageAndAccessibilityContext.Consumer>
         {(value) => {
-          const { fontSizeRatio, showInGray, showUnderLines: sUl } = value;
+          const {
+            activeLanguage,
+            fontSizeRatio,
+            showInGray,
+            showUnderLines: sUl,
+          } = value;
           const fsr = fontSizeRatio;
           console.log(fontSizeRatio);
 
@@ -165,7 +198,7 @@ class Login extends Component {
             <div className={`${showInGray && "show-in-gray"} bg-container`}>
               {loading
                 ? this.renderLoading()
-                : this.renderLoginSection(fsr, sUl)}
+                : this.renderLoginSection(activeLanguage, fsr, sUl)}
               <AccessibilitySection />
             </div>
           );

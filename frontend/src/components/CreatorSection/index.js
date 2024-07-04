@@ -2,8 +2,9 @@ import React, { Component } from "react";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
-import loading from "../../images/loading.png";
+import apology from "../../images/apology.png";
 import noRequests from "../../images/noRequests.jpg";
+import { TailSpin } from "react-loader-spinner";
 import {
   CreatorSectionContainer,
   CreatorSectionHeading,
@@ -20,7 +21,6 @@ import {
   VideoTitle,
   EditorId,
   Id,
-  StatusAndButtonsContainer,
   RequestStatus,
   Status,
   PendingStatusAndButtonsContainer,
@@ -31,35 +31,69 @@ import {
   LargeScreenResponseButtonContainer,
   Button,
   LoadingSection,
-  LoadingImage,
-  LoadingText,
+  FetchingErrorImage,
+  FetchingErrorMessage,
 } from "./styledComponents";
+import { requestsSectionContent } from "../EditorSection/languageContent";
 
 class CreatorSection extends Component {
   state = {
     requestsList: [],
     loading: true,
+    fetchingErrorStatus: "",
   };
 
   componentDidMount() {
     this.getRequests();
   }
 
+  getCreatorSectionContent = (activeLanguage) => {
+    switch (activeLanguage) {
+      case "AR":
+        return requestsSectionContent.AR;
+      case "BN":
+        return requestsSectionContent.BN;
+      case "ZH":
+        return requestsSectionContent.ZH;
+      case "EN":
+        return requestsSectionContent.EN;
+      case "FR":
+        return requestsSectionContent.FR;
+      case "HI":
+        return requestsSectionContent.HI;
+      case "PT":
+        return requestsSectionContent.PT;
+      case "RU":
+        return requestsSectionContent.RU;
+      case "ES":
+        return requestsSectionContent.ES;
+      case "TE":
+        return requestsSectionContent.TE;
+      case "UR":
+        return requestsSectionContent.UR;
+
+      default:
+        return null;
+    }
+  };
+
   getRequests = async () => {
     try {
       const response = await fetch("/requests?role=creator");
       if (!response.ok) {
-        throw new Error(`Request failed with status: ${response.status}`);
+        this.setState({
+          loading: false,
+          fetchingErrorStatus: response.status,
+        });
+        return;
       }
       const data = await response.json();
       const updatedData = data.map((eachItem) => ({
         videoId: eachItem.id,
         videoUrl: eachItem.video_url,
+        thumbnailUrl: eachItem.thumbnail_url,
         title: eachItem.title,
         description: eachItem.description,
-        thumbnailUrl: eachItem.thumbnail_url,
-        playLists: eachItem.playLists,
-        visibility: eachItem.visibility,
         tags: eachItem.tags,
         categoryId: eachItem.category_id,
         privacyStatus: eachItem.privacy_status,
@@ -76,8 +110,7 @@ class CreatorSection extends Component {
         requestsList: updatedData,
       });
     } catch (error) {
-      console.error("Error fetching requests:", error);
-      this.setState({ loading: false });
+      this.setState({ loading: false, fetchingErrorStatus: 400 });
     }
   };
 
@@ -127,13 +160,12 @@ class CreatorSection extends Component {
   renderLoading = () => {
     return (
       <LoadingSection>
-        <LoadingImage alt="loading img" src={loading} />
-        <LoadingText>Please Wait!, We are on your request...</LoadingText>
+        <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
       </LoadingSection>
     );
   };
 
-  renderRequest = (requestItem, fsr) => {
+  renderRequest = (renderRequestContent, requestItem, fsr) => {
     const {
       videoId,
       requestStatus,
@@ -143,6 +175,15 @@ class CreatorSection extends Component {
       requestedDateTime,
       responseDateTime,
     } = requestItem;
+    const {
+      from,
+      requestStatus_,
+      approved,
+      rejected,
+      pending,
+      approve,
+      reject,
+    } = renderRequestContent;
 
     const onHandleApprove = (event) => {
       event.stopPropagation();
@@ -176,21 +217,37 @@ class CreatorSection extends Component {
             {title}
           </VideoTitle>
           <EditorId ratio={fsr}>
-            From: <Id>{fromUser}</Id>
+            {from}: <Id>{fromUser}</Id>
           </EditorId>
           {requestStatus !== "pending" && (
             <RequestStatus ratio={fsr}>
-              Status: <Status>{requestStatus}</Status>
+              {requestStatus_}:{" "}
+              <Status>
+                {" "}
+                {requestStatus === "approved"
+                  ? approved
+                  : requestStatus === "pending"
+                  ? pending
+                  : rejected}
+              </Status>
             </RequestStatus>
           )}
           {requestStatus === "pending" && (
             <PendingStatusAndButtonsContainer>
               <RequestStatus ratio={fsr}>
-                Status: <Status>{requestStatus}</Status>
+                {requestStatus_}:{" "}
+                <Status>
+                  {" "}
+                  {requestStatus === "approved"
+                    ? approved
+                    : requestStatus === "pending"
+                    ? pending
+                    : rejected}
+                </Status>
               </RequestStatus>
               <ButtonsContainer>
-                <Button onClick={onHandleApprove}>Approve</Button>
-                <Button onClick={onHandleReject}>Reject</Button>
+                <Button onClick={onHandleApprove}>{approve}</Button>
+                <Button onClick={onHandleReject}>{reject}</Button>
               </ButtonsContainer>
             </PendingStatusAndButtonsContainer>
           )}
@@ -200,7 +257,11 @@ class CreatorSection extends Component {
           <span>{requestedTime}</span>
         </RequestedDateTime>
         <LargeScreenRequestStatus ratio={fsr}>
-          {requestStatus}
+          {requestStatus === "approved"
+            ? approved
+            : requestStatus === "pending"
+            ? pending
+            : rejected}
         </LargeScreenRequestStatus>
 
         {responseDateTime ? (
@@ -213,14 +274,14 @@ class CreatorSection extends Component {
         )}
         <LargeScreenResponseButtonContainer>
           {requestStatus === "pending" ? (
-            <Button onClick={onHandleApprove}>Approve</Button>
+            <Button onClick={onHandleApprove}>{approve}</Button>
           ) : (
             "-"
           )}
         </LargeScreenResponseButtonContainer>
         <LargeScreenResponseButtonContainer>
           {requestStatus === "pending" ? (
-            <Button onClick={onHandleReject}>Reject</Button>
+            <Button onClick={onHandleReject}>{reject}</Button>
           ) : (
             "-"
           )}
@@ -229,36 +290,64 @@ class CreatorSection extends Component {
     );
   };
 
-  renderCreatorSection = (fsr, sUl) => {
+  renderFetchingError = (renderFetchingErrorContent) => {
+    const { error500, retry } = renderFetchingErrorContent;
+
+    const retryFetching = () => {
+      this.getRequests();
+    };
+
+    return (
+      <LoadingSection>
+        <FetchingErrorImage alt="fetching error img" src={apology} />
+        <FetchingErrorMessage>{error500}</FetchingErrorMessage>
+
+        <Button onClick={retryFetching}>{retry}</Button>
+      </LoadingSection>
+    );
+  };
+
+  renderCreatorSection = (renderRequestsSectionContent, fsr, sUl) => {
     const { requestsList } = this.state;
+    const {
+      sectionHeading,
+      video,
+      status,
+      requestedOn,
+      respondedOn,
+      approve,
+      reject,
+      creatorApologiesText,
+      renderRequestContent,
+    } = renderRequestsSectionContent;
     return (
       <CreatorSectionContainer>
         <CreatorSectionHeading ratio={fsr}>
-          Requests for you
+          {sectionHeading}
         </CreatorSectionHeading>
         {requestsList.length > 0 && (
           <RequestsTableHeader ratio={fsr}>
-            <TableElement video>Video</TableElement>
-            <TableElement requestedDateTime>requested on</TableElement>
-            <TableElement status>Status</TableElement>
-            <TableElement respondedDateTime>responded on</TableElement>
-            <TableElement approve>Approve</TableElement>
-            <TableElement reject>Reject</TableElement>
+            <TableElement video>{video}</TableElement>
+            <TableElement requestedDateTime>{requestedOn}</TableElement>
+            <TableElement status>{status}</TableElement>
+            <TableElement respondedDateTime>{respondedOn}</TableElement>
+            <TableElement approve>{approve}</TableElement>
+            <TableElement reject>{reject}</TableElement>
           </RequestsTableHeader>
         )}
         {requestsList.length === 0 ? (
           <NoRequestsContainer>
             <NoRequestsImage alt="loading img" src={noRequests} />
-            <ApologiesText ratio={fsr}>
-              Sorry! there are no requests for you
-            </ApologiesText>
+            <ApologiesText ratio={fsr}>{creatorApologiesText}</ApologiesText>
             <StyledLink to="/" sUl={sUl}>
               <Button>Go To Home</Button>
             </StyledLink>
           </NoRequestsContainer>
         ) : (
           <RequestsContainer>
-            {requestsList.map((eachItem) => this.renderRequest(eachItem, fsr))}
+            {requestsList.map((eachItem) =>
+              this.renderRequest(renderRequestContent, eachItem, fsr)
+            )}
           </RequestsContainer>
         )}
       </CreatorSectionContainer>
@@ -266,14 +355,23 @@ class CreatorSection extends Component {
   };
 
   render() {
-    const { loading } = this.state;
+    const { loading, fetchingErrorStatus } = this.state;
 
     return (
       <LanguageAndAccessibilityContext.Consumer>
         {(value) => {
-          const { fontSizeRatio, showInGray, showUnderLines: sUl } = value;
+          const {
+            activeLanguage,
+            fontSizeRatio,
+            showInGray,
+            showUnderLines: sUl,
+          } = value;
           const fsr = fontSizeRatio;
           console.log("creator section ratio: ", fontSizeRatio);
+          const {
+            renderRequestsSectionContent,
+            renderFetchingErrorContent,
+          } = this.getCreatorSectionContent(activeLanguage);
 
           return (
             <div className={`${showInGray && "show-in-gray"} bg-container`}>
@@ -281,7 +379,13 @@ class CreatorSection extends Component {
               <div className="main-container">
                 {loading
                   ? this.renderLoading()
-                  : this.renderCreatorSection(fsr, sUl)}
+                  : fetchingErrorStatus
+                  ? renderFetchingErrorContent(renderFetchingErrorContent)
+                  : this.renderCreatorSection(
+                      renderRequestsSectionContent,
+                      fsr,
+                      sUl
+                    )}
               </div>
               <AccessibilitySection />
             </div>

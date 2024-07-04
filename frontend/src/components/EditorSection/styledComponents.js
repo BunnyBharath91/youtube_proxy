@@ -386,11 +386,13 @@ export const LoadingSection = styled(EditorSectionContainer)`
   align-items: center;
   justify-content: center;
 `;
-export const LoadingImage = styled.img`
-  width: min(50vw, 50vh);
-`;
 
-export const LoadingText = styled.p`
+//fetchingError section styling
+
+export const FetchingErrorImage = styled.img`
+  width: min(60vw, 60vh);
+`;
+export const FetchingErrorMessage = styled.p`
   font-size: 16px;
   font-weight: 500;
   text-align: center;
@@ -412,8 +414,25 @@ export const UploadResponseSection = styled(EditorSectionContainer)`
   align-items: center;
   justify-content: center;
 `;
-export const UploadResponseImage = styled(LoadingImage)``;
-export const UploadResponseMessage = styled(LoadingText)``;
+export const UploadResponseImage = styled.img`
+  width: min(50vw, 50vh);
+`;
+export const UploadResponseMessage = styled.p`
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 12px;
+
+  @media screen and (min-width: 576px) {
+    font-size: 20px;
+  }
+  @media screen and (min-width: 768px) {
+    font-size: 24px;
+  }
+  @media screen and (min-width: 992px) {
+    font-size: 32px;
+  }
+`;
 
 export const Button = styled.button`
   border: 1px solid gray;

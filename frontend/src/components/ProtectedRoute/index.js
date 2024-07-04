@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { Route, Redirect } from "react-router-dom";
-import loading from "../../images/loading.png";
 import { TailSpin } from "react-loader-spinner";
 
 class ProtectedRoute extends Component {
@@ -42,7 +41,15 @@ class ProtectedRoute extends Component {
 
   renderLoading = () => {
     return (
-      <div className="request-section loading-section">
+      <div
+        style={{
+          height: "100vh",
+          width: "100vw",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
       </div>
     );

@@ -1,6 +1,8 @@
 import React from "react";
 
 const LanguageAndAccessibilityContext = React.createContext({
+  activeLanguage: "",
+  changeLanguage: () => {},
   fontSizeRatio: "",
   increaseRatio: () => {},
   decreaseRatio: () => {},
@@ -8,7 +10,7 @@ const LanguageAndAccessibilityContext = React.createContext({
   toggleGrayScale: () => {},
   showUnderLines: "",
   toggleUnderLines: () => {},
-  resetSettings:()=>{}
+  resetSettings: () => {},
 });
 
 export default LanguageAndAccessibilityContext;

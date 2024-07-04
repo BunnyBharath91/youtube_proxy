@@ -7,10 +7,41 @@ import {
   AccessibilityCard,
   AccessibilityCardElement,
 } from "./styledComponents";
+import { accessibilitySectionContent } from "./languageContent";
 
 class AccessibilitySection extends Component {
   state = {
     showAccessibilityCard: false,
+  };
+
+  getAccessibilitySectionContent = (activeLanguage) => {
+    switch (activeLanguage) {
+      case "AR":
+        return accessibilitySectionContent.AR;
+      case "BN":
+        return accessibilitySectionContent.BN;
+      case "ZH":
+        return accessibilitySectionContent.ZH;
+      case "EN":
+        return accessibilitySectionContent.EN;
+      case "FR":
+        return accessibilitySectionContent.FR;
+      case "HI":
+        return accessibilitySectionContent.HI;
+      case "PT":
+        return accessibilitySectionContent.PT;
+      case "RU":
+        return accessibilitySectionContent.RU;
+      case "ES":
+        return accessibilitySectionContent.ES;
+      case "TE":
+        return accessibilitySectionContent.TE;
+      case "UR":
+        return accessibilitySectionContent.UR;
+
+      default:
+        return null;
+    }
   };
 
   toggleAccessibilityCard = () => {
@@ -26,6 +57,7 @@ class AccessibilitySection extends Component {
       <LanguageAndAccessibilityContext.Consumer>
         {(value) => {
           const {
+            activeLanguage,
             fontSizeRatio: fsr,
             showInGray,
             increaseRatio,
@@ -36,6 +68,15 @@ class AccessibilitySection extends Component {
             resetSettings,
           } = value;
           console.log(fsr);
+          const {
+            increaseText,
+            decreaseText,
+            removeGrayscale,
+            grayScale,
+            removeUnderlines,
+            showUnderlines,
+            resetSettings_,
+          } = this.getAccessibilitySectionContent(activeLanguage);
 
           const onIncreaseRatio = () => {
             increaseRatio();
@@ -65,21 +106,21 @@ class AccessibilitySection extends Component {
                 <AccessibilityImg onClick={this.toggleAccessibilityCard} />
               )}
 
-              <AccessibilityCard ratio={fsr}>
+              <AccessibilityCard show={showAccessibilityCard} ratio={fsr}>
                 <AccessibilityCardElement onClick={onIncreaseRatio}>
-                  Increase Text
+                  {increaseText}
                 </AccessibilityCardElement>
                 <AccessibilityCardElement onClick={onDecreaseRatio}>
-                  Decrease Text
+                  {decreaseText}
                 </AccessibilityCardElement>
                 <AccessibilityCardElement onClick={onToggleGrayScale}>
-                  {showInGray ? "Remove Gray" : "Show in Gray"}
+                  {showInGray ? removeGrayscale : grayScale}
                 </AccessibilityCardElement>
                 <AccessibilityCardElement onClick={onToggleUnderLines}>
-                  {showUnderLines ? "Remove UnderLines" : "Show UnderLines"}
+                  {showUnderLines ? removeUnderlines : showUnderlines}
                 </AccessibilityCardElement>
                 <AccessibilityCardElement onClick={onResetSettings}>
-                  Reset Settings
+                  {resetSettings_}
                 </AccessibilityCardElement>
               </AccessibilityCard>
             </AccessibilityCardContainer>

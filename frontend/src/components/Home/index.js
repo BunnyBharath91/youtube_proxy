@@ -9,42 +9,75 @@ import {
   StyledLink,
   GetStartedButton,
 } from "./styledComponents";
+import { homeSectionContent } from "./languageContent";
 
-const Home = () => (
-  <LanguageAndAccessibilityContext.Consumer>
-    {(value) => {
-      const { fontSizeRatio, showInGray } = value;
-      const fsr = fontSizeRatio;
-      console.log("home section Ratio: ", fontSizeRatio);
+const Home = () => {
+  const getHomeSectionData = (activeLanguage) => {
+    switch (activeLanguage) {
+      case "AR":
+        return homeSectionContent.AR;
+      case "BN":
+        return homeSectionContent.BN;
+      case "ZH":
+        return homeSectionContent.ZH;
+      case "EN":
+        return homeSectionContent.EN;
+      case "FR":
+        return homeSectionContent.FR;
+      case "HI":
+        return homeSectionContent.HI;
+      case "PT":
+        return homeSectionContent.PT;
+      case "RU":
+        return homeSectionContent.RU;
+      case "ES":
+        return homeSectionContent.ES;
+      case "TE":
+        return homeSectionContent.TE;
+      case "UR":
+        return homeSectionContent.UR;
 
-      return (
-        <div className={`${showInGray && "show-in-gray"} bg-container`}>
-          <div className="main-container">
-            <Header ratio={fsr} />
+      default:
+        return null;
+    }
+  };
 
-            <HomeContainer>
-              <UpperDescription ratio={fsr}>
-                Streamlining YouTube Collaboration
-              </UpperDescription>
-              <MainDescription ratio={fsr}>
-                Empower editors to upload videos on behalf of creators with a
-                seamless approval process
-              </MainDescription>
-              <LowerDescription ratio={fsr}>
-                Effortlessly manage secure video uploads with creator consent.
-                Boost productivity and ensure seamless, trusted management with
-                Proxy's innovative platform.
-              </LowerDescription>
-              <StyledLink to="/editor_section">
-                <GetStartedButton ratio={fsr}>Get Started</GetStartedButton>
-              </StyledLink>
-            </HomeContainer>
+  return (
+    <LanguageAndAccessibilityContext.Consumer>
+      {(value) => {
+        const { activeLanguage, fontSizeRatio, showInGray } = value;
+        const fsr = fontSizeRatio;
+        console.log("home section Ratio: ", fontSizeRatio);
+        const {
+          upperDescription,
+          mainDescription,
+          lowerDescription,
+        } = getHomeSectionData(activeLanguage);
+
+        return (
+          <div className={`${showInGray && "show-in-gray"} bg-container`}>
+            <div className="main-container">
+              <Header ratio={fsr} />
+
+              <HomeContainer>
+                <UpperDescription ratio={fsr}>
+                  {upperDescription}
+                </UpperDescription>
+                <MainDescription ratio={fsr}>{mainDescription}</MainDescription>
+                <LowerDescription ratio={fsr}>
+                  {lowerDescription}
+                </LowerDescription>
+                <StyledLink to="/editor_section">
+                  <GetStartedButton ratio={fsr}>Get Started</GetStartedButton>
+                </StyledLink>
+              </HomeContainer>
+            </div>
+            <AccessibilitySection />
           </div>
-          <AccessibilitySection />
-        </div>
-      );
-    }}
-  </LanguageAndAccessibilityContext.Consumer>
-);
+        );
+      }}
+    </LanguageAndAccessibilityContext.Consumer>
+  );
+};
 
 export default Home;

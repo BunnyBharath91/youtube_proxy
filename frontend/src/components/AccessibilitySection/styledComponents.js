@@ -66,6 +66,9 @@ export const AccessibilityCard = styled.ul`
   }}px;
   font-weight: 500;
 
+  transition: opacity 0.5s ease-in-out;
+  opacity: ${(props) => (props.show ? "1" : "0")};
+
   @media screen and (min-width: 768px) {
     font-size: ${(props) => {
       return props.ratio * 17;

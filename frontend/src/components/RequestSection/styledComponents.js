@@ -54,7 +54,7 @@ export const MediaFilesContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 12px;
+
   @media screen and (min-width: 768px) {
     flex-direction: row;
     justify-content: space-between;
@@ -63,6 +63,9 @@ export const MediaFilesContainer = styled.div`
 `;
 
 export const MediaContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+
   width: 100%;
   max-width: 940px;
   height: 50vw;
@@ -140,7 +143,7 @@ export const InputContainer = styled.div`
   position: relative;
   width: 100%; /* 100% for full width on small screens */
   max-width: 768px; /*max width for larger screens */
-  margin-bottom: 12px;
+  margin-top: 12px;
   border: solid 1px #c7c7c7;
   border-radius: 4px;
   padding: 12px 12px 22px 12px;
@@ -260,12 +263,12 @@ export const FormElementContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-bottom: 1em;
+  margin-top: 12px;
   @media screen and (min-width: 576px) {
-    width: 40%;
+    width: ${(props) => (props.creatorCode ? "100%" : "40%")};
   }
   @media screen and (min-width: 768px) {
-    width: 33%;
+    width: ${(props) => (props.creatorCode ? "100%" : "33%")};
   }
 `;
 
@@ -325,15 +328,29 @@ export const FormElementSelect = styled.select`
   margin-left: 14px;
   color: #333333;
   border: 1px solid #dddddd;
+  outline: none;
   cursor: pointer;
   border-radius: 5px;
   /* for replacing default arrow styling*/
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 12l-7-7 1.5-1.5L10 9.0l5.5-5.5L18 5.5z"/></svg>')
+    no-repeat right 8px center/10px 10px; /* Change the SVG URL to your arrow icon */
 `;
 
-export const FormElementSelectOption = styled.option``;
+export const FormElementSelectOption = styled.option`
+  width: 150px;
+  padding: 8px 12px;
+  margin-left: 14px;
+  color: #333333;
+  border: 1px solid #dddddd;
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 8px 12px;
+  background-color: #ffffff; /* Adjust as per your design */
+  color: #333333; /* Adjust as per your design */
+`;
 
 export const InputCreator = styled.input`
   width: clamp(140px, 60vw, 300px);
@@ -365,8 +382,9 @@ export const Button = styled.button`
   }}px;
   font-weight: 500;
   border: 1px solid gray;
-  padding: 8px 16px;
   border-radius: 6px;
+  padding: 8px 16px;
+  margin-top: 12px;
   background-color: transparent;
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
@@ -417,3 +435,24 @@ export const SubmitResponseSection = styled(RequestSectionContainer)`
 `;
 export const SubmitResponseImage = styled(LoadingImage)``;
 export const SubmitResponseMessage = styled(LoadingText)``;
+
+//error message styling
+export const ErrorMessage = styled.p`
+  padding: 4px 0px 0px 12px;
+  color: red;
+  font-weight: 500;
+  font-size: 12px;
+  @media screen and (min-width: 576px) {
+    font-size: 13px;
+  }
+
+  @media screen and (min-width: 756px) {
+    font-size: 14px;
+  }
+  @media screen and (min-width: 992px) {
+    font-size: 15px;
+  }
+  @media screen and (min-width: 1200px) {
+    font-size: 16px;
+  }
+`;
