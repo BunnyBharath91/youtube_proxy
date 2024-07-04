@@ -4,7 +4,7 @@ export const homeSectionContent = {
     mainDescription:
       "Empower editors to upload videos on behalf of creators with a seamless approval process",
     lowerDescription:
-      "Effortlessly manage secure video uploads with creator consent. Boost productivity and ensure seamless, trusted management with Proxy's innovative platform",
+      "Effortlessly manage secure video uploads with creator consent. Boost productivity and ensure seamless, trusted management with PROXY's innovative platform",
   },
   HI: {
     upperDescription: "YouTube सहयोग को सुव्यवस्थित करना",
@@ -41,11 +41,11 @@ export const homeSectionContent = {
       "Gérez sans effort les téléchargements vidéo sécurisés avec le consentement du créateur. Augmentez la productivité et assurez une gestion transparente et fiable avec la plateforme innovante de Proxy",
   },
   AR: {
-    upperDescription: "Rationaliser la collaboration sur YouTube",
+    upperDescription: "تبسيط التعاون على YouTube",
     mainDescription:
-      "Donnez aux éditeurs les moyens de mettre en ligne des vidéos au nom des créateurs grâce à un processus d'approbation transparent",
+      "قم بتمكين المحررين من تحميل مقاطع الفيديو نيابة عن المبدعين من خلال عملية موافقة سلسة",
     lowerDescription:
-      "Gérez sans effort les téléchargements vidéo sécurisés avec le consentement du créateur. Augmentez la productivité et assurez une gestion transparente et fiable avec la plateforme innovante de PROXY",
+      "يمكنك إدارة تحميلات الفيديو الآمنة دون عناء بموافقة منشئ المحتوى. عزز الإنتاجية وتأكد من الإدارة السلسة والموثوقة باستخدام منصة PROXY المبتكرة",
   },
   BN: {
     upperDescription: "YouTube সহযোগিতা স্ট্রীমলাইন করা",

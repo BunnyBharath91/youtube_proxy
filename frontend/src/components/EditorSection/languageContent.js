@@ -37,8 +37,8 @@ export const requestsSectionContent = {
     },
   },
   HI: {
-    renderEditorSectionContent: {
-      editorSectionHeading: "आपके द्वारा किये गये अनुरोध",
+    renderRequestsSectionContent: {
+      sectionHeading: "आपके द्वारा किये गये अनुरोध",
       video: "वीडियो",
       status: "स्थिति",
       upload: "डालना",
@@ -74,8 +74,8 @@ export const requestsSectionContent = {
     },
   },
   TE: {
-    renderEditorSectionContent: {
-      editorSectionHeading: "మీరు చేసిన అభ్యర్థనలు",
+    renderRequestsSectionContent: {
+      sectionHeading: "మీరు చేసిన అభ్యర్థనలు",
       video: "వీడియో",
       status: "హోదా",
       upload: "అప్లోడ్",
@@ -111,8 +111,8 @@ export const requestsSectionContent = {
     },
   },
   ZH: {
-    renderEditorSectionContent: {
-      editorSectionHeading: "您提出的請求",
+    renderRequestsSectionContent: {
+      sectionHeading: "您提出的請求",
       video: "影片",
       status: "地位",
       upload: "上傳",
@@ -148,8 +148,8 @@ export const requestsSectionContent = {
     },
   },
   ES: {
-    renderEditorSectionContent: {
-      editorSectionHeading: "Solicitudes que hiciste",
+    renderRequestsSectionContent: {
+      sectionHeading: "Solicitudes que hiciste",
       video: "Video",
       status: "Estado",
       upload: "Subir",
@@ -185,8 +185,8 @@ export const requestsSectionContent = {
     },
   },
   FR: {
-    renderEditorSectionContent: {
-      editorSectionHeading: "Les demandes que vous avez faites",
+    renderRequestsSectionContent: {
+      sectionHeading: "Les demandes que vous avez faites",
       video: "Vidéo",
       status: "Statut",
       upload: "Télécharger",
@@ -223,8 +223,8 @@ export const requestsSectionContent = {
     },
   },
   AR: {
-    renderEditorSectionContent: {
-      editorSectionHeading: "الطلبات التي قدمتها",
+    renderRequestsSectionContent: {
+      sectionHeading: "الطلبات التي قدمتها",
       video: "فيديو",
       status: "حالة",
       upload: "رفع",
@@ -260,8 +260,8 @@ export const requestsSectionContent = {
     },
   },
   BN: {
-    renderEditorSectionContent: {
-      editorSectionHeading: "আপনার করা অনুরোধ",
+    renderRequestsSectionContent: {
+      sectionHeading: "আপনার করা অনুরোধ",
       video: "ভিডিও",
       status: "স্ট্যাটাস",
       upload: "আপলোড করুন",
@@ -298,8 +298,8 @@ export const requestsSectionContent = {
     },
   },
   RU: {
-    renderEditorSectionContent: {
-      editorSectionHeading: "Ваши запросы",
+    renderRequestsSectionContent: {
+      sectionHeading: "Ваши запросы",
       video: "видео",
       status: "Положение дел",
       upload: "Загрузить",
@@ -335,8 +335,8 @@ export const requestsSectionContent = {
     },
   },
   PT: {
-    renderEditorSectionContent: {
-      editorSectionHeading: "Solicitações que você fez",
+    renderRequestsSectionContent: {
+      sectionHeading: "Solicitações que você fez",
       video: "Vídeo",
       status: "Status",
       upload: "Carregar",
@@ -372,8 +372,8 @@ export const requestsSectionContent = {
     },
   },
   UR: {
-    renderEditorSectionContent: {
-      editorSectionHeading: "آپ نے جو درخواستیں کی ہیں۔",
+    renderRequestsSectionContent: {
+      sectionHeading: "آپ نے جو درخواستیں کی ہیں۔",
       video: "ویڈیو",
       status: "حالت",
       upload: "اپ لوڈ کریں۔",
