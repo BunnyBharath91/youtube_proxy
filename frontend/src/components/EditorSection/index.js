@@ -1,13 +1,17 @@
 import React, { Component } from "react";
+import { ToastContainer, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
-import loading from "../../images/loading.png";
-import apology from "../../images/apology.png";
-import errorWhileUploading from "../../images/errorWhileUploading.jpg";
-import forbidden from "../../images/forbidden.jpg";
-import successful from "../../images/successful.jpg";
-import noRequests from "../../images/noRequests.jpg";
+import {
+  noRequests,
+  successful,
+  forbidden,
+  errorWhileUploading,
+  apology,
+  loading,
+} from "../../images";
 import { TailSpin } from "react-loader-spinner";
 import {
   EditorSectionContainer,
@@ -345,7 +349,7 @@ class EditorSectionRequests extends Component {
         key={videoId}
         onClick={() => this.props.history.push(`/editor_section/${videoId}`)}
       >
-        <RequestThumbnail alt="thumbnail" src={thumbnailUrl} />
+        <RequestThumbnail alt="thumbnail" src={thumbnailUrl} loading="lazy" />
         <RequestTextContainer className="request-card-text-container">
           <VideoTitle ratio={fsr}>
             This is my video title nothing fancy words just for checking
@@ -384,7 +388,9 @@ class EditorSectionRequests extends Component {
               )}
               {videoUploadStatus === "not uploaded" &&
                 requestStatus !== "pending" && (
-                  <Button onClick={handleDelete}>{delete_}</Button>
+                  <Button onClick={handleDelete} delete>
+                    {delete_}
+                  </Button>
                 )}
             </ButtonsContainer>
           </StatusAndButtonsContainer>
@@ -429,7 +435,9 @@ class EditorSectionRequests extends Component {
         <LargeScreenDeleteButtonContainer>
           {videoUploadStatus === "not uploaded" &&
           requestStatus !== "pending" ? (
-            <Button onClick={handleDelete}>{delete_}</Button>
+            <Button onClick={handleDelete} delete>
+              {delete_}
+            </Button>
           ) : (
             "-"
           )}
@@ -605,6 +613,20 @@ class EditorSectionRequests extends Component {
                     )}
               </div>
               <AccessibilitySection />
+              <ToastContainer
+                position="top-center"
+                autoClose={4000}
+                hideProgressBar={true}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+                transition={Slide}
+                stacked
+              />
             </div>
           );
         }}

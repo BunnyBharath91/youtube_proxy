@@ -97,14 +97,13 @@ export const RequestDetailsHeading = styled.h2`
 
 export const MediaItem = styled.video`
   width: 100%;
-  height: 50vw;
+  aspect-ratio: 16/9;
   border-radius: 10px;
 
   @media screen and (min-width: 576px) {
     border-radius: 18px;
   }
   @media screen and (min-width: 768px) {
-    height: 25vw;
     border-radius: 10px;
   }
   @media screen and (min-width: 1200px) {
@@ -229,6 +228,24 @@ export const ButtonsContainer = styled.div`
   gap: 20px;
 `;
 
+//button colors
+const buttonColors = {
+  approve: "#46A758",
+  reject: "#E54D2E",
+};
+
+//button background colors
+const buttonBgColors = {
+  approve: "#F5FBF5",
+  reject: "#FFF7F7",
+};
+
+//button hover background colors
+const buttonHoverColor = {
+  approve: "#E9F6E9",
+  reject: "#FFDBDC",
+};
+
 export const Button = styled.button`
   font-size: ${(props) => {
     if (props.ratio > 1) {
@@ -240,10 +257,24 @@ export const Button = styled.button`
     }
   }}px;
   font-weight: 500;
-  border: 1px solid gray;
+  color: ${(props) =>
+    props.approve_ ? buttonColors.approve : buttonColors.reject};
+  border: 1px solid
+    ${(props) => (props.approve_ ? buttonColors.approve : buttonColors.reject)};
+
   padding: 8px 16px;
   border-radius: 6px;
-  background-color: transparent;
+  background-color: ${(props) =>
+    props.approve_ ? buttonBgColors.approve : buttonBgColors.reject};
+  cursor: pointer;
+
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: ${(props) =>
+      props.approve_ ? buttonHoverColor.approve : buttonHoverColor.reject};
+  }
+
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
       if (props.ratio > 1) {
@@ -256,20 +287,6 @@ export const Button = styled.button`
     }}px;
     padding: 10px 20px;
   }
-`;
-
-export const ErrorMessage = styled.p`
-  font-size: 1rem;
-  margin-top: 4px;
-  color: red;
-  margin-left: 1vw;
-  font-weight: 500;
-`;
-
-export const Err = styled.span`
-  font-size: 1.15rem;
-  font-weight: 600;
-  margin-right: 4px;
 `;
 
 //loading section styling

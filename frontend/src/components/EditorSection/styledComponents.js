@@ -99,7 +99,7 @@ export const TableElement = styled.li`
 
 //no requests section styling
 export const NoRequestsContainer = styled.div`
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 160px);
   padding: 1vw 2vw;
   display: flex;
   flex-direction: column;
@@ -107,7 +107,7 @@ export const NoRequestsContainer = styled.div`
   justify-content: center;
 
   @media screen and (min-width: 992px) {
-    min-height: calc(100vh - 76px);
+    min-height: calc(100vh - 180px);
   }
 `;
 
@@ -156,6 +156,8 @@ export const RequestCard = styled.div`
   flex-direction: column;
   padding-top: 10px;
   border-bottom: solid 1px #e8e3e3;
+  cursor: pointer;
+
   @media screen and (min-width: 576px) {
     flex-direction: row;
     padding-bottom: 10px;
@@ -167,20 +169,18 @@ export const RequestCard = styled.div`
 
 export const RequestThumbnail = styled.img`
   width: 100%;
-  height: 50vw;
+  aspect-ratio: 16/9;
+
   border-radius: 8px;
 
   @media screen and (min-width: 576px) {
     width: 40%;
-    height: 20vw;
   }
   @media screen and (min-width: 992px) {
     width: 22%;
-    height: 11vw;
   }
   @media screen and (min-width: 1200px) {
     width: 13%;
-    height: min(7vw, 100px);
   }
 `;
 
@@ -323,7 +323,7 @@ export const VideoUploadedText = styled.p`
 
 export const RequestedDateTime = styled.p`
   display: none;
-  color: rgb(71, 85, 105);
+  color: gray;
   font-weight: 500;
   font-size: ${(props) => {
     return props.ratio * 14;
@@ -339,7 +339,9 @@ export const RequestedDateTime = styled.p`
 
 export const LargeScreenRequestStatus = styled.p`
   display: none;
-  color: rgb(71, 85, 105);
+
+  color: gray;
+
   font-weight: 500;
   @media screen and (min-width: 992px) {
     display: block;
@@ -435,8 +437,18 @@ export const UploadResponseMessage = styled.p`
 `;
 
 export const Button = styled.button`
-  border: 1px solid gray;
-  padding: 6px 10px;
+  border: 0.5px solid ${(props) => (props.delete ? "#E5484D" : "#3356C7")};
+  padding: 8px 14px;
   border-radius: 6px;
-  background-color: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: ${(props) => (props.delete ? "#E5484D" : "#3356C7")};
+  background-color: ${(props) => (props.delete ? "#FFF7F7" : "#edf2fe")};
+  cursor: pointer;
+
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: ${(props) => (props.delete ? "#FFDBDC" : "#E1E9FF")};
+  }
 `;

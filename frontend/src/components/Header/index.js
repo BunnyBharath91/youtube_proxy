@@ -1,4 +1,5 @@
 import { Component } from "react";
+import { toast } from "react-toastify";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import { IoMdClose } from "react-icons/io";
 
@@ -23,6 +24,10 @@ import {
   StyledDropDown,
   Languages,
   SelectedMark,
+  InvitationCard,
+  InvitationCode,
+  CopyImgContainer,
+  StyledCopyImg,
 } from "./styledComponents";
 import { headerSectionContent } from "./languageContent";
 
@@ -45,8 +50,9 @@ class Header extends Component {
     userName: "HELLO! USER",
     userImage: defaultUserImage,
     invitationCode: "",
-    showLanguageContainer: false,
-    showMenuContainer: false,
+    copyImgClicked: false,
+    showLanguageContainer: "initial",
+    showMenuContainer: "initial",
   };
 
   getHeaderSectionData = (activeLanguage) => {
@@ -91,21 +97,35 @@ class Header extends Component {
       this.setState({
         userImage: finalData.userImage,
         userName: finalData.displayName,
-        invitationCode: finalData.username,
+        invitationCode: finalData.invitationCode,
       });
     }
   };
 
   onToggleLanguageContainer = () => {
-    this.setState((prevState) => ({
-      showLanguageContainer: !prevState.showLanguageContainer,
-    }));
+    const { showLanguageContainer } = this.state;
+    if (showLanguageContainer === "initial") {
+      this.setState({
+        showLanguageContainer: true,
+      });
+    } else {
+      this.setState((prevState) => ({
+        showLanguageContainer: !prevState.showLanguageContainer,
+      }));
+    }
   };
 
   onToggleMenuContainer = () => {
-    this.setState((prevState) => ({
-      showMenuContainer: !prevState.showMenuContainer,
-    }));
+    const { showMenuContainer } = this.state;
+    if (showMenuContainer === "initial") {
+      this.setState({
+        showMenuContainer: true,
+      });
+    } else {
+      this.setState((prevState) => ({
+        showMenuContainer: !prevState.showMenuContainer,
+      }));
+    }
   };
 
   onCloseMenuContainer = () => {
@@ -128,15 +148,39 @@ class Header extends Component {
     }
   };
 
+  copyToClipboard = () => {
+    const { invitationCode } = this.state;
+    navigator.clipboard // navigator.clipboard.writeText() is an api
+      .writeText(invitationCode)
+      .then(() => toast.success("Invitation Code Copied"))
+      .catch((error) => {
+        console.error("Failed to copy:", error);
+      });
+  };
+
+  onMouseDown = () => {
+    this.setState({
+      copyImgClicked: true,
+    });
+  };
+
+  onMouseUp = () => {
+    this.setState({
+      copyImgClicked: false,
+    });
+    this.copyToClipboard();
+  };
+
   render() {
     const {
       userName,
       userImage,
+      invitationCode,
+      copyImgClicked,
       showLanguageContainer,
       showMenuContainer,
     } = this.state;
     console.log("showMenuContainer", showMenuContainer);
-    console.log("showLanguageContainer:", showLanguageContainer);
 
     return (
       <LanguageAndAccessibilityContext.Consumer>
@@ -154,6 +198,7 @@ class Header extends Component {
             creator,
             editor,
             logout,
+            invCode,
           } = this.getHeaderSectionData(activeLanguage);
           const selectedLanguage = languagesList.filter(
             (eachItem) => eachItem.code === activeLanguage
@@ -169,16 +214,18 @@ class Header extends Component {
               </StyledLink>
 
               <HeaderList>
-                <HeaderItem
-                  onClick={this.onToggleLanguageContainer}
-                  language
-                  ratio={fsr}
-                >
-                  <SelectLanguage>
+                <HeaderItem onClick={this.onToggleLanguageContainer} language>
+                  <SelectLanguage ratio={fsr}>
                     <Languages /> {selectedLanguage}{" "}
-                    <StyledDropDown rotate={showLanguageContainer} />
+                    <StyledDropDown
+                      rotate={
+                        showLanguageContainer === "initial"
+                          ? false
+                          : showLanguageContainer
+                      }
+                    />
                   </SelectLanguage>
-                  <LanguageContainer show={showLanguageContainer}>
+                  <LanguageContainer show={showLanguageContainer} ratio={fsr}>
                     {languagesList.map((eachItem) => (
                       <LanguageItem
                         key={eachItem.code}
@@ -231,21 +278,41 @@ class Header extends Component {
                         <IoMdClose />
                       </MenuCloseIcon>
                     </MenuUserItem>
-
+                    <MenuItem>
+                      {invCode}
+                      <InvitationCard>
+                        <InvitationCode>{invitationCode}</InvitationCode>
+                        <CopyImgContainer
+                          onMouseDown={this.onMouseDown}
+                          onMouseUp={this.onMouseUp}
+                          clicked={copyImgClicked}
+                        >
+                          <StyledCopyImg />
+                        </CopyImgContainer>
+                      </InvitationCard>{" "}
+                    </MenuItem>
                     <StyledLink to="/" sUl={sUl}>
-                      <MenuItem>{home}</MenuItem>
+                      <MenuItem onClick={this.onCloseMenuContainer}>
+                        {home}
+                      </MenuItem>
                     </StyledLink>
 
                     <StyledLink to="/creator_section" sUl={sUl}>
-                      <MenuItem>{creator}</MenuItem>
+                      <MenuItem onClick={this.onCloseMenuContainer}>
+                        {creator}
+                      </MenuItem>
                     </StyledLink>
 
                     <StyledLink to="/editor_section" sUl={sUl}>
-                      <MenuItem>{editor}</MenuItem>
+                      <MenuItem onClick={this.onCloseMenuContainer}>
+                        {editor}
+                      </MenuItem>
                     </StyledLink>
 
                     <StyledLink to="/request_section" sUl={sUl}>
-                      <MenuItem>{request}</MenuItem>
+                      <MenuItem onClick={this.onCloseMenuContainer}>
+                        {request}
+                      </MenuItem>
                     </StyledLink>
 
                     <MenuItem onClick={this.onLogout}>{logout}</MenuItem>
@@ -260,3 +327,5 @@ class Header extends Component {
   }
 }
 export default Header;
+
+//before change

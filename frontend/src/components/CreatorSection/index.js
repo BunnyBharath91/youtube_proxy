@@ -1,9 +1,10 @@
 import React, { Component } from "react";
+import { ToastContainer, toast, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
-import apology from "../../images/apology.png";
-import noRequests from "../../images/noRequests.jpg";
+import { apology,noRequests } from '../../images';
 import { TailSpin } from "react-loader-spinner";
 import {
   CreatorSectionContainer,
@@ -41,6 +42,7 @@ class CreatorSection extends Component {
     requestsList: [],
     loading: true,
     fetchingErrorStatus: "",
+    isProcessing: false,
   };
 
   componentDidMount() {
@@ -78,6 +80,9 @@ class CreatorSection extends Component {
   };
 
   getRequests = async () => {
+    this.setState({
+      loading: true,
+    });
     try {
       const response = await fetch("/requests?role=creator");
       if (!response.ok) {
@@ -109,12 +114,15 @@ class CreatorSection extends Component {
         loading: false,
         requestsList: updatedData,
       });
-    } catch (error) {
+    } catch (err) {
       this.setState({ loading: false, fetchingErrorStatus: 400 });
     }
   };
 
   onApprove = async (videoId) => {
+    this.setState({
+      isProcessing: true,
+    });
     try {
       const response = await fetch(`/response/${videoId}`, {
         method: "PUT",
@@ -126,17 +134,22 @@ class CreatorSection extends Component {
 
       if (response.ok) {
         await this.getRequests();
-        alert("Request approved successfully");
+        toast.success("Request approved successfully");
       } else {
-        throw new Error("Failed to process your request. Please try again.");
+        toast.error("Request approval failed");
       }
-    } catch (error) {
-      console.error("Error processing approval:", error);
-      throw new Error("Failed to process your request. Please try again.");
+    } catch (err) {
+      toast.error("Failed to process request");
     }
+    this.setState({
+      isProcessing: false,
+    });
   };
 
   onReject = async (videoId) => {
+    this.setState({
+      isProcessing: true,
+    });
     try {
       const response = await fetch(`/response/${videoId}`, {
         method: "PUT",
@@ -148,13 +161,16 @@ class CreatorSection extends Component {
 
       if (response.ok) {
         await this.getRequests();
+        toast.success("Request rejected successfully");
       } else {
-        throw new Error("Failed to process your request. Please try again.");
+        toast.error("Request rejection failed");
       }
-    } catch (error) {
-      console.error("Error processing approval:", error);
-      throw new Error("Failed to process your request. Please try again.");
+    } catch (err) {
+      toast.error("Failed to process request");
     }
+    this.setState({
+      isProcessing: false,
+    });
   };
 
   renderLoading = () => {
@@ -166,6 +182,7 @@ class CreatorSection extends Component {
   };
 
   renderRequest = (renderRequestContent, requestItem, fsr) => {
+    const { isProcessing } = this.state;
     const {
       videoId,
       requestStatus,
@@ -209,7 +226,7 @@ class CreatorSection extends Component {
         key={videoId}
         onClick={() => this.props.history.push(`/creator_section/${videoId}`)}
       >
-        <RequestThumbnail alt="thumbnail" src={thumbnailUrl} />
+        <RequestThumbnail alt="thumbnail" src={thumbnailUrl} loading="lazy" />
         <ResponseTextContainer>
           <VideoTitle ratio={fsr}>
             This is my video title nothing fancy words just for checking
@@ -246,8 +263,12 @@ class CreatorSection extends Component {
                 </Status>
               </RequestStatus>
               <ButtonsContainer>
-                <Button onClick={onHandleApprove}>{approve}</Button>
-                <Button onClick={onHandleReject}>{reject}</Button>
+                <Button onClick={onHandleApprove} approve_>
+                  {approve}
+                </Button>
+                <Button onClick={onHandleReject} reject_>
+                  {reject}
+                </Button>
               </ButtonsContainer>
             </PendingStatusAndButtonsContainer>
           )}
@@ -274,14 +295,18 @@ class CreatorSection extends Component {
         )}
         <LargeScreenResponseButtonContainer>
           {requestStatus === "pending" ? (
-            <Button onClick={onHandleApprove}>{approve}</Button>
+            <Button onClick={onHandleApprove} disabled={isProcessing} approve_>
+              {approve}
+            </Button>
           ) : (
             "-"
           )}
         </LargeScreenResponseButtonContainer>
         <LargeScreenResponseButtonContainer>
           {requestStatus === "pending" ? (
-            <Button onClick={onHandleReject}>{reject}</Button>
+            <Button onClick={onHandleReject} disabled={isProcessing} reject_>
+              {reject}
+            </Button>
           ) : (
             "-"
           )}
@@ -331,8 +356,8 @@ class CreatorSection extends Component {
             <TableElement requestedDateTime>{requestedOn}</TableElement>
             <TableElement status>{status}</TableElement>
             <TableElement respondedDateTime>{respondedOn}</TableElement>
-            <TableElement approve>{approve}</TableElement>
-            <TableElement reject>{reject}</TableElement>
+            <TableElement approve_>{approve}</TableElement>
+            <TableElement reject_>{reject}</TableElement>
           </RequestsTableHeader>
         )}
         {requestsList.length === 0 ? (
@@ -388,6 +413,20 @@ class CreatorSection extends Component {
                     )}
               </div>
               <AccessibilitySection />
+              <ToastContainer
+                position="top-center"
+                autoClose={4000}
+                hideProgressBar={true}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+                transition={Slide}
+                stacked
+              />
             </div>
           );
         }}

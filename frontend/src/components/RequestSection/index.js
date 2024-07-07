@@ -1,9 +1,8 @@
 import { Component } from "react";
-import { RiVideoUploadLine } from "react-icons/ri";
-import { IoMdArrowDropdown } from "react-icons/io";
-import loading from "../../images/loading.png";
-import successful from "../../images/successful.jpg";
-import errorWhileUploading from "../../images/errorWhileUploading.jpg";
+import { ToastContainer, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { IoVideocamOutline, IoImageOutline } from "react-icons/io5";
+import { loading, successful, errorWhileUploading } from "../../images";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
@@ -22,7 +21,6 @@ import {
   FileButton,
   InputContainer,
   TitleLabel,
-  InfoIcon,
   TitleTextArea,
   CharCount,
   DescriptionLabel,
@@ -33,6 +31,8 @@ import {
   AudienceType,
   AudienceTypeRadio,
   FormElementSelect,
+  StyledDropDown,
+  FormElementSelectOptionsContainer,
   FormElementSelectOption,
   InputCreator,
   Button,
@@ -45,7 +45,10 @@ import {
   ErrorMessage,
 } from "./styledComponents";
 
-import { requestSectionContent, youtubeCategories } from "./languageContent";
+import {
+  requestSectionContent,
+  youtubeCategoriesContainer,
+} from "./languageContent";
 
 class RequestSection extends Component {
   constructor(props) {
@@ -57,6 +60,11 @@ class RequestSection extends Component {
       videoTitle: "",
       videoDescription: "",
       creatorInvitationCode: "",
+      titleFocused: false,
+      selectedVisibility: "",
+      selectedCategory: "",
+      showVisibilityContainer: false,
+      showCategoriesContainer: false,
       thumbnailError: "",
       videoError: "",
       titleError: "",
@@ -92,6 +100,36 @@ class RequestSection extends Component {
         return requestSectionContent.TE;
       case "UR":
         return requestSectionContent.UR;
+
+      default:
+        return null;
+    }
+  };
+
+  getYoutubeCategories = (activeLanguage) => {
+    switch (activeLanguage) {
+      case "AR":
+        return youtubeCategoriesContainer.AR;
+      case "BN":
+        return youtubeCategoriesContainer.BN;
+      case "ZH":
+        return youtubeCategoriesContainer.ZH;
+      case "EN":
+        return youtubeCategoriesContainer.EN;
+      case "FR":
+        return youtubeCategoriesContainer.FR;
+      case "HI":
+        return youtubeCategoriesContainer.HI;
+      case "PT":
+        return youtubeCategoriesContainer.PT;
+      case "RU":
+        return youtubeCategoriesContainer.RU;
+      case "ES":
+        return youtubeCategoriesContainer.ES;
+      case "TE":
+        return youtubeCategoriesContainer.TE;
+      case "UR":
+        return youtubeCategoriesContainer.UR;
 
       default:
         return null;
@@ -134,13 +172,13 @@ class RequestSection extends Component {
       isValid = false;
     }
 
-    const visibility = document.getElementById("status").value;
+    const visibility = document.getElementById("input-status").value;
     if (!visibility) {
       this.setState({ visibilityError: "Please select visibility" });
       isValid = false;
     }
 
-    const category = document.getElementById("category").value;
+    const category = document.getElementById("input-category").value;
     if (!category) {
       this.setState({ categoryError: "Please select category" });
       isValid = false;
@@ -268,18 +306,6 @@ class RequestSection extends Component {
     });
   };
 
-  onChangeVisibility = (event) => {
-    this.setState({
-      visibilityError: "",
-    });
-  };
-
-  onChangeCategory = (event) => {
-    this.setState({
-      categoryError: "",
-    });
-  };
-
   onChangeCreatorInvitationCode = (event) => {
     this.setState({
       creatorInvitationCode: event.target.value,
@@ -293,50 +319,42 @@ class RequestSection extends Component {
     });
   };
 
+  onTitleFocus = () => {
+    this.setState({
+      titleFocused: true,
+    });
+  };
+
   onTitleBlur = (event) => {
     if (event.target.value === "") {
       this.setState({
         titleError: "please give title for your video",
+        titleFocused: false,
       });
     } else {
       this.setState({
         titleError: "",
+        titleFocused: false,
       });
     }
+  };
+
+  onDescriptionFocus = () => {
+    this.setState({
+      descriptionFocused: true,
+    });
   };
 
   onDescriptionBlur = (event) => {
     if (event.target.value === "") {
       this.setState({
         descriptionError: "please give description for your video",
+        descriptionFocused: false,
       });
     } else {
       this.setState({
         descriptionError: "",
-      });
-    }
-  };
-
-  onVisibilityBlur = (event) => {
-    if (event.target.value === "") {
-      this.setState({
-        visibilityError: "please select visibility",
-      });
-    } else {
-      this.setState({
-        visibilityError: "",
-      });
-    }
-  };
-
-  onCategoryBlur = (event) => {
-    if (event.target.value === "") {
-      this.setState({
-        categoryError: "please select category",
-      });
-    } else {
-      this.setState({
-        categoryError: "",
+        descriptionFocused: false,
       });
     }
   };
@@ -391,9 +409,39 @@ class RequestSection extends Component {
     );
   };
 
+  onUpdateSelectedVisibility = (event) => {
+    const selectedValue = event.target.getAttribute("data-value");
+
+    this.setState({
+      selectedVisibility: selectedValue,
+      showVisibilityContainer: false,
+    });
+  };
+
+  onUpdateSelectedCategory = (event) => {
+    const selectedValue = event.target.getAttribute("data-value");
+
+    this.setState({
+      selectedCategory: selectedValue,
+      showCategoriesContainer: false,
+    });
+  };
+
+  toggleVisibilityContainer = () => {
+    this.setState((prevState) => ({
+      showVisibilityContainer: !prevState.showVisibilityContainer,
+    }));
+  };
+
+  toggleCategoriesContainer = () => {
+    this.setState((prevState) => ({
+      showCategoriesContainer: !prevState.showCategoriesContainer,
+    }));
+  };
+
   renderRequestSection = (
     renderRequestSectionContent,
-
+    youtubeCategories,
     fsr
   ) => {
     const {
@@ -401,6 +449,12 @@ class RequestSection extends Component {
       thumbnailUrl,
       videoTitle,
       videoDescription,
+      titleFocused,
+      descriptionFocused,
+      selectedVisibility,
+      selectedCategory,
+      showVisibilityContainer,
+      showCategoriesContainer,
       videoError,
       thumbnailError,
       titleError,
@@ -417,17 +471,20 @@ class RequestSection extends Component {
       uploadVideoText,
       uploadThumbnailText,
       title_,
+      titlePlaceHolder,
       description_,
+      descriptionPlaceHolder,
       audience_,
       madeForKids,
       notMadeForKids,
       visibility_,
-      select,
+      selectVisibility,
       public_,
       private_,
       category,
       selectCategory,
       creatorInvitationCode,
+      creatorIdPlaceHolder,
       submit,
     } = renderRequestSectionContent;
 
@@ -455,9 +512,10 @@ class RequestSection extends Component {
                   onClick={() => {
                     document.getElementById("video").click(); // Trigger the file input click when the card is clicked
                   }}
+                  error={titleError}
                 >
                   <UploadIcon>
-                    <RiVideoUploadLine />
+                    <IoVideocamOutline />
                   </UploadIcon>
 
                   <UploadText ratio={fsr}>{uploadVideoText}</UploadText>
@@ -490,9 +548,10 @@ class RequestSection extends Component {
                   onClick={() => {
                     document.getElementById("thumbnail").click(); // Trigger the file input click when the card is clicked
                   }}
+                  error={thumbnailError}
                 >
                   <UploadIcon>
-                    <RiVideoUploadLine />
+                    <IoImageOutline />
                   </UploadIcon>
 
                   <UploadText ratio={fsr}>{uploadThumbnailText}</UploadText>
@@ -509,9 +568,14 @@ class RequestSection extends Component {
               />
             </MediaContainer>
           </MediaFilesContainer>
-          <InputContainer>
-            <TitleLabel htmlFor="title" ratio={fsr}>
-              {title_} <InfoIcon>?</InfoIcon>
+          <InputContainer focused={titleFocused} error={titleError !== ""}>
+            <TitleLabel
+              htmlFor="title"
+              ratio={fsr}
+              focused={titleFocused}
+              error={titleError !== ""}
+            >
+              {title_}
             </TitleLabel>
             <TitleTextArea
               name="title"
@@ -525,17 +589,25 @@ class RequestSection extends Component {
                 e.target.style.height = "auto";
                 e.target.style.height = `${e.target.scrollHeight}px`;
               }}
-              placeholder=""
+              placeholder={titlePlaceHolder}
+              onFocus={this.onTitleFocus}
               onBlur={this.onTitleBlur}
               ratio={fsr}
             />
             <CharCount ratio={fsr}>{videoTitle.length}/100</CharCount>
           </InputContainer>
           <ErrorMessage>{titleError}</ErrorMessage>
-          <InputContainer>
-            <DescriptionLabel htmlFor="description" ratio={fsr}>
+          <InputContainer
+            focused={descriptionFocused}
+            error={descriptionError !== ""}
+          >
+            <DescriptionLabel
+              htmlFor="description"
+              ratio={fsr}
+              focused={descriptionFocused}
+              error={descriptionError !== ""}
+            >
               {description_}
-              <InfoIcon>?</InfoIcon>
             </DescriptionLabel>
             <DescriptionTextArea
               name="description"
@@ -549,7 +621,8 @@ class RequestSection extends Component {
                 e.target.style.height = "auto";
                 e.target.style.height = `${e.target.scrollHeight}px`;
               }}
-              placeholder=""
+              placeholder={descriptionPlaceHolder}
+              onFocus={this.onDescriptionFocus}
               onBlur={this.onDescriptionBlur}
               ratio={fsr}
             />
@@ -585,21 +658,33 @@ class RequestSection extends Component {
                 {visibility_}:
               </FormElementHeading>
               <FormElementSelect
-                name="privacy_status"
                 id="status"
-                onBlur={this.onVisibilityBlur}
-                onChange={this.onChangeVisibility}
+                value={selectedVisibility}
+                onClick={this.toggleVisibilityContainer}
               >
-                <FormElementSelectOption value="" disabled selected>
-                  {select} <IoMdArrowDropdown className="select-dropdown" />
-                </FormElementSelectOption>
-                <FormElementSelectOption value="public">
+                {selectedVisibility ? selectedVisibility : selectVisibility}
+                <StyledDropDown rotate={showVisibilityContainer} />
+              </FormElementSelect>
+              <FormElementSelectOptionsContainer show={showVisibilityContainer}>
+                <FormElementSelectOption
+                  data-value="public"
+                  onClick={this.onUpdateSelectedVisibility}
+                >
                   {public_}
                 </FormElementSelectOption>
-                <FormElementSelectOption value="private">
+                <FormElementSelectOption
+                  data-value="private"
+                  onClick={this.onUpdateSelectedVisibility}
+                >
                   {private_}
                 </FormElementSelectOption>
-              </FormElementSelect>
+              </FormElementSelectOptionsContainer>
+              <input
+                type="hidden"
+                name="privacy_status"
+                id="input-status"
+                value={selectedVisibility}
+              />
               <ErrorMessage>{visibilityError}</ErrorMessage>
             </FormElementContainer>
             <FormElementContainer>
@@ -607,20 +692,33 @@ class RequestSection extends Component {
                 {category}:
               </FormElementHeading>
               <FormElementSelect
-                name="category_id"
                 id="category"
-                onBlur={this.onCategoryBlur}
-                onChange={this.onChangeCategory}
+                value={selectedCategory}
+                onClick={this.toggleCategoriesContainer}
               >
-                <FormElementSelectOption value="" disabled selected>
-                  {selectCategory}
-                </FormElementSelectOption>
+                {selectedCategory ? selectedCategory : selectCategory}
+                <StyledDropDown rotate={showCategoriesContainer} />
+              </FormElementSelect>
+              <FormElementSelectOptionsContainer
+                show={showCategoriesContainer}
+                category
+              >
                 {youtubeCategories.map((eachItem) => (
-                  <FormElementSelectOption value={eachItem.id}>
+                  <FormElementSelectOption
+                    key={eachItem.id}
+                    data-value={eachItem.id}
+                    onClick={this.onUpdateSelectedCategory}
+                  >
                     {eachItem.category}
                   </FormElementSelectOption>
                 ))}
-              </FormElementSelect>
+              </FormElementSelectOptionsContainer>
+              <input
+                type="hidden"
+                name="category_id"
+                id="input-category"
+                value={selectedCategory}
+              />
               <ErrorMessage>{categoryError}</ErrorMessage>
             </FormElementContainer>
           </FormElementsContainer>
@@ -632,7 +730,7 @@ class RequestSection extends Component {
               id="creator"
               name="creator_invitation_code"
               type="text"
-              placeholder="fill creator id"
+              placeholder={creatorIdPlaceHolder}
               onBlur={this.onCreatorInvitationCodeInputBlur}
               onChange={this.onChangeCreatorInvitationCode}
               ratio={fsr}
@@ -663,9 +761,10 @@ class RequestSection extends Component {
             renderSubmitMessageContent,
             renderRequestSectionContent,
           } = this.getRequestSectionData(activeLanguage);
+          const youtubeCategories = this.getYoutubeCategories(activeLanguage);
 
           return (
-            <div className={`${showInGray && "show-in-gray"} bg-container`}>
+            <div className={`bg-container ${showInGray && "show-in-gray"}`}  >
               <Header ratio={fsr} />
               <div className="main-container">
                 {responseStatus === 200 ||
@@ -676,11 +775,25 @@ class RequestSection extends Component {
                   ? this.renderLoading(renderLoadingContent)
                   : this.renderRequestSection(
                       renderRequestSectionContent,
-
+                      youtubeCategories,
                       fsr
                     )}
               </div>
               <AccessibilitySection />
+              <ToastContainer
+                position="top-center"
+                autoClose={4000}
+                hideProgressBar={true}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+                transition={Slide}
+                stacked
+              />
             </div>
           );
         }}

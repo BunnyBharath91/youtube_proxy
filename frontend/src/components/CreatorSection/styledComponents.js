@@ -65,18 +65,18 @@ export const TableElement = styled.li`
         return "61%";
       } else if (props.status) {
         return "15%";
-      } else if (props.approve || props.reject) {
+      } else if (props.approve_ || props.reject_) {
         return "12%";
       } else {
         return "0%";
       }
     }};
     display: ${(props) =>
-      props.video || props.status || props.approve || props.reject
+      props.video || props.status || props.approve_ || props.reject_
         ? "block"
         : "none"};
     text-align: ${(props) =>
-      props.approve || props.reject ? "center" : "flex-start"};
+      props.approve_ || props.reject_ ? "center" : "flex-start"};
   }
 
   padding-left: ${(props) => (props.video ? "12px" : "0px")};
@@ -91,20 +91,20 @@ export const TableElement = styled.li`
         return "15%";
       } else if (props.status) {
         return "10%";
-      } else if (props.approve || props.reject) {
+      } else if (props.approve_ || props.reject_) {
         return "10%";
       } else {
         return "0%";
       }
     }};
     text-align: ${(props) =>
-      props.approve || props.reject ? "center" : "flex-start"};
+      props.approve_ || props.reject_ ? "center" : "flex-start"};
   }
 `;
 
 //no requests section styling
 export const NoRequestsContainer = styled.div`
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 160px);
   padding: 1vw 2vw;
   display: flex;
   flex-direction: column;
@@ -112,7 +112,7 @@ export const NoRequestsContainer = styled.div`
   justify-content: center;
 
   @media screen and (min-width: 992px) {
-    min-height: calc(100vh - 76px);
+    min-height: calc(100vh - 180px);
   }
 `;
 
@@ -172,20 +172,17 @@ export const RequestCard = styled.div`
 
 export const RequestThumbnail = styled.img`
   width: 100%;
-  height: 50vw;
+  aspect-ratio: 16/9;
   border-radius: 8px;
 
   @media screen and (min-width: 576px) {
     width: 40%;
-    height: 20vw;
   }
   @media screen and (min-width: 992px) {
     width: 20%;
-    height: 10vw;
   }
   @media screen and (min-width: 1200px) {
     width: 13%;
-    height: min(7vw, 100px);
   }
 `;
 
@@ -226,6 +223,14 @@ export const VideoTitle = styled.p`
     text-overflow: ellipsis;
     margin-bottom: 4px;
   }
+
+  transition: text-decoration 0.5s ease;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
       return props.ratio * 14;
@@ -320,7 +325,7 @@ export const ButtonsContainer = styled.div`
 
 export const RequestedDateTime = styled.p`
   display: none;
-  color: rgb(71, 85, 105);
+  color: gray;
   font-weight: 500;
   font-size: ${(props) => {
     return props.ratio * 14;
@@ -336,7 +341,7 @@ export const RequestedDateTime = styled.p`
 
 export const LargeScreenRequestStatus = styled.p`
   display: none;
-  color: rgb(71, 85, 105);
+  color: gray;
   font-weight: 500;
   @media screen and (min-width: 992px) {
     display: block;
@@ -367,11 +372,63 @@ export const LargeScreenResponseButtonContainer = styled.div`
   text-align: center;
 `;
 
+//button colors
+const buttonColors = {
+  approve: "#46A758",
+  reject: "#E54D2E",
+  other: "#3356C7",
+};
+
+//button background colors
+const buttonBgColors = {
+  approve: "#F5FBF5",
+  reject: "#FFF7F7",
+  other: "#edf2fe",
+};
+
+//button hover background colors
+const buttonHoverColors = {
+  approve: "#E9F6E9",
+  reject: "#FFDBDC",
+  other: "#E1E9FF",
+};
+
 export const Button = styled.button`
-  border: 1px solid gray;
-  padding: 6px 10px;
+  color: ${(props) =>
+    props.approve_
+      ? buttonColors.approve
+      : props.reject_
+      ? buttonColors.reject
+      : buttonColors.other};
+  border: 1px solid
+    ${(props) =>
+      props.approve_
+        ? buttonColors.approve
+        : props.reject_
+        ? buttonColors.reject
+        : buttonColors.other};
+  padding: 8px 14px;
   border-radius: 6px;
-  background-color: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: ${(props) =>
+    props.approve_
+      ? buttonBgColors.approve
+      : props.reject_
+      ? buttonBgColors.reject
+      : buttonBgColors.other};
+  cursor: pointer;
+
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: ${(props) =>
+      props.approve_
+        ? buttonHoverColors.approve
+        : props.reject_
+        ? buttonHoverColors.reject
+        : buttonHoverColors.other};
+  }
 `;
 
 //loading section styling

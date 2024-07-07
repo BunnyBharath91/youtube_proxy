@@ -3,6 +3,7 @@ lockfileVersion: 5.3
 specifiers:
   axios: ^1.7.2
   cloudinary: ^2.2.0
+  connect-sqlite3: ^0.9.15
   cors: ^2.8.5
   date-fns: ^3.6.0
   dotenv: ^16.4.5
@@ -22,6 +23,7 @@ specifiers:
 dependencies:
   axios: 1.7.2
   cloudinary: 2.2.0
+  connect-sqlite3: 0.9.15
   cors: 2.8.5
   date-fns: 3.6.0
   dotenv: 16.4.5
@@ -399,6 +401,15 @@ packages:
       inherits: 2.0.4
       readable-stream: 2.3.8
       typedarray: 0.0.6
+    dev: false
+
+  /connect-sqlite3/0.9.15:
+    resolution: {integrity: sha512-aJGDtASX8DTUZ++7iTN97vR0vGFpm8jDFew/qHK3veISkCpVpPS0tMdqs7i9fiHLaqaU0Jh3c4sUvNxsizaSTA==}
+    engines: {node: '>=0.4.x'}
+    dependencies:
+      sqlite3: 5.1.7
+    transitivePeerDependencies:
+      - supports-color
     dev: false
 
   /console-control-strings/1.1.0:

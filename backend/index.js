@@ -10,6 +10,7 @@ const { v4: uuidv4 } = require("uuid");
 const { config } = require("dotenv"); // importing the config function and invoking it by calling it(i.e. config()) so that all the local environment variables are loaded into the memory and we can reference them
 config(); // or we can just write //require('dotenv').config();
 const session = require("express-session");
+const SQLiteStore = require("connect-sqlite3")(session);
 const ejs = require("ejs");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
@@ -34,8 +35,13 @@ app.use(
   })
 );
 
+const store = new SQLiteStore({
+  sessionDB: path.join(__dirname, "database", "sessions.sqlite"),
+});
+
 app.use(
   session({
+    store: store,
     secret: process.env.KEY, //given secrete key,  and this secrete key is used to generate sessionId when a user login into out application. and keep this secreteKey as strong as we can
     resave: false,
     saveUninitialized: true,
@@ -212,29 +218,6 @@ const initializeDBAndServer = async () => {
       driver: sqlite3.Database,
     });
 
-    const createTablesQuery = `
-    CREATE TABLE IF NOT EXISTS videos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    video_url TEXT NOT NULL,
-    title TEXT NOT NULL,
-    description TEXT,
-    thumbnail_url TEXT,
-    audience TEXT,
-    tags TEXT,
-    category_id INTEGER,
-    privacy_status TEXT NOT NULL,
-    from_user TEXT,
-    to_user TEXT,
-    requested_date_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    response_date_time DATETIME,
-    video_access_token TEXT,
-    request_status TEXT,
-    video_upload_status TEXT DEFAULT 'not uploaded',
-    video_refresh_token TEXT,
-    FOREIGN KEY (from_user) REFERENCES users(id),
-    FOREIGN KEY (to_user) REFERENCES users(id);
-    `;
-
     app.listen(5000, () => {
       console.log("server is running on http://localhost:5000");
     });
@@ -312,8 +295,8 @@ app.post(
       // Prepare and execute the SQL INSERT query using parameterized query
       const addDetailsQuery = `
         INSERT INTO VIDEOS(video_url, title, description, thumbnail_url, audience, category_id,
-                            privacy_status,request_status, from_user, to_user) 
-        VALUES(?, ?, ?, ?, ?, ?, ?,'pending', ?, ?);
+                            privacy_status,request_status, from_user, to_user,video_public_id,thumbnail_public_id) 
+        VALUES(?, ?, ?, ?, ?, ?, ?,'pending', ?, ?,?,?);
       `;
       const addingResponse = await db.run(addDetailsQuery, [
         videoUploadResponse.url,
@@ -325,6 +308,8 @@ app.post(
         privacyStatus,
         request.user.userName,
         creatorUserName,
+        videoUploadResponse.public_id,
+        thumbnailUploadResponse.public_id,
       ]);
 
       console.log("Inserted video details:", addingResponse.lastID);
@@ -377,16 +362,6 @@ app.get("/home", async (request, response) => {
   }
 });
 
-// app.get("/dashboard", async (request, response) => {
-//   if (request.isAuthenticated()) {
-//     // isAuthenticated is a method which comes from the passport Module. It returns true if the user is authenticated or else it returns false
-//     // console.log(request.user);
-//     response.render(path.join(__dirname, "dashboard.ejs"), {
-//       user: request.user,
-//     });
-//   }
-// });
-
 app.get(
   "/oauth/google",
 
@@ -420,12 +395,12 @@ app.get("/user/details", async (request, response) => {
   if (request.isAuthenticated()) {
     console.log("user email", request.user.emails[0].value);
     const query = `
-    SELECT username FROM users WHERE email=?;
+    SELECT invitation_code FROM users WHERE email=?;
     `;
     const dbResponse = await db.get(query, request.user.emails[0].value);
     response.json({
-      username: dbResponse.username,
-      userEmail: request.user.emails[0].value,
+      invitationCode: dbResponse.invitation_code,
+      userEmail: request.user.emails[0].value, // there is no need of sending this for now
       userImage: request.user.photos[0].value,
       displayName: request.user.displayName,
     });
@@ -623,6 +598,45 @@ app.get("/resend/:videoId", ensureAuthenticated, async (request, response) => {
   }
 });
 
+// Function to delete resource from Cloudinary
+const deleteFromCloudinary = async (
+  videoId,
+  publicId,
+  resourceType = "image"
+) => {
+  const columnName =
+    resourceType === "image" ? "thumbnail_public_id" : "video_public_id";
+  const addToPendingDeletesTableQuery = `
+    INSERT INTO pending_deletes(${columnName}, video_id)
+    VALUES(?, ?);
+  `;
+
+  try {
+    // Starting the transaction
+    await db.run("BEGIN TRANSACTION;");
+
+    // Adding publicId to pending_deletes table
+    await db.run(addToPendingDeletesTableQuery, [publicId, videoId]);
+
+    // Deleting resource from Cloudinary
+    await v2.uploader.destroy(publicId, { resource_type: resourceType });
+
+    // Removing entry from pending_deletes table
+    const removeFromPendingDeletesTableQuery = `
+      DELETE FROM pending_deletes WHERE ${columnName} = ? AND video_id = ?;
+    `;
+    await db.run(removeFromPendingDeletesTableQuery, [publicId, videoId]);
+
+    // Committing transaction
+    await db.run("COMMIT;");
+  } catch (error) {
+    // Rollback transaction on error
+    await db.run("ROLLBACK;");
+    console.error(`Error deleting ${resourceType} from Cloudinary:`, error);
+    // For handling error manually if any error occurs
+  }
+};
+
 //delete the request
 app.delete(
   "/delete/:videoId",
@@ -630,11 +644,24 @@ app.delete(
   async (request, response) => {
     const { videoId } = request.params;
 
+    const getDetailsQuery = `
+    SELECT video_public_id,thumbnail_public_id from videos WHERE id=?
+    `;
+
     const deleteRequest = `
         DELETE FROM videos WHERE id=?;
     `;
 
     try {
+      const getResponse = await db.get(getDetailsQuery, [videoId]);
+
+      if (!getResponse) {
+        return response.status(404).json({ error: "Video not found" });
+      }
+
+      await deleteFromCloudinary(videoId, getResponse.video_public_id, "video");
+      await deleteFromCloudinary(videoId, getResponse.thumbnail_public_id);
+
       const deleteResponse = await db.run(deleteRequest, [videoId]);
       response.json({ message: "Video deleted successfully", deleteResponse });
     } catch (error) {
@@ -687,7 +714,7 @@ app.post("/upload-video", async (req, res) => {
 
   console.log("video id is :", videoId);
 
-  const getVideoDetails = `select * from videos where id=?;`;
+  const getVideoDetails = `SELECT * FROM videos WHERE id=?;`;
   const getVideoDetailsResponse = await db.get(getVideoDetails, [videoId]);
 
   const {
@@ -696,11 +723,14 @@ app.post("/upload-video", async (req, res) => {
     description,
     thumbnail_url,
     category_id,
+    audience,
     privacy_status,
     video_refresh_token,
+    video_public_id,
+    thumbnail_public_id,
   } = getVideoDetailsResponse;
 
-  console.log("title,description:", title, description);
+  console.log("title, description:", title, description);
   console.log(
     "this is the refreshToken while uploading video: ",
     video_refresh_token
@@ -747,6 +777,7 @@ app.post("/upload-video", async (req, res) => {
         },
         status: {
           privacyStatus: privacy_status,
+          selfDeclaredMadeForKids: audience === "yes",
         },
       }),
       { contentType: "application/json" }
@@ -799,13 +830,6 @@ app.post("/upload-video", async (req, res) => {
     console.log("Response from YouTube:", videoResponseBody);
     isVideoUploaded = true;
 
-    // Update the video upload status in the database
-    const updateVideoUploadStatusQuery = `UPDATE videos SET video_upload_status='uploaded' WHERE id=?;`;
-    await db.run(updateVideoUploadStatusQuery, [videoId]);
-
-    // Clean up the downloaded video file
-    cleanupFiles(videoFileName, null);
-
     // Upload thumbnail
     const thumbnailForm = new FormData();
     thumbnailForm.append(
@@ -854,11 +878,22 @@ app.post("/upload-video", async (req, res) => {
       }
     }
 
-    console.log(
-      "Thumbnail uploaded successfully:",
-      await thumbnailResponse.json()
-    );
+    const thumbnailResponseBody = await thumbnailResponse.json();
+    console.log("Thumbnail uploaded successfully:", thumbnailResponseBody);
     cleanupFiles(null, thumbnailFileName);
+
+    // Delete resources from Cloudinary
+    await deleteFromCloudinary(videoId, video_public_id, "video");
+    await deleteFromCloudinary(videoId, thumbnail_public_id, "image");
+    console.log("successfully deleted from cloudinary");
+
+    // Update the video and thumbnail URLs in the database
+    const updateVideoDetailsQuery = `UPDATE videos SET video_url=?, thumbnail_url=?, video_upload_status='uploaded' WHERE id=?;`;
+    await db.run(updateVideoDetailsQuery, [
+      youtubeVideoId,
+      thumbnailResponseBody.items[0].default.url, // Use the correct path to extract the URL
+      videoId,
+    ]);
 
     res.json({ message: "Video and thumbnail uploaded successfully." });
   } catch (error) {

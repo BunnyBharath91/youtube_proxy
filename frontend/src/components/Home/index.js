@@ -1,3 +1,5 @@
+import { ToastContainer, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
@@ -73,6 +75,21 @@ const Home = () => {
               </HomeContainer>
             </div>
             <AccessibilitySection />
+
+            <ToastContainer
+              position="top-center"
+              autoClose={4000}
+              hideProgressBar={true}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="colored"
+              transition={Slide}
+              stacked
+            />
           </div>
         );
       }}

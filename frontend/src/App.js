@@ -9,6 +9,7 @@ import RequestSection from "./components/RequestSection";
 import Login from "./components/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LanguageAndAccessibilityContext from "./context/languageAndAccessibilityContext";
+import { toast } from "react-toastify";
 import "./App.css";
 
 class App extends Component {
@@ -32,7 +33,7 @@ class App extends Component {
         fontSizeRatio: prevState.fontSizeRatio + 0.15,
       }));
     } else {
-      return alert("max size reached");
+      return toast.warn("Maximum size reached");
     }
   };
 
@@ -43,7 +44,7 @@ class App extends Component {
         fontSizeRatio: prevState.fontSizeRatio - 0.15,
       }));
     } else {
-      return alert("min size reached");
+      return toast.warn("Minimum size reached");
     }
   };
 

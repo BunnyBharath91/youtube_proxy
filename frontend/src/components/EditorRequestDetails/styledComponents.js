@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-export const EditorRequestDetailsSection = styled.div`
+export const RequestDetailsSection = styled.div`
   min-height: calc(100vh - 60px);
   padding: 0px 5vw 24px;
   display: flex;
@@ -64,9 +64,9 @@ export const MediaCard = styled.div`
 
 export const RequestDetailsHeading = styled.h2`
   font-size: ${(props) => {
-    return props.ratio * 14;
+    return props.ratio * 13;
   }}px;
-  font-weight: 600;
+  font-weight: 500;
   color: rgb(54, 73, 98);
   line-height: 22px;
   padding-left: 4px;
@@ -95,14 +95,13 @@ export const RequestDetailsHeading = styled.h2`
 
 export const MediaItem = styled.video`
   width: 100%;
-  height: 50vw;
+  aspect-ratio: 16/9;
   border-radius: 10px;
 
   @media screen and (min-width: 576px) {
     border-radius: 18px;
   }
   @media screen and (min-width: 768px) {
-    height: 25vw;
     border-radius: 10px;
   }
   @media screen and (min-width: 1200px) {
@@ -116,10 +115,10 @@ export const TextContainer = styled.div`
   margin-bottom: 12px;
   border: solid 1px #c7c7c7;
   border-radius: 4px;
-  padding: 12px 12px 22px 12px;
+  padding: 12px 12px 18px;
 `;
 export const VideoTitleHeading = styled.h2`
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   font-size: ${(props) => {
     return props.ratio * 12;
   }}px;
@@ -136,24 +135,18 @@ export const VideoTitleHeading = styled.h2`
       return props.ratio * 14;
     }}px;
   }
-  @media screen and (min-width: 992px) {
-    font-size: ${(props) => {
-      return props.ratio * 15;
-    }}px;
-  }
 `;
 export const VideoTitle = styled.p`
   border-radius: 4px;
   font-size: ${(props) => {
-    return props.ratio * 16;
+    return props.ratio * 15;
   }}px;
+
   line-height: 1.2em;
-  overflow-y: auto; /*vertical scrollbar when content overflows */
-  max-height: 5em; /* Limit the height to four lines */
 
   @media screen and (min-width: 768px) {
     font-size: ${(props) => {
-      return props.ratio * 15;
+      return props.ratio * 16;
     }}px;
   }
   @media screen and (min-width: 992px) {
@@ -175,32 +168,31 @@ export const ElementsContainer = styled.div`
 `;
 export const Element = styled.h2`
   font-size: ${(props) => {
-    return props.ratio * 14;
+    return props.ratio * 12;
   }}px;
 
-  font-weight: 600;
+  font-weight: 500;
   color: rgb(54, 73, 98);
   margin-bottom: 8px;
   line-height: 22px;
   @media screen and (min-width: 576px) {
     font-size: ${(props) => {
-      return props.ratio * 15;
+      return props.ratio * 14;
     }}px;
-    line-height: 24px;
+    line-height: 20px;
   }
 
   @media screen and (min-width: 768px) {
     width: 45%;
     font-size: ${(props) => {
-      return props.ratio * 16;
+      return props.ratio * 15;
     }}px;
-    line-height: 28px;
+    line-height: 24px;
   }
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
-      return props.ratio * 18;
+      return props.ratio * 16;
     }}px;
-    line-height: 32px;
   }
 `;
 
@@ -221,14 +213,14 @@ export const ElementValue = styled.span`
   }
 `;
 export const ButtonsContainer = styled.div`
-  margin: 12px 0px 0px 8px;
+  margin-top: 12px;
   display: flex;
   align-items: center;
   gap: 20px;
 `;
 
 //loading section styling
-export const LoadingSection = styled(EditorRequestDetailsSection)`
+export const LoadingSection = styled(RequestDetailsSection)`
   align-items: center;
   justify-content: center;
 `;
@@ -276,28 +268,87 @@ export const FetchingErrorMessage = styled.p`
 `;
 
 //Render upload Response
-export const UploadResponseSection = styled(EditorRequestDetailsSection)`
+export const UploadResponseSection = styled(RequestDetailsSection)`
   align-items: center;
   justify-content: center;
 `;
 export const UploadResponseImage = styled(LoadingImage)``;
 export const UploadResponseMessage = styled(LoadingText)``;
 
-export const Button = styled.button`
-  align-self: ${(props) => {
-    if (props.upload || props.delete || props.resend) {
-      return "flex-start";
-    }
-  }};
+// Button colors
+const buttonColors = {
+  approve: "#46A758",
+  reject: "#E54D2E",
+  upload: "#3356C7",
+  resend: "#3356C7",
+};
 
-  font-size: 14px;
+// Button background colors
+const buttonBgColors = {
+  approve: "#F5FBF5",
+  reject: "#FFF7F7",
+  upload: "#edf2fe",
+  resend: "#edf2fe",
+};
+
+// Button hover background colors
+const buttonHoverColors = {
+  approve: "#E9F6E9",
+  reject: "#FFDBDC",
+  upload: "#E1E9FF",
+  resend: "#E1E9FF",
+};
+
+export const Button = styled.button`
+  font-size: ${(props) => {
+    if (props.ratio > 1) {
+      return (1 + (props.ratio - 1) / 2) * 14;
+    } else if (props.ratio < 1) {
+      return (1 - (1 - props.ratio) / 2) * 14;
+    } else {
+      return 14;
+    }
+  }}px;
   font-weight: 500;
-  border: 1px solid gray;
+  color: ${(props) => {
+    if (props.approve_) return buttonColors.approve;
+    if (props.upload || props.resend) return buttonColors.upload;
+    return buttonColors.reject;
+  }};
+  border: 1px solid
+    ${(props) => {
+      if (props.approve_) return buttonColors.approve;
+      if (props.upload || props.resend) return buttonColors.upload;
+      return buttonColors.reject;
+    }};
   padding: 8px 16px;
   border-radius: 6px;
-  background-color: transparent;
+  background-color: ${(props) => {
+    if (props.approve_) return buttonBgColors.approve;
+    if (props.upload || props.resend) return buttonBgColors.upload;
+    return buttonBgColors.reject;
+  }};
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: ${(props) => {
+      if (props.approve_) return buttonHoverColors.approve;
+      if (props.upload || props.resend) return buttonHoverColors.upload;
+      return buttonHoverColors.reject;
+    }};
+  }
+
   @media screen and (min-width: 992px) {
-    font-size: 16px;
+    font-size: ${(props) => {
+      if (props.ratio > 1) {
+        return (1 + (props.ratio - 1) / 2) * 16;
+      } else if (props.ratio < 1) {
+        return (1 - (1 - props.ratio) / 2) * 16;
+      } else {
+        return 16;
+      }
+    }}px;
     padding: 10px 20px;
   }
 `;

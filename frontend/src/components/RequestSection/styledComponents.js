@@ -1,5 +1,7 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { TbReplace } from "react-icons/tb";
+
+import { FaChevronDown } from "react-icons/fa6";
 
 export const RequestSectionContainer = styled.div`
   min-height: calc(100vh - 60px);
@@ -68,11 +70,10 @@ export const MediaContainer = styled.div`
 
   width: 100%;
   max-width: 940px;
-  height: 50vw;
-  max-height: 460px;
+  aspect-ratio: 16/9;
+
   @media screen and (min-width: 768px) {
     width: 49%;
-    height: 25vw;
   }
 `;
 
@@ -97,13 +98,14 @@ export const StyledFileReplaceIcon = styled(TbReplace)`
 export const MyFile = styled.video`
   width: 100%;
   height: 100%;
+  aspect-ratio: 16/9;
   border: solid 2px #616e7c;
   border-radius: 10px;
 `;
 
 export const PreviewCard = styled.div`
   height: 100%;
-  border: dashed 2px #616e7c;
+  border: dashed 2px ${(props) => (props.error ? "red" : "#616e7c")};
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -113,7 +115,8 @@ export const PreviewCard = styled.div`
 `;
 
 export const UploadIcon = styled.div`
-  font-size: 34px;
+  font-size: 28px;
+  height: 32px;
 `;
 export const UploadText = styled.p`
   font-size: ${(props) => {
@@ -144,62 +147,74 @@ export const InputContainer = styled.div`
   width: 100%; /* 100% for full width on small screens */
   max-width: 768px; /*max width for larger screens */
   margin-top: 12px;
-  border: solid 1px #c7c7c7;
+  transition: border-color 0.3s;
+  border: solid 1px
+    ${(props) => (props.focused ? "blue" : props.error ? "red" : "#c7c7c7")};
   border-radius: 4px;
-  padding: 12px 12px 22px 12px;
+
+  padding: 8px 12px 22px 12px;
 `;
 
 export const TitleLabel = styled.label`
-  margin-bottom: 5px;
+  display: block;
+  margin-bottom: 6px;
 
   font-size: ${(props) => {
     return props.ratio * 14;
   }}px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 24px;
-  color: rgb(71, 85, 105);
+  transition: color 0.3s;
+  color: ${(props) =>
+    props.focused ? "blue" : props.error ? "red" : "rgb(71, 85, 105)"};
+
   @media screen and (min-width: 768px) {
     font-size: ${(props) => {
       return props.ratio * 16;
     }}px;
   }
-  @media screen and (min-width: 992px) {
-    font-size: ${(props) => {
-      return props.ratio * 17;
-    }}px;
-  }
 `;
 
-export const InfoIcon = styled.span`
-  display: inline-block;
-  margin-left: 5px;
-  color: #6c757d;
-  cursor: pointer;
-  font-size: 12px;
-`;
 export const TitleTextArea = styled.textarea`
   width: 100%;
-
   font-size: ${(props) => {
-    return props.ratio * 16;
+    return props.ratio * 15;
   }}px;
-
-  box-sizing: border-box;
   border: none;
   outline: none;
   resize: none; /* Prevents the user from resizing the textarea */
   overflow: hidden; /* Hides the scrollbar */
   font-family: Inter;
   line-height: 1.2em;
+  margin-bottom: 10px;
+
+  &::placeholder {
+    color: #a0a0a0;
+    font-size: ${(props) => props.ratio * 14}px;
+  }
+
+  /* Styles for scrollbar */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #c7c7c7 #f5f5f5; /* Firefox */
+  &::-webkit-scrollbar {
+    width: 6px; /* Width of the scrollbar */
+  }
+
   @media screen and (min-width: 768px) {
+    font-size: ${(props) => {
+      return props.ratio * 16;
+    }}px;
+    &::placeholder {
+      font-size: ${(props) => props.ratio * 15}px;
+    }
+  }
+  @media screen and (min-width: 992px) {
     font-size: ${(props) => {
       return props.ratio * 17;
     }}px;
   }
-  @media screen and (min-width: 992px) {
-    font-size: ${(props) => {
-      return props.ratio * 18;
-    }}px;
+  &::placeholder {
+    font-size: ${(props) => props.ratio * 16}px;
   }
 `;
 
@@ -216,21 +231,12 @@ export const CharCount = styled.div`
 
 export const DescriptionLabel = styled(TitleLabel)``;
 
-export const DescriptionTextArea = styled.textarea`
-  width: 100%;
-  border: none;
-  outline: none;
-
-  font-size: ${(props) => {
-    return props.ratio * 16;
-  }}px;
-  box-sizing: border-box;
-  resize: none; /* Prevents the user from resizing the textarea */
+export const DescriptionTextArea = styled(TitleTextArea)`
   overflow-y: auto; /* Enables vertical scrollbar */
   height: auto; /* Ensure the textarea adjusts its height */
   max-height: calc(1.2em * 5); /* Set the maximum height to 5 rows */
   line-height: 1.2em; /* Adjust the line height to match your needs */
-  font-family: Inter;
+
   @media screen and (min-width: 768px) {
     font-size: ${(props) => {
       return props.ratio * 17;
@@ -263,6 +269,7 @@ export const FormElementContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  position: relative;
   margin-top: 12px;
   @media screen and (min-width: 576px) {
     width: ${(props) => (props.creatorCode ? "100%" : "40%")};
@@ -277,7 +284,7 @@ export const FormElementHeading = styled.h2`
     return props.ratio * 14;
   }}px;
 
-  font-weight: 600;
+  font-weight: 500;
   color: rgb(51, 65, 85);
   margin-bottom: 8px;
   @media screen and (min-width: 576px) {
@@ -322,34 +329,121 @@ export const AudienceTypeRadio = styled.input`
   height: 1.5em;
 `;
 
-export const FormElementSelect = styled.select`
-  width: 150px;
-  padding: 8px 12px;
-  margin-left: 14px;
-  color: #333333;
-  border: 1px solid #dddddd;
-  outline: none;
+export const FormElementSelect = styled.div`
+  min-width: 160px;
+  height: 40px;
+  font-size: 15px;
+  padding: 6px 12px;
+  margin-left: 12px;
+  border: solid 1px #e2e2e2;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 25px;
   cursor: pointer;
-  border-radius: 5px;
-  /* for replacing default arrow styling*/
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 12l-7-7 1.5-1.5L10 9.0l5.5-5.5L18 5.5z"/></svg>')
-    no-repeat right 8px center/10px 10px; /* Change the SVG URL to your arrow icon */
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #f1f5f9;
+  }
 `;
 
-export const FormElementSelectOption = styled.option`
-  width: 150px;
-  padding: 8px 12px;
-  margin-left: 14px;
-  color: #333333;
-  border: 1px solid #dddddd;
+export const StyledDropDown = styled(FaChevronDown)`
+  margin-left: auto;
+  color: rgb(71, 85, 105);
+  transition: transform 0.5s ease;
+
+  ${(props) =>
+    props.rotate &&
+    `
+      transform: rotate(-180deg);
+    `}
+`;
+
+//dropdown Animation
+
+const slideIn = keyframes`
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+`;
+
+const slideOut = keyframes`
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-20px);
+    opacity: 0;
+    display: none;
+  }
+`;
+
+export const FormElementSelectOptionsContainer = styled.ul`
+  background-color: white;
+  width: ${(props) => (props.category ? "180px" : "170px")};
+  max-height: 135px;
+  overflow-y: auto;
+  position: absolute;
+  top: 70px;
+  left: 12px;
+  z-index: 2;
+  z-index: ${(props) => (props.category ? 2 : 3)};
+  box-shadow: rgb(224, 231, 238) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.12) 2px 6px 10px 0px;
+  border-radius: 6px;
   cursor: pointer;
-  border-radius: 5px;
-  padding: 8px 12px;
-  background-color: #ffffff; /* Adjust as per your design */
-  color: #333333; /* Adjust as per your design */
+  animation: ${(props) => (props.show ? slideIn : slideOut)} 0.5s ease-in-out
+    forwards;
+
+  /* Styles for scrollbar */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #c7c7c7 #f5f5f5; /* Firefox */
+  &::-webkit-scrollbar {
+    width: 6px; /* Width of the scrollbar */
+  }
+
+  @media screen and (min-width: 576px) {
+    right: calc(5vw + 140px);
+  }
+
+  @media screen and (min-width: 768px) {
+    right: max(5vw + 300px, calc((100vw - 1920px) / 2 + 5vw + 300px));
+  }
+
+  @media screen and (min-width: 992px) {
+    top: 75px;
+  }
+`;
+
+export const FormElementSelectOption = styled.li`
+  list-style-type: none;
+  font-size: 14px;
+  height: 40px;
+
+  border-top: 1px solid rgba(123, 135, 148, 0.16);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0px 20px;
+  //   color: rgb(97, 110, 124);
+  color: ${(props) => props.selected && "blue"};
+
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #f1f5f9;
+  }
+
+  @media screen and (min-width: 992px) {
+    height: 45px;
+  }
 `;
 
 export const InputCreator = styled.input`
@@ -381,11 +475,19 @@ export const Button = styled.button`
     return props.ratio * 14;
   }}px;
   font-weight: 500;
-  border: 1px solid gray;
+  color: #3356c7;
+  border: 1px solid #3356c7;
   border-radius: 6px;
   padding: 8px 16px;
   margin-top: 12px;
-  background-color: transparent;
+  background-color: #edf2fe;
+  cursor: pointer;
+
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #e1e9ff;
+  }
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
       return props.ratio * 16;

@@ -1,16 +1,21 @@
 import { Component } from "react";
+import { withRouter } from "react-router-dom";
+import { ToastContainer, toast, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
-import loading from "../../images/loading.png";
 import { TailSpin } from "react-loader-spinner";
-import notFound from "../../images/notFound.png";
-import apology from "../../images/apology.png";
-import errorWhileUploading from "../../images/errorWhileUploading.jpg";
-import forbidden from "../../images/forbidden.jpg";
-import successful from "../../images/successful.jpg";
 import {
-  EditorRequestDetailsSection,
+  loading,
+  notFound,
+  apology,
+  errorWhileUploading,
+  forbidden,
+  successful,
+} from "../../images";
+import {
+  RequestDetailsSection,
   RequestHeading,
   MediaContainer,
   MediaCard,
@@ -43,6 +48,7 @@ class EditorRequestDetails extends Component {
     this.state = {
       requestDetails: {},
       loading: true,
+      isProcessing: false,
       fetchingErrorStatus: "",
       uploadResponse: "",
       uploadResponseMessage: "",
@@ -165,6 +171,10 @@ class EditorRequestDetails extends Component {
 
   onDeleteRequest = async () => {
     const { videoId } = this.props.match.params;
+    const { history } = this.props;
+    this.setState({
+      isProcessing: true,
+    });
     try {
       const response = await fetch(`/delete/${videoId}`, {
         method: "DELETE",
@@ -173,15 +183,17 @@ class EditorRequestDetails extends Component {
         },
       });
       if (response.ok) {
-        alert("Your Request Deleted Successfully");
-        this.props.history.push("/editor_section/requests");
+        toast.success("Deleted Successfully");
+        history.push("/editor_section");
       } else {
-        throw new Error("Failed to process your request. Please try again.");
+        toast.error("Failed to Delete");
       }
-    } catch (error) {
-      console.error("Error deleting request:", error);
-      alert("Failed to delete request. Please try again.");
+    } catch (err) {
+      toast.error("Failed to delete");
     }
+    this.setState({
+      isProcessing: false,
+    });
   };
 
   onUploadVideo = async (activeLanguage) => {
@@ -381,7 +393,7 @@ class EditorRequestDetails extends Component {
     activeLanguage,
     fsr
   ) => {
-    const { requestDetails } = this.state;
+    const { requestDetails, isProcessing } = this.state;
     const {
       requestHeading,
       video,
@@ -415,7 +427,6 @@ class EditorRequestDetails extends Component {
       title,
       thumbnailUrl,
       description,
-      visibility,
       categoryId,
       privacyStatus,
       requestedDateTime,
@@ -429,17 +440,26 @@ class EditorRequestDetails extends Component {
 
     return (
       <>
-        <EditorRequestDetailsSection>
+        <RequestDetailsSection>
           <RequestHeading ratio={fsr}>{requestHeading}</RequestHeading>
           <MediaContainer>
             <MediaCard>
               <RequestDetailsHeading ratio={fsr}>
                 {video}:{" "}
               </RequestDetailsHeading>
-              <MediaItem controls poster={thumbnailUrl} preload="auto">
-                <source src={videoUrl} type="video/mp4" />
-                {mediaItemText}
-              </MediaItem>
+              {videoUploadStatus === "not uploaded" && (
+                <MediaItem controls poster={thumbnailUrl} preload="auto">
+                  <source src={videoUrl} type="video/mp4" />
+                  {mediaItemText}
+                </MediaItem>
+              )}
+              {videoUploadStatus === "uploaded" && (
+                <MediaItem
+                  as="iframe"
+                  src={`https://www.youtube.com/embed/${videoUrl}`}
+                  allowFullScreen
+                ></MediaItem>
+              )}
             </MediaCard>
             <MediaCard>
               <RequestDetailsHeading ratio={fsr}>
@@ -523,24 +543,34 @@ class EditorRequestDetails extends Component {
                   <Button
                     onClick={() => this.onUploadVideo(activeLanguage)}
                     upload
+                    disabled={isProcessing}
                   >
                     {upload}
                   </Button>
                 )
               ) : (
-                <Button onClick={this.resendRequest} resend>
+                <Button
+                  onClick={this.resendRequest}
+                  resend
+                  disabled={isProcessing}
+                >
                   {resendRequest}
                 </Button>
               ))}
 
             {videoUploadStatus === "not uploaded" &&
               requestStatus !== "pending" && (
-                <Button onClick={this.onDeleteRequest} ratio={fsr} delete>
+                <Button
+                  onClick={this.onDeleteRequest}
+                  ratio={fsr}
+                  delete
+                  disabled={isProcessing}
+                >
                   {deleteRequest}
                 </Button>
               )}
           </ButtonsContainer>
-        </EditorRequestDetailsSection>
+        </RequestDetailsSection>
       </>
     );
   };
@@ -577,6 +607,20 @@ class EditorRequestDetails extends Component {
                     )}
               </div>
               <AccessibilitySection />
+              <ToastContainer
+                position="top-center"
+                autoClose={4000}
+                hideProgressBar={true}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+                transition={Slide}
+                stacked
+              />
             </div>
           );
         }}
@@ -585,4 +629,4 @@ class EditorRequestDetails extends Component {
   }
 }
 
-export default EditorRequestDetails;
+export default withRouter(EditorRequestDetails);

@@ -1,12 +1,13 @@
 import { Component } from "react";
+import { ToastContainer, toast, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
 import { TailSpin } from "react-loader-spinner";
-import notFound from "../../images/notFound.png";
-import apology from "../../images/apology.png";
+import { apology, notFound } from "../../images";
 import {
-  CreatorRequestDetailsSection,
+  RequestDetailsSection,
   RequestHeading,
   MediaContainer,
   MediaCard,
@@ -22,12 +23,10 @@ import {
   ElementValue,
   ButtonsContainer,
   Button,
-  ErrorMessage,
-  Err,
   LoadingSection,
   FetchingErrorImage,
   FetchingErrorMessage,
-} from "./styledComponents";
+} from "../EditorRequestDetails/styledComponents";
 import { requestDetailsContent } from "../EditorRequestDetails/languageContent";
 import { youtubeCategories } from "../RequestSection/languageContent";
 
@@ -37,8 +36,8 @@ class CreatorRequestDetails extends Component {
     this.state = {
       requestDetails: {},
       loading: true,
+      isProcessing: false,
       fetchingErrorStatus: "",
-      errorMessage: "",
     };
   }
 
@@ -120,15 +119,16 @@ class CreatorRequestDetails extends Component {
         loading: false,
         requestDetails: updatedData,
       });
-    } catch (error) {
-      console.error("Error fetching requests:", error);
+    } catch (err) {
       this.setState({ loading: false, fetchingErrorStatus: 500 }); //just kept the errorStatus as 500 to show the fetchingError component
     }
   };
 
   onApprove = async () => {
     const { videoId } = this.props.match.params;
-
+    this.setState({
+      isProcessing: true,
+    });
     try {
       const response = await fetch(`/response/${videoId}`, {
         method: "PUT",
@@ -140,19 +140,24 @@ class CreatorRequestDetails extends Component {
 
       if (response.ok) {
         await this.getRequestDetails(videoId);
+        toast.success("Request approved successfully");
       } else {
-        throw new Error("Failed to process your request. Please try again.");
+        toast.error("Request approval failed");
       }
-    } catch (error) {
-      console.error("Error processing approval:", error);
-      this.setState({
-        errorMessage: "Failed to process your request. Please try again.",
-      });
+    } catch (err) {
+      toast.error("Failed to process request");
     }
+    this.setState({
+      isProcessing: false,
+    });
   };
 
   onReject = async () => {
     const { videoId } = this.props.match.params;
+
+    this.setState({
+      isProcessing: true,
+    });
 
     try {
       const response = await fetch(`/response/${videoId}`, {
@@ -165,14 +170,12 @@ class CreatorRequestDetails extends Component {
 
       if (response.ok) {
         await this.getRequestDetails(videoId);
+        toast.success("Request rejected successfully");
       } else {
-        throw new Error("Failed to process your request. Please try again.");
+        toast.error("Request rejection failed");
       }
-    } catch (error) {
-      console.error("Error processing approval:", error);
-      this.setState({
-        errorMessage: "Failed to process your request. Please try again.",
-      });
+    } catch (err) {
+      toast.error("Failed to process request");
     }
   };
 
@@ -210,7 +213,7 @@ class CreatorRequestDetails extends Component {
   };
 
   renderRequestDetailsSection = (renderRequestDetailsContent, fsr) => {
-    const { requestDetails, errorMessage } = this.state;
+    const { requestDetails, isProcessing } = this.state;
     const {
       requestHeading,
       video,
@@ -257,7 +260,7 @@ class CreatorRequestDetails extends Component {
     )[0].category;
 
     return (
-      <CreatorRequestDetailsSection>
+      <RequestDetailsSection>
         <RequestHeading ratio={fsr}>{requestHeading}</RequestHeading>
         <MediaContainer>
           <MediaCard>
@@ -340,21 +343,25 @@ class CreatorRequestDetails extends Component {
 
         {requestStatus === "pending" && (
           <ButtonsContainer>
-            <Button onClick={this.onApprove} ratio={fsr}>
+            <Button
+              onClick={this.onApprove}
+              ratio={fsr}
+              disabled={isProcessing}
+              approve_
+            >
               {approve}
             </Button>
-            <Button onClick={this.onReject} ratio={fsr}>
+            <Button
+              onClick={this.onReject}
+              ratio={fsr}
+              disabled={isProcessing}
+              reject_
+            >
               {reject}
             </Button>
           </ButtonsContainer>
         )}
-        {errorMessage && (
-          <ErrorMessage>
-            <Err>Error:</Err>
-            {errorMessage}
-          </ErrorMessage>
-        )}
-      </CreatorRequestDetailsSection>
+      </RequestDetailsSection>
     );
   };
 
@@ -384,6 +391,20 @@ class CreatorRequestDetails extends Component {
                     )}
               </div>
               <AccessibilitySection />
+              <ToastContainer
+                position="top-center"
+                autoClose={4000}
+                hideProgressBar={true}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+                transition={Slide}
+                stacked
+              />
             </div>
           );
         }}

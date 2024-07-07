@@ -39,7 +39,7 @@ export const AccessibilityCardContainer = styled.div`
 `;
 
 export const AccessibilityImg = styled(BiAccessibility)`
-  background-color: orange;
+  background-color: #0090ff;
   width: 45px;
   height: 45px;
   padding: 4px;
@@ -47,7 +47,7 @@ export const AccessibilityImg = styled(BiAccessibility)`
 `;
 
 export const CloseIcon = styled(IoMdClose)`
-  background-color: orange;
+  background-color: #e54d2e;
   width: 45px;
   height: 45px;
   padding: 4px;

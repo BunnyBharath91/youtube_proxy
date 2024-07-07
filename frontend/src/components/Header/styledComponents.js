@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import { RxHamburgerMenu } from "react-icons/rx";
+import { MdOutlineContentCopy } from "react-icons/md";
 import { HiMiniLanguage } from "react-icons/hi2";
 import { FaChevronDown } from "react-icons/fa6";
 import { FaCheck } from "react-icons/fa6";
@@ -47,6 +48,7 @@ export const HeaderItem = styled.li`
   font-size: ${(props) => {
     return props.ratio * 15;
   }}px;
+  text-underline-offset: 10px;
   display: ${(props) => (props.request || props.username ? "none" : "block")};
   cursor: ${(props) =>
     props.request || ((props.menu || props.language) && "pointer")};
@@ -57,6 +59,13 @@ export const HeaderItem = styled.li`
     display: flex;
     flex-direction: column;
   `)};
+
+  transition: color 0.3s ease, text-decoration 0.3 ease;
+
+  &:hover {
+    color: ${(props) => !props.username && "black"};
+    text-decoration: ${(props) => props.request && "underline"};
+  }
 
   @media screen and (min-width: 576px) {
     display: ${(props) => (props.username ? "none" : "block")};
@@ -128,6 +137,7 @@ export const MenuContainer = styled.ul`
   right: 0px;
   overflow-y: auto;
   background: white;
+  display: ${(props) => (props.show === "initial" ? "none" : "block")};
   transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
   transform: ${(props) => (props.show ? "translateX(0)" : "translateX(100%)")};
   opacity: ${(props) => (props.show ? "1" : "0")};
@@ -137,14 +147,20 @@ export const MenuContainer = styled.ul`
   border-radius: 6px;
   font-size: ${(props) => props.ratio * 14}px;
 
+  /* Styles for scrollbar */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #c7c7c7 #f5f5f5; /* Firefox */
+  &::-webkit-scrollbar {
+    width: 6px; /* Width of the scrollbar */
+  }
+
   @media screen and (min-width: 768px) {
     max-height: 400px;
     width: 350px;
     top: 55px;
     right: max(5vw, calc((100vw - 1920px) / 2 + 5vw));
     font-size: ${(props) => props.ratio * 17}px;
-    animation: ${(props) => (props.show ? slideIn : slideOut)} 0.5s ease-in-out
-      forwards;
+    ${(props) => showAnimation(props)}
   }
 
   @media screen and (min-width: 992px) {
@@ -152,7 +168,8 @@ export const MenuContainer = styled.ul`
   }
 
   @media screen and (min-width: 1200px) {
-    height: 60vh;
+    max-height: 65vh;
+    height: 550px;
   }
 `;
 
@@ -162,6 +179,7 @@ export const MenuItem = styled.li`
   border-top: 1px solid rgba(123, 135, 148, 0.16);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0px 26px;
   font-weight: 500;
   color: rgb(97, 110, 124);
@@ -211,50 +229,109 @@ export const MenuCloseIcon = styled.div`
   margin-left: auto;
 `;
 
+//invitation-code container styling
+export const InvitationCard = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  background-color: rgb(245, 247, 250);
+  border-radius: 4px;
+  border: 1px solid rgb(228, 231, 235);
+`;
+
+export const InvitationCode = styled.p`
+  max-width: 60px;
+  font-weight: 500;
+  font-size: 18px;
+
+  color: rgb(97, 110, 124);
+  margin-top: 8px;
+  margin-bottom: 8px;
+  margin-left: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const CopyImgContainer = styled.div`
+  background-color: ${(props) =>
+    props.clicked ? "rgb(208, 211, 215)" : "rgb(228, 231, 235)"};
+  border-radius: 4px;
+  height: 40px;
+  min-width: 40px;
+  margin: 0px 0px 0px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const StyledCopyImg = styled(MdOutlineContentCopy)`
+  width: 24px;
+  height: 24px;
+`;
+
 //languageList Container styling
 export const SelectLanguage = styled.div`
   width: 160px;
   height: 40px;
-  font-size: 15px;
+  font-size: ${(props) => {
+    return props.ratio * 15;
+  }}px;
   padding: 6px 12px;
   border: solid 1px #e2e2e2;
   border-radius: 6px;
   display: flex;
   align-items: center;
   gap: 5px;
+
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #f1f5f9;
+  }
 `;
+
+// Function to generate animation property based on props.show
+const showAnimation = (props) =>
+  props.show !== "initial" &&
+  css`
+    animation: ${props.show ? slideIn : slideOut} 0.5s ease-in-out forwards;
+  `;
 
 export const LanguageContainer = styled.ul`
   background-color: white;
   width: 160px;
   height: 270px;
   overflow-y: auto;
-  position: fixed;
-  top: 55px;
-  right: calc(5vw + 40px);
+  position: absolute;
+  font-size: ${(props) => {
+    return props.ratio * 14;
+  }}px;
   box-shadow: rgb(224, 231, 238) 0px 0px 0px 1px,
     rgba(0, 0, 0, 0.12) 2px 6px 10px 0px;
   border-radius: 6px;
 
-  animation: ${(props) => (props.show ? slideIn : slideOut)} 0.5s ease-in-out
-    forwards;
+  ${(props) => showAnimation(props)}
 
-  @media screen and (min-width: 576px) {
-    right: calc(5vw + 140px);
-  }
-
-  @media screen and (min-width: 768px) {
-    right: max(5vw + 300px, calc((100vw - 1920px) / 2 + 5vw + 300px));
+  display: ${(props) => (props.show === "initial" ? "none" : "block")};
+  /* Styles for scrollbar */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #c7c7c7 #f5f5f5; /* Firefox */
+  &::-webkit-scrollbar {
+    width: 6px; /* Width of the scrollbar */
   }
 
   @media screen and (min-width: 992px) {
     top: 65px;
   }
 `;
+
 export const LanguageItem = styled.li`
   list-style-type: none;
-  font-size: 14px;
-  height: 45px;
+
+  height: 40px;
   border-top: 1px solid rgba(123, 135, 148, 0.16);
   display: flex;
   align-items: center;
@@ -263,8 +340,14 @@ export const LanguageItem = styled.li`
   //   color: rgb(97, 110, 124);
   color: ${(props) => props.selected && "blue"};
 
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #f1f5f9;
+  }
+
   @media screen and (min-width: 992px) {
-    height: 50px;
+    height: 45px;
   }
 `;
 
