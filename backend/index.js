@@ -1,4 +1,4 @@
-const express = require("express"); //base point
+const express = require("express");
 const path = require("path");
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
@@ -7,16 +7,13 @@ const { v2 } = require("cloudinary");
 const fs = require("fs");
 const http = require("http");
 const { v4: uuidv4 } = require("uuid");
-const { config } = require("dotenv"); // importing the config function and invoking it by calling it(i.e. config()) so that all the local environment variables are loaded into the memory and we can reference them
-config(); // or we can just write //require('dotenv').config();
+require("dotenv").config(); // Loading environment variables
 const session = require("express-session");
 const SQLiteStore = require("connect-sqlite3")(session);
 const ejs = require("ejs");
 const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-//we don't need whole package of passport-google-oauth module, we only need a class named 'Strategy'(since class name starts with Capital letter) in that module
+const GoogleStrategy = require("passport-google-oauth20").Strategy; //importing 'Strategy' class from passport-google-oauth20 module
 const cors = require("cors");
-
 const request = require("request");
 const FormData = require("form-data");
 const fetch = require("node-fetch");
@@ -25,34 +22,39 @@ const app = express();
 
 app.use(express.json()); // Middleware to parse JSON payloads
 
-app.use(express.urlencoded({ extended: false })); // Middleware to parse URL-encoded payloads i.e  form data(ex-videos,photos etc) which is coming from fronted
+app.use(express.urlencoded({ extended: false })); // Middleware to parse URL-encoded payloads
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "http://localhost:3000", // Allow requests from frontend running on localhost:3000
     methods: "GET,POST,PUT,DELETE",
-    credentials: true,
+    credentials: true, // Allow credentials (cookies, authorization headers)
   })
 );
 
+// Configuring session management using SQLite as session store
 const store = new SQLiteStore({
-  sessionDB: path.join(__dirname, "database", "sessions.sqlite"),
+  sessionDB: path.join(__dirname, "database", "sessions.sqlite"), // SQLite database file from storing sessions
 });
 
 app.use(
   session({
     store: store,
-    secret: process.env.KEY, //given secrete key,  and this secrete key is used to generate sessionId when a user login into out application. and keep this secreteKey as strong as we can
+    secret: process.env.KEY, //Secret key used for session encryption
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }, // since our application is running on http server, we kept it as false, but when the application goes into production mode, we can keep it as true(if we want to run it on https)
+    cookie: {
+      secure: false, // Set to true in production for HTTPS
+      maxAge: 30 * 24 * 60 * 60 * 1000, // Session valid for 30 days
+    },
   })
 );
 
+// Initialize Passport and session handling
 app.use(passport.initialize());
-app.use(passport.session()); //integrates Passport.js with express-session to handle persistent login sessions by deserializing user information from the session on each request.
-// and we can only use this passport.session() only when we are working with session in our express application. i.e app.use(session({...}))
+app.use(passport.session()); //integrating Passport.js with express-session to handle persistent login sessions by deserializing user information from the session on each request.
 
+// Middleware to set CORS headers for frontend communication
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "http://localhost:3000"); // updating match the domain  will make the request from
   res.header(
@@ -62,11 +64,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Configuring Google OAuth 2.0 Strategy for Passport
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.clientID,
-
       clientSecret: process.env.clientSecret,
       callbackURL: process.env.callbackURL,
       scope: [
@@ -77,80 +79,156 @@ passport.use(
         "https://www.googleapis.com/auth/youtube",
         "https://www.googleapis.com/auth/youtube.force-ssl",
       ],
-      accessType: "offline", // Ensure 'accessType' is set to 'offline' for refresh tokens
-      prompt: "consent select_account", // Add prompt to force account selection and consent
+      accessType: "offline",
+      prompt: "consent select_account",
     },
-
     async (accessToken, refreshToken, profile, cb) => {
-      profile.accessToken = accessToken; // Add the accessToken to the profile object
-      profile.refreshToken = refreshToken; //Add the refreshToken to the profile obj
-      console.log("profile obj: ", profile);
-      console.log("access token: ", accessToken);
-      console.log("refresh token: ", refreshToken);
-      const email = profile.emails[0].value;
+      try {
+        const email = profile.emails[0].value;
+        const userImage = profile.photos[0].value;
+        const userDisplayName = profile.displayName;
 
-      const userCheckQuery = `
-      SELECT * FROM users WHERE email='${email}';
-      `;
-      const userResponse = await db.get(userCheckQuery);
-      if (!userResponse) {
-        const maxIdQuery = `
-          SELECT max(id) as maximum_id from users;
-          `;
-        const maxIdResponse = await db.get(maxIdQuery);
-        const userName = `${profile.name.givenName}${
-          maxIdResponse.maximum_id + 1
-        }`;
-        const userInvitationCode = userName;
+        // Checking if user already exists in database
+        const userCheckQuery = `SELECT * FROM users WHERE email=?;`;
+        const userResponse = await db.get(userCheckQuery, email);
 
-        const addUserQuery = `INSERT INTO users (username, email, invitation_code, refresh_token) VALUES (?, ?, ?, ?)`;
-        profile.userName = userName;
-        await db.run(addUserQuery, [
-          userName,
-          email,
-          userInvitationCode,
-          refreshToken,
-        ]);
-      } else {
-        profile.userName = userResponse.username;
-        const updateRefreshTokenQuery = `UPDATE users SET refresh_token = ? WHERE email = ?`;
-        await db.run(updateRefreshTokenQuery, [refreshToken, email]);
+        if (!userResponse) {
+          // Creating new user entry if user doesn't exist
+          const maxIdQuery = `SELECT max(id) as maximum_id FROM users;`;
+          const maxIdResponse = await db.get(maxIdQuery);
+          const userName = `${profile.name.givenName}${
+            (maxIdResponse.maximum_id || 0) + 1
+          }`;
+          const userInvitationCode = userName;
+
+          const addUserQuery = `INSERT INTO users (username, email, invitation_code, refresh_token, user_image, user_display_name) VALUES (?, ?, ?, ?, ?, ?)`;
+          await db.run(addUserQuery, [
+            userName,
+            email,
+            userInvitationCode,
+            refreshToken,
+            userImage,
+            userDisplayName,
+          ]);
+          console.log(`New user created: ${userName}`);
+        } else {
+          // Update user's refresh token if user already exists
+          const updateRefreshTokenQuery = `UPDATE users SET refresh_token = ? WHERE email = ?`;
+          await db.run(updateRefreshTokenQuery, [refreshToken, email]);
+          console.log(`User updated: ${userResponse.username}`);
+        }
+
+        cb(null, email);
+      } catch (err) {
+        console.error("Error in GoogleStrategy:", err);
+        cb(err, null);
       }
-
-      cb(null, profile); // Pass the profile object to the serializeUser method
-      //profile will be returned // here we can also save the details of the user in database using sql or mongos query
     }
   )
 );
 
-//if we want to save the user into our session storage, serializeUser saves user information into the session
-passport.serializeUser(function (user, cb) {
-  // Here we serialize only the user ID to save space
-  //cb(null, user.id);
-  cb(null, user);
+//Serialize use into session. i.e serializeUser saves user information into the session
+passport.serializeUser((email, cb) => {
+  cb(null, email);
 });
 
-//while deserializeUser retrieves user information from the session.Together, they enable persistent user authentication across multiple requests in an Express.js application using Passport.js.
-passport.deserializeUser(function (obj, cb) {
-  // passport.deserializeUser(async function (id, cb) {
-  //   try {
-  //     // In a real application, you'd fetch the user from the database here
-  //     // const user = await User.findById(id);
-
-  //     // For now, we'll just pass the user ID back
-  //     const user = { id }; // Replace with the actual user fetching logic
-
-  //     cb(null, user);
-  //   } catch (err) {
-  //     cb(err);
-  //   }
-  // });
-
-  // here obj is user
-  cb(null, obj);
+// Deserialize user from session .Together, they enable persistent user authentication across multiple requests in an Express.js application using Passport.js.
+passport.deserializeUser(async (email, cb) => {
+  try {
+    const getUserDetailsQuery = `SELECT * FROM users WHERE email = ?;`;
+    const userDetailsObj = await db.get(getUserDetailsQuery, [email]);
+    if (!userDetailsObj) {
+      console.log("user not found");
+      throw new Error("User not found");
+    }
+    cb(null, userDetailsObj);
+  } catch (err) {
+    console.error("Error in deserializeUser:", err);
+    cb(err, null);
+  }
 });
 
-// get new AccessToken using refreshToken
+// Google OAuth authentication route
+app.get(
+  "/oauth/google",
+  passport.authenticate("google", {
+    scope: [
+      "profile",
+      "email",
+      "https://www.googleapis.com/auth/youtube.upload",
+      "https://www.googleapis.com/auth/youtubepartner",
+      "https://www.googleapis.com/auth/youtube",
+      "https://www.googleapis.com/auth/youtube.force-ssl",
+    ],
+    accessType: "offline", // Ensure 'accessType' is set to 'offline' for refresh tokens
+    prompt: "consent select_account", // Add prompt to force account selection and consent
+  })
+);
+
+// Redirect route after successful authentication
+app.get(
+  "/oauth/redirect",
+  passport.authenticate("google", {
+    failureRedirect: "http://localhost:3000/login",
+  }),
+  async (request, response) => {
+    response.redirect("http://localhost:3000");
+  }
+);
+
+// Configuring Cloudinary for file uploads
+v2.config({
+  cloud_name: process.env.cloudName,
+  api_key: process.env.apiKey,
+  api_secret: process.env.apiSecret,
+});
+
+// Multer configuration for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./uploads");
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const upload = multer({
+  storage,
+});
+
+/*...................... initializing SQLite database and starting server .............. */
+
+const dbPath = path.join(__dirname, "youtubetimer.db");
+let db = null;
+const initializeDBAndServer = async () => {
+  try {
+    db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database,
+    });
+
+    app.listen(5000, () => {
+      console.log("server is running on http://localhost:5000");
+    });
+  } catch (error) {
+    console.log(`error: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+initializeDBAndServer();
+
+// Middleware to check if the user is authenticated for backend
+const ensureAuthenticated = (request, response, next) => {
+  if (request.isAuthenticated()) {
+    return next();
+  }
+
+  response.redirect("/oauth/google"); // Redirect to Google OAuth if not authenticated
+};
+
+// Function to get new access token using refresh token
 const getNewAccessToken = async (refreshToken) => {
   const url = "https://oauth2.googleapis.com/token";
   const params = new URLSearchParams({
@@ -172,66 +250,50 @@ const getNewAccessToken = async (refreshToken) => {
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Error refreshing access token:", errorData);
-      return null; //indicate error while generating access_token
+      return null; //Returning null on error
     }
 
     const data = await response.json();
     console.log("new AccessToken: ", data.access_token);
 
-    return data.access_token;
+    return data.access_token; // Returning new accessToken
   } catch (error) {
     console.error("Error refreshing access token:", error);
-    return null;
+    return null; //Returning null on error
   }
 };
 
-app.use(express.static(path.join(__dirname, "public")));
+/*...................... CRUD OPERATIONS ................................. */
 
-// configuring cloudinary
-v2.config({
-  cloud_name: process.env.cloudName,
-  api_key: process.env.apiKey,
-  api_secret: process.env.apiSecret,
-});
-
-//working with multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./uploads");
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-
-const upload = multer({
-  storage,
-});
-
-//initializing db and server
-const dbPath = path.join(__dirname, "youtubetimer.db");
-let db = null;
-const initializeDBAndServer = async () => {
-  try {
-    db = await open({
-      filename: dbPath,
-      driver: sqlite3.Database,
+app.get("/user/details", async (request, response) => {
+  if (request.isAuthenticated()) {
+    console.log("user email", request.user.email);
+    const query = `SELECT email, invitation_code, user_image, user_display_name FROM users WHERE email=?;`;
+    const dbResponse = await db.get(query, request.user.email);
+    console.log("dbResponse:", dbResponse);
+    response.json({
+      invitationCode: dbResponse.invitation_code,
+      userEmail: dbResponse.email,
+      userImage: dbResponse.user_image,
+      displayName: dbResponse.user_display_name,
     });
-
-    app.listen(5000, () => {
-      console.log("server is running on http://localhost:5000");
-    });
-  } catch (error) {
-    console.log(`error: ${error.message}`);
-    process.exit(1);
   }
-};
+});
 
-initializeDBAndServer();
+// Logout route
+app.get("/logout", async (request, response) => {
+  request.logout((err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      request.session.destroy(() => {
+        response.send("logged out successfully");
+      });
+    }
+  });
+});
 
-app.set("view engine", "ejs"); // express will know that the developer is going to work on ejs templates
-
-//for checking authentication in for frontend
+// Check authentication status
 app.get("/oauth/status", (req, res) => {
   if (req.isAuthenticated()) {
     res.send({ authenticated: true, user: req.user });
@@ -240,16 +302,7 @@ app.get("/oauth/status", (req, res) => {
   }
 });
 
-// Middleware to check if the user is authenticated for backend
-const ensureAuthenticated = (request, response, next) => {
-  if (request.isAuthenticated()) {
-    return next();
-  }
-
-  response.redirect("/oauth/google");
-};
-
-//uploading the files into server(ie./uploads folder)
+// Request video upload
 app.post(
   "/upload-request",
   upload.fields([
@@ -257,9 +310,6 @@ app.post(
     { name: "video", maxCount: 1 },
   ]),
   async (request, response) => {
-    console.log(request.body);
-    console.log(request.files);
-    // Accessing title, description, privacy_status, creatorId
     const {
       title,
       description,
@@ -269,34 +319,33 @@ app.post(
       category_id: categoryId,
     } = request.body;
 
-    const creatorUserNameQuery = `
-    SELECT username from USERS where invitation_code=?;
-    `;
+    const creatorUserNameQuery = `SELECT username from USERS where invitation_code=?;`;
     const creatorUserNameResponse = await db.get(creatorUserNameQuery, [
       creatorInvitationCode,
     ]);
     console.log("creator user name Response: ", creatorUserNameResponse);
     const creatorUserName = creatorUserNameResponse.username;
 
-    // Example: Upload thumbnail to cloudinary
+    // Upload thumbnail to Cloudinary
     const thumbnailPath = request.files["thumbnail"][0].path;
     const thumbnailUploadResponse = await v2.uploader.upload(thumbnailPath, {
       resource_type: "image",
     });
     fs.unlinkSync(thumbnailPath);
 
-    // Example: Upload video to cloudinary
+    // Upload video to Cloudinary
     const videoPath = request.files["video"][0].path;
     const videoUploadResponse = await v2.uploader.upload(videoPath, {
       resource_type: "video",
     });
     fs.unlinkSync(videoPath);
+
     try {
-      // Prepare and execute the SQL INSERT query using parameterized query
+      // Insert video details into database
       const addDetailsQuery = `
         INSERT INTO VIDEOS(video_url, title, description, thumbnail_url, audience, category_id,
-                            privacy_status,request_status, from_user, to_user,video_public_id,thumbnail_public_id) 
-        VALUES(?, ?, ?, ?, ?, ?, ?,'pending', ?, ?,?,?);
+                            privacy_status, request_status, from_user, to_user, video_public_id, thumbnail_public_id) 
+        VALUES(?, ?, ?, ?, ?, ?, ?,'pending', ?, ?, ?, ?);
       `;
       const addingResponse = await db.run(addDetailsQuery, [
         videoUploadResponse.url,
@@ -306,137 +355,26 @@ app.post(
         audience,
         categoryId,
         privacyStatus,
-        request.user.userName,
+        request.user.username,
         creatorUserName,
         videoUploadResponse.public_id,
         thumbnailUploadResponse.public_id,
       ]);
 
-      console.log("Inserted video details:", addingResponse.lastID);
       return response.status(200).send({ message: "Upload successful" });
     } catch (error) {
-      console.error("Error inserting video details:", error);
       return response.status(500).send({ message: "Upload failed" });
     }
   }
 );
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// app.get("/login", async (request, response) => {
-//   if (request.isAuthenticated()) {
-//     // isAuthenticated() is a method which comes in passport module(which is accessed through request method)
-//     response.redirect("/dashboard");
-//   } else {
-//     response.render(path.join(__dirname, "login.ejs"));
-//   }
-// });
-
-app.get("/logout", async (request, response) => {
-  request.logout((err) => {
-    if (err) {
-      console.log(err);
-    } else {
-      request.session.destroy(() => {
-        response.send("logged out successfully");
-        console.log("logged out successfully");
-        // response.redirect("http://localhost/login");
-      });
-    }
-  });
-});
-
-app.get("/home", async (request, response) => {
-  if (request.isAuthenticated()) {
-    // isAuthenticated is a method which comes from the passport Module. It returns true if the user is authenticated or else it returns false
-    //console.log(request.user);
-
-    const db = request.app.locals.db; // Accessing the database connection
-    // Now we can use the db object to query the database
-
-    //const userVideos = await db.all("SELECT * FROM videos WHERE user_id = ?", request.user.id);
-
-    response.send(request.user);
-  } else {
-    response.redirect("/oauth/google");
-  }
-});
-
-app.get(
-  "/oauth/google",
-
-  passport.authenticate("google", {
-    scope: [
-      "profile",
-      "email",
-      "https://www.googleapis.com/auth/youtube.upload",
-      "https://www.googleapis.com/auth/youtubepartner",
-      "https://www.googleapis.com/auth/youtube",
-      "https://www.googleapis.com/auth/youtube.force-ssl",
-    ],
-    accessType: "offline", // Ensure 'accessType' is set to 'offline' for refresh tokens
-    prompt: "consent select_account", // Add prompt to force account selection and consent
-  })
-);
-
-app.get(
-  "/oauth/redirect",
-  passport.authenticate("google", {
-    failureRedirect: "http://localhost:3000/login",
-  }),
-  async (request, response) => {
-    //console.log(request.user);
-    //response.redirect("/dashboard");
-    response.redirect("http://localhost:3000");
-  }
-);
-
-app.get("/user/details", async (request, response) => {
-  if (request.isAuthenticated()) {
-    console.log("user email", request.user.emails[0].value);
-    const query = `
-    SELECT invitation_code FROM users WHERE email=?;
-    `;
-    const dbResponse = await db.get(query, request.user.emails[0].value);
-    response.json({
-      invitationCode: dbResponse.invitation_code,
-      userEmail: request.user.emails[0].value, // there is no need of sending this for now
-      userImage: request.user.photos[0].value,
-      displayName: request.user.displayName,
-    });
-  }
-});
-
-app.get("/videos", async (request, response) => {
-  const query = `
-    SELECT * FROM videos;
-    `;
-  const dbResponse = await db.all(query);
-  response.send(dbResponse);
-});
-
-// Function to update response_date_time to NULL in the database
-const updateResponseDateTime = async (query, params) => {
-  return new Promise((resolve, reject) => {
-    db.run(query, params, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
-};
-
-//..............................................base-line...................
-//getting requests
+// Get requests
 app.get("/requests", ensureAuthenticated, async (request, response) => {
   try {
-    // Assuming request.user is correctly populated by your authentication middleware
-    const userName = request.user.userName;
+    const userName = request.user.username;
     console.log(userName);
 
-    const { role } = request.query; //accessing query parameter role which will have values as editor or creator
+    const { role } = request.query;
     let requestType;
     if (role === "creator") {
       requestType = "to_user";
@@ -446,9 +384,7 @@ app.get("/requests", ensureAuthenticated, async (request, response) => {
       return response.status(400).send("Invalid role parameter");
     }
 
-    const getRequestsQuery = `
-      SELECT * FROM VIDEOS WHERE ${requestType} = ?;
-    `;
+    const getRequestsQuery = `SELECT * FROM VIDEOS WHERE ${requestType} = ?;`;
     const requestsResponse = await db.all(getRequestsQuery, [userName]);
 
     for (let eachItem of requestsResponse) {
@@ -463,15 +399,12 @@ app.get("/requests", ensureAuthenticated, async (request, response) => {
           const updateResponseDateTimeQuery = `
             UPDATE videos SET response_date_time=NULL WHERE id=?
           `;
-          await updateResponseDateTime(updateResponseDateTimeQuery, [
-            eachItem.id,
-          ]);
-          eachItem.response_date_time = null; // Updating the response_date_time in the eachItem
+          await db.run(updateResponseDateTimeQuery, [eachItem.id]);
+          eachItem.response_date_time = null;
         }
       }
     }
 
-    // Send the retrieved requests as the response
     response.status(200).json(requestsResponse);
   } catch (error) {
     console.error("Error retrieving requests:", error);
@@ -479,7 +412,7 @@ app.get("/requests", ensureAuthenticated, async (request, response) => {
   }
 });
 
-//getting videoDetails(request Details) with videoId
+// Get video details by videoId
 app.get(
   "/requests/:videoId",
   ensureAuthenticated,
@@ -488,17 +421,13 @@ app.get(
       const { videoId } = request.params;
       console.log("request params", request.params);
 
-      // Prepare and execute the SQL SELECT query using a parameterized query
-      const getRequestDetailsQuery = `
-      SELECT * FROM VIDEOS WHERE id = ?;
-    `;
+      const getRequestDetailsQuery = `SELECT * FROM VIDEOS WHERE id = ?;`;
       const dbResponse = await db.get(getRequestDetailsQuery, [videoId]);
       console.log(dbResponse);
       if (dbResponse === undefined) {
         return response.status(404).send({ message: "details not found" });
       }
 
-      // Send the retrieved requests as the response
       return response.status(200).json(dbResponse);
     } catch (error) {
       console.error("Error retrieving video details:", error);
@@ -507,7 +436,7 @@ app.get(
   }
 );
 
-//update Request Status along with accessToken
+// Update request status and refresh token
 app.put(
   "/response/:videoId",
   ensureAuthenticated,
@@ -516,7 +445,7 @@ app.put(
     const { creatorResponse } = request.body;
     console.log(
       "for approving request refreshToken: ",
-      request.user.refreshToken
+      request.user.refresh_token
     );
 
     let editorRequestStatus;
@@ -530,27 +459,24 @@ app.put(
     try {
       let updateRequestStatusQuery;
       let queryParams;
-      const dateTime = new Date().toISOString(); //changing date and time to ISO format
+      const dateTime = new Date().toISOString();
 
       if (editorRequestStatus === "approved") {
-        // const newAccessToken = await getNewAccessToken(
-        //   request.user.refreshToken
-        // );
         updateRequestStatusQuery = `
           UPDATE videos 
-          SET request_status = ?,response_date_time=?, video_refresh_token = ? 
+          SET request_status = ?, response_date_time=?, video_refresh_token = ? 
           WHERE id = ?;
         `;
         queryParams = [
           editorRequestStatus,
           dateTime,
-          request.user.refreshToken,
+          request.user.refresh_token,
           videoId,
         ];
       } else {
         updateRequestStatusQuery = `
           UPDATE videos 
-          SET request_status = ? ,response_date_time=?
+          SET request_status = ?, response_date_time=? 
           WHERE id = ?;
         `;
         queryParams = [editorRequestStatus, dateTime, videoId];
@@ -565,7 +491,7 @@ app.put(
   }
 );
 
-//resend request for approval due to expiry of accessToken
+// Resend request for approval due to expired refresh token
 app.get("/resend/:videoId", ensureAuthenticated, async (request, response) => {
   const { videoId } = request.params;
 
@@ -578,7 +504,6 @@ app.get("/resend/:videoId", ensureAuthenticated, async (request, response) => {
 
     const dbResponse = await db.run(updateResponseStatusQuery, [videoId]);
 
-    // Check if the update was successful
     if (dbResponse.changes > 0) {
       response.status(200).json({
         status: "success",
@@ -673,9 +598,7 @@ app.delete(
   }
 );
 
-///////////////////////////////////////////////////////////////////////////////////
 // Function to download files from URLs
-
 const downloadFromUrl = async (fileUrl, videoId, fileType) => {
   try {
     const uniqueFilename = `${videoId}_${uuidv4()}.${fileType}`;
@@ -698,7 +621,7 @@ const downloadFromUrl = async (fileUrl, videoId, fileType) => {
           });
         })
         .on("error", (err) => {
-          fs.unlink(filePath, () => reject(err)); // Delete the file async if error occurs
+          fs.unlink(filePath, () => reject(err)); // Deleting the file if error occurs
         });
     });
 
@@ -709,6 +632,7 @@ const downloadFromUrl = async (fileUrl, videoId, fileType) => {
   }
 };
 
+// Route to upload video
 app.post("/upload-video", async (req, res) => {
   const { videoId } = req.body;
 
@@ -829,6 +753,7 @@ app.post("/upload-video", async (req, res) => {
     const youtubeVideoId = videoResponseBody.id;
     console.log("Response from YouTube:", videoResponseBody);
     isVideoUploaded = true;
+    cleanupFiles(videoFileName, null);
 
     // Upload thumbnail
     const thumbnailForm = new FormData();

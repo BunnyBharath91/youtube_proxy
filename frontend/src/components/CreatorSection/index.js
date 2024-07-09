@@ -4,7 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
-import { apology,noRequests } from '../../images';
+import { apology, noRequests } from "../../images";
 import { TailSpin } from "react-loader-spinner";
 import {
   CreatorSectionContainer,
@@ -133,8 +133,8 @@ class CreatorSection extends Component {
       });
 
       if (response.ok) {
-        await this.getRequests();
         toast.success("Request approved successfully");
+        await this.getRequests();
       } else {
         toast.error("Request approval failed");
       }
@@ -160,8 +160,8 @@ class CreatorSection extends Component {
       });
 
       if (response.ok) {
-        await this.getRequests();
         toast.success("Request rejected successfully");
+        await this.getRequests();
       } else {
         toast.error("Request rejection failed");
       }
@@ -225,14 +225,11 @@ class CreatorSection extends Component {
       <RequestCard
         key={videoId}
         onClick={() => this.props.history.push(`/creator_section/${videoId}`)}
+        wait={isProcessing}
       >
         <RequestThumbnail alt="thumbnail" src={thumbnailUrl} loading="lazy" />
         <ResponseTextContainer>
-          <VideoTitle ratio={fsr}>
-            This is my video title nothing fancy words just for checking
-            text-overflow: ellipses property. I mean is it working or not{" "}
-            {title}
-          </VideoTitle>
+          <VideoTitle ratio={fsr}>{title}</VideoTitle>
           <EditorId ratio={fsr}>
             {from}: <Id>{fromUser}</Id>
           </EditorId>
@@ -343,6 +340,7 @@ class CreatorSection extends Component {
       approve,
       reject,
       creatorApologiesText,
+      backToHome,
       renderRequestContent,
     } = renderRequestsSectionContent;
     return (
@@ -365,7 +363,7 @@ class CreatorSection extends Component {
             <NoRequestsImage alt="loading img" src={noRequests} />
             <ApologiesText ratio={fsr}>{creatorApologiesText}</ApologiesText>
             <StyledLink to="/" sUl={sUl}>
-              <Button>Go To Home</Button>
+              <Button>{backToHome}</Button>
             </StyledLink>
           </NoRequestsContainer>
         ) : (

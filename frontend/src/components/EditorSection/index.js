@@ -1,9 +1,10 @@
 import React, { Component } from "react";
-import { ToastContainer, Slide } from "react-toastify";
+import { ToastContainer, Slide, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
+import { TailSpin } from "react-loader-spinner";
 import {
   noRequests,
   successful,
@@ -12,7 +13,6 @@ import {
   apology,
   loading,
 } from "../../images";
-import { TailSpin } from "react-loader-spinner";
 import {
   EditorSectionContainer,
   EditorSectionHeading,
@@ -57,6 +57,7 @@ class EditorSectionRequests extends Component {
     uploadResponse: "",
     uploadResponseMessage: "",
     uploadResponseImg: "",
+    isProcessing: false,
   };
 
   componentDidMount() {
@@ -169,6 +170,9 @@ class EditorSectionRequests extends Component {
   };
 
   onDeleteRequest = async (videoId) => {
+    this.setState({
+      isProcessing: true,
+    });
     try {
       const response = await fetch(`/delete/${videoId}`, {
         method: "DELETE",
@@ -177,13 +181,18 @@ class EditorSectionRequests extends Component {
         },
       });
       if (response.ok) {
+        toast.success("Deleted Successfully");
         await this.getRequests();
       } else {
-        throw new Error("Failed to process your request. Please try again.");
+        toast.error("Failed to Delete");
       }
     } catch (error) {
+      toast.error("Failed to delete");
       console.log("error occurred: ", error);
     }
+    this.setState({
+      isProcessing: false,
+    });
   };
 
   onUploadVideo = async (activeLanguage, videoId) => {
@@ -297,6 +306,7 @@ class EditorSectionRequests extends Component {
   };
 
   renderRequest = (activeLanguage, renderRequestContent, requestItem, fsr) => {
+    const { isProcessing } = this.state;
     const {
       videoId,
       requestStatus,
@@ -348,6 +358,7 @@ class EditorSectionRequests extends Component {
       <RequestCard
         key={videoId}
         onClick={() => this.props.history.push(`/editor_section/${videoId}`)}
+        wait={isProcessing}
       >
         <RequestThumbnail alt="thumbnail" src={thumbnailUrl} loading="lazy" />
         <RequestTextContainer className="request-card-text-container">
@@ -375,10 +386,14 @@ class EditorSectionRequests extends Component {
               {requestStatus === "approved" &&
                 (responseDateTime ? (
                   videoUploadStatus === "not uploaded" && (
-                    <Button onClick={handleUpload}>{upload}</Button>
+                    <Button onClick={handleUpload} wait={isProcessing}>
+                      {upload}
+                    </Button>
                   )
                 ) : (
-                  <Button onClick={handleResendRequest}>{resend}</Button>
+                  <Button onClick={handleResendRequest} wait={isProcessing}>
+                    {resend}
+                  </Button>
                 ))}
 
               {videoUploadStatus === "uploaded" && (
@@ -388,7 +403,12 @@ class EditorSectionRequests extends Component {
               )}
               {videoUploadStatus === "not uploaded" &&
                 requestStatus !== "pending" && (
-                  <Button onClick={handleDelete} delete>
+                  <Button
+                    onClick={handleDelete}
+                    delete
+                    disabled={isProcessing}
+                    wait={isProcessing}
+                  >
                     {delete_}
                   </Button>
                 )}
@@ -421,12 +441,24 @@ class EditorSectionRequests extends Component {
           {requestStatus === "approved" ? (
             responseDateTime ? (
               videoUploadStatus === "not uploaded" ? (
-                <Button onClick={handleUpload}>{upload}</Button>
+                <Button
+                  onClick={handleUpload}
+                  disabled={isProcessing}
+                  wait={isProcessing}
+                >
+                  {upload}
+                </Button>
               ) : (
                 "-"
               )
             ) : (
-              <Button onClick={handleResendRequest}>{resend}</Button>
+              <Button
+                onClick={handleResendRequest}
+                disabled={isProcessing}
+                wait={isProcessing}
+              >
+                {resend}
+              </Button>
             )
           ) : (
             "-"
@@ -435,7 +467,12 @@ class EditorSectionRequests extends Component {
         <LargeScreenDeleteButtonContainer>
           {videoUploadStatus === "not uploaded" &&
           requestStatus !== "pending" ? (
-            <Button onClick={handleDelete} delete>
+            <Button
+              onClick={handleDelete}
+              delete
+              disabled={isProcessing}
+              wait={isProcessing}
+            >
               {delete_}
             </Button>
           ) : (
@@ -501,6 +538,7 @@ class EditorSectionRequests extends Component {
         {uploadResponse === "IN_PROGRESS" ? (
           <>
             <UploadResponseMessage>{inProgressMessage}</UploadResponseMessage>
+            <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
           </>
         ) : (
           <>

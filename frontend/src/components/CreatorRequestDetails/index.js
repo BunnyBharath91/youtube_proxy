@@ -260,7 +260,7 @@ class CreatorRequestDetails extends Component {
     )[0].category;
 
     return (
-      <RequestDetailsSection>
+      <RequestDetailsSection wait={isProcessing}>
         <RequestHeading ratio={fsr}>{requestHeading}</RequestHeading>
         <MediaContainer>
           <MediaCard>

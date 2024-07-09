@@ -112,6 +112,7 @@ export const PreviewCard = styled.div`
   align-items: center;
   justify-content: center;
   color: rgb(71, 85, 105);
+  cursor: pointer;
 `;
 
 export const UploadIcon = styled.div`
@@ -525,7 +526,7 @@ export const LoadingText = styled.p`
   }
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
-      return props.ratio * 32;
+      return props.ratio * 28;
     }}px;
   }
 `;

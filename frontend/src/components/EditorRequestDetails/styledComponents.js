@@ -5,7 +5,7 @@ export const RequestDetailsSection = styled.div`
   padding: 0px 5vw 24px;
   display: flex;
   flex-direction: column;
-
+  cursor: ${(props) => props.wait && "wait"};
   @media screen and (min-width: 992px) {
     min-height: calc(100vh - 76px);
   }
@@ -328,7 +328,7 @@ export const Button = styled.button`
     if (props.upload || props.resend) return buttonBgColors.upload;
     return buttonBgColors.reject;
   }};
-  cursor: pointer;
+  cursor: ${(props) => (props.wait ? "wait" : "pointer")};
   transition: background-color 0.3s ease;
 
   &:hover {

@@ -184,7 +184,9 @@ class EditorRequestDetails extends Component {
       });
       if (response.ok) {
         toast.success("Deleted Successfully");
-        history.push("/editor_section");
+        setTimeout(() => {
+          history.push("/editor_section");
+        }, 2000);
       } else {
         toast.error("Failed to Delete");
       }
@@ -440,7 +442,7 @@ class EditorRequestDetails extends Component {
 
     return (
       <>
-        <RequestDetailsSection>
+        <RequestDetailsSection wait={isProcessing}>
           <RequestHeading ratio={fsr}>{requestHeading}</RequestHeading>
           <MediaContainer>
             <MediaCard>
@@ -544,6 +546,7 @@ class EditorRequestDetails extends Component {
                     onClick={() => this.onUploadVideo(activeLanguage)}
                     upload
                     disabled={isProcessing}
+                    wait={isProcessing}
                   >
                     {upload}
                   </Button>
@@ -553,6 +556,7 @@ class EditorRequestDetails extends Component {
                   onClick={this.resendRequest}
                   resend
                   disabled={isProcessing}
+                  wait={isProcessing}
                 >
                   {resendRequest}
                 </Button>
@@ -565,6 +569,7 @@ class EditorRequestDetails extends Component {
                   ratio={fsr}
                   delete
                   disabled={isProcessing}
+                  wait={isProcessing}
                 >
                   {deleteRequest}
                 </Button>

@@ -6,7 +6,6 @@ export const CreatorSectionContainer = styled.div`
   padding: 0px 5vw 24px;
   display: flex;
   flex-direction: column;
-
   @media screen and (min-width: 992px) {
     min-height: calc(100vh - 76px);
   }
@@ -161,6 +160,7 @@ export const RequestCard = styled.div`
   flex-direction: column;
   padding-top: 10px;
   border-bottom: solid 1px #e8e3e3;
+  cursor: ${(props) => (props.wait ? "wait" : "pointer")};
   @media screen and (min-width: 576px) {
     flex-direction: row;
     padding-bottom: 10px;

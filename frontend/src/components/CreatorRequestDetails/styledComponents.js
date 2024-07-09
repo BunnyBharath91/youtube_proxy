@@ -5,7 +5,7 @@ export const CreatorRequestDetailsSection = styled.div`
   padding: 0px 5vw 24px;
   display: flex;
   flex-direction: column;
-
+  cursor: ${(props) => props.wait && "wait"};
   @media screen and (min-width: 992px) {
     min-height: calc(100vh - 76px);
   }

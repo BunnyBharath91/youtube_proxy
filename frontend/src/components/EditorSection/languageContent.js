@@ -13,6 +13,7 @@ export const requestsSectionContent = {
       editorApologiesText: "Sorry! you haven't made any requests",
       creatorApologiesText: "Sorry! there are no requests for you",
       makeARequest: "Make a Request",
+      backToHome: "Back to Home",
       renderRequestContent: {
         to: "to",
         from: "from",
@@ -33,7 +34,7 @@ export const requestsSectionContent = {
       retry: "Retry",
     },
     renderUploadResponseContent: {
-      inProgressMessage: "Please Wait! we are sending your request",
+      inProgressMessage: "Please wait! We are uploading your video",
 
       goBack: "go back",
     },
@@ -52,6 +53,7 @@ export const requestsSectionContent = {
       editorApologiesText: "क्षमा मांगना! आपने कोई अनुरोध नहीं किया है",
       creatorApologiesText: "क्षमा मांगना! आपके लिए कोई अनुरोध नहीं है",
       makeARequest: "एक अनुरोध करना",
+      backToHome: "घर वापिस जा रहा हूँ",
       renderRequestContent: {
         to: "को",
         from: "से",
@@ -73,7 +75,8 @@ export const requestsSectionContent = {
     },
 
     renderUploadResponseContent: {
-      inProgressMessage: "कृपया प्रतीक्षा करें! हम आपका अनुरोध भेज रहे हैं",
+      inProgressMessage:
+        "कृपया प्रतीक्षा करें! हम आपका वीडियो अपलोड कर रहे हैं",
       goBack: "वापस जाओ",
     },
   },
@@ -91,6 +94,7 @@ export const requestsSectionContent = {
       editorApologiesText: "క్షమించండి! మీరు ఎలాంటి అభ్యర్థనలు చేయలేదు",
       creatorApologiesText: "క్షమించండి! మీ కోసం అభ్యర్థనలు లేవు",
       makeARequest: "అభ్యర్థన చేయండి",
+      backToHome: "తిరిగి ఇంటికి",
       renderRequestContent: {
         to: "కు",
         from: "నుండి",
@@ -112,7 +116,8 @@ export const requestsSectionContent = {
       retry: "మళ్లీ ప్రయత్నించండి",
     },
     renderUploadResponseContent: {
-      inProgressMessage: "దయచేసి వేచి ఉండండి! మేము మీ అభ్యర్థనను పంపుతున్నాము",
+      inProgressMessage:
+        "దయచేసి వేచి ఉండండి! మేము మీ వీడియోను అప్‌లోడ్ చేస్తున్నాము",
       goBack: "వెనక్కి వెళ్ళు",
     },
   },
@@ -130,6 +135,7 @@ export const requestsSectionContent = {
       editorApologiesText: "對不起！您還沒有提出任何請求",
       creatorApologiesText: "對不起！沒有您的要求",
       makeARequest: "發出請求",
+      backToHome: "回首頁",
       renderRequestContent: {
         to: "到",
         from: "從",
@@ -150,7 +156,7 @@ export const requestsSectionContent = {
       retry: "重試",
     },
     renderUploadResponseContent: {
-      inProgressMessage: "請稍等！我們正在發送您的請求",
+      inProgressMessage: "請稍等！我們正在上傳您的視頻",
 
       goBack: "回去",
     },
@@ -169,6 +175,7 @@ export const requestsSectionContent = {
       editorApologiesText: "¡Lo siento! no has hecho ninguna solicitud",
       creatorApologiesText: "Vídeo¡Lo siento! no hay solicitudes para ti",
       makeARequest: "Hacer una solicitud",
+      backToHome: "De vuelta a casa",
       renderRequestContent: {
         to: "a",
         from: "de",
@@ -189,7 +196,7 @@ export const requestsSectionContent = {
       retry: "Rever",
     },
     renderUploadResponseContent: {
-      inProgressMessage: "¡Espere por favor! estamos enviando su solicitud",
+      inProgressMessage: "¡Espere por favor! Estamos subiendo tu vídeo.",
 
       goBack: "regresa",
     },
@@ -208,6 +215,7 @@ export const requestsSectionContent = {
       editorApologiesText: "Désolé! tu n'as fait aucune demande",
       creatorApologiesText: "Désolé! il n'y a aucune demande pour vous",
       makeARequest: "Faire une demande",
+      backToHome: "De retour à la maison",
       renderRequestContent: {
         to: "à",
         from: "depuis",
@@ -229,7 +237,7 @@ export const requestsSectionContent = {
     },
     renderUploadResponseContent: {
       inProgressMessage:
-        "S'il vous plaît, attendez! nous envoyons votre demande",
+        "S'il vous plaît, attendez! Nous mettons en ligne votre vidéo",
 
       goBack: "retourner",
     },
@@ -248,6 +256,7 @@ export const requestsSectionContent = {
       editorApologiesText: "آسف! لم تقم بأي طلبات",
       creatorApologiesText: "آسف! لا توجد طلبات لك",
       makeARequest: "تقديم طلب",
+      backToHome: "العودة إلى المنزل",
       renderRequestContent: {
         to: "ل",
         from: "من",
@@ -268,7 +277,7 @@ export const requestsSectionContent = {
       retry: "أعد المحاولة",
     },
     renderUploadResponseContent: {
-      inProgressMessage: "انتظر من فضلك! نحن نرسل طلبك",
+      inProgressMessage: "انتظر من فضلك! نحن نقوم بتحميل الفيديو الخاص بك",
 
       goBack: "عُد",
     },
@@ -287,6 +296,7 @@ export const requestsSectionContent = {
       editorApologiesText: "দুঃখিত! আপনি কোনো অনুরোধ করেননি",
       creatorApologiesText: "দুঃখিত! আপনার জন্য কোন অনুরোধ নেই",
       makeARequest: "একটি অনুরোধ করুন",
+      backToHome: "বাড়িতে ফিরে যাও",
       renderRequestContent: {
         to: "প্রতি",
         from: "থেকে",
@@ -308,7 +318,7 @@ export const requestsSectionContent = {
     },
     renderUploadResponseContent: {
       inProgressMessage:
-        "অনুগ্রহপূর্বক অপেক্ষা করুন! আমরা আপনার অনুরোধ পাঠাচ্ছি",
+        "অনুগ্রহপূর্বক অপেক্ষা করুন! আমরা আপনার ভিডিও আপলোড করছি",
 
       goBack: "ফিরে যাও",
     },
@@ -327,6 +337,7 @@ export const requestsSectionContent = {
       editorApologiesText: "Извини! вы не делали никаких запросов",
       creatorApologiesText: "Извини! к вам нет запросов",
       makeARequest: "Обратиться с просьбой",
+      backToHome: "Вернуться домой",
       renderRequestContent: {
         to: "к",
         from: "от",
@@ -347,7 +358,7 @@ export const requestsSectionContent = {
       retry: "Повторить попытку",
     },
     renderUploadResponseContent: {
-      inProgressMessage: "Пожалуйста, подождите! мы отправляем ваш запрос",
+      inProgressMessage: "Пожалуйста, подождите! Мы загружаем ваше видео",
 
       goBack: "возвращаться",
     },
@@ -366,6 +377,7 @@ export const requestsSectionContent = {
       editorApologiesText: "Desculpe! você não fez nenhuma solicitação",
       creatorApologiesText: "StatusDesculpe! não há pedidos para você",
       makeARequest: "Faça um pedido",
+      backToHome: "De volta para casa",
       renderRequestContent: {
         to: "para",
         from: "from",
@@ -386,7 +398,7 @@ export const requestsSectionContent = {
       retry: "Tentar novamente",
     },
     renderUploadResponseContent: {
-      inProgressMessage: "Por favor, aguarde! estamos enviando sua solicitação",
+      inProgressMessage: "Por favor, aguarde! Estamos enviando seu vídeo",
 
       goBack: "volte",
     },
@@ -405,6 +417,7 @@ export const requestsSectionContent = {
       editorApologiesText: "معذرت! آپ نے کوئی درخواست نہیں کی ہے۔",
       creatorApologiesText: "معذرت! آپ کے لیے کوئی درخواستیں نہیں ہیں۔",
       makeARequest: "ایک درخواست کریں۔",
+      backToHome: "واپس گھر",
       renderRequestContent: {
         to: "کو",
         from: "سے",
@@ -426,7 +439,7 @@ export const requestsSectionContent = {
     },
     renderUploadResponseContent: {
       inProgressMessage:
-        "برائے مہربانی انتظار کریں! ہم آپ کی درخواست بھیج رہے ہیں۔",
+        "برائے مہربانی انتظار کریں! ہم آپ کی ویڈیو اپ لوڈ کر رہے ہیں۔",
 
       goBack: "واپس جاو",
     },

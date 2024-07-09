@@ -1,12 +1,11 @@
 import styled from "styled-components";
-import { Link } from "react-router-dom";
 import { IoMdClose } from "react-icons/io";
 import { PiUserCircleLight } from "react-icons/pi";
 import { RxHamburgerMenu } from "react-icons/rx";
 
 export const HeaderContainer = styled.header`
   max-width: 1920px;
-  margin:auto;
+  margin: auto;
   height: 60px;
   background-color: white;
   display: flex;

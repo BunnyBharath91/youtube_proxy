@@ -14,7 +14,7 @@ export const notFound =
   "https://res.cloudinary.com/drbnxuf21/image/upload/v1720357896/dehq7kpnmgnn4vlpsmzw.png";
 
 export const successful =
-  "https://res.cloudinary.com/drbnxuf21/image/upload/v1720357692/nzwbne6wua48k9er8nch.jpg";
+  "https://res.cloudinary.com/drbnxuf21/image/upload/v1720479350/ifnqqlkmfw099n1bfugx.png";
 
 export const errorWhileUploading =
   "https://res.cloudinary.com/drbnxuf21/image/upload/v1720357692/w2aqdmhgugaujgpysmyv.jpg";

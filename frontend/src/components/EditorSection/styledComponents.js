@@ -156,7 +156,7 @@ export const RequestCard = styled.div`
   flex-direction: column;
   padding-top: 10px;
   border-bottom: solid 1px #e8e3e3;
-  cursor: pointer;
+  cursor: ${(props) => (props.wait ? "wait" : "pointer")};
 
   @media screen and (min-width: 576px) {
     flex-direction: row;
@@ -444,7 +444,7 @@ export const Button = styled.button`
   font-weight: 500;
   color: ${(props) => (props.delete ? "#E5484D" : "#3356C7")};
   background-color: ${(props) => (props.delete ? "#FFF7F7" : "#edf2fe")};
-  cursor: pointer;
+  cursor: ${(props) => (props.wait ? "wait" : "pointer")};
 
   transition: background-color 0.3s ease;
 

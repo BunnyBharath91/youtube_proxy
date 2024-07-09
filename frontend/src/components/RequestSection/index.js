@@ -6,6 +6,7 @@ import { loading, successful, errorWhileUploading } from "../../images";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
+import { TailSpin } from "react-loader-spinner";
 import {
   RequestSectionContainer,
   Heading,
@@ -371,7 +372,7 @@ class RequestSection extends Component {
     }
   };
 
-  renderSubmitMessage = (renderSubmitMessageContent) => {
+  renderSubmitMessage = (renderSubmitMessageContent, fsr) => {
     const { responseStatus } = this.state;
     const {
       successMessage,
@@ -385,7 +386,7 @@ class RequestSection extends Component {
           alt="loading img"
           src={responseStatus === 200 ? successful : errorWhileUploading}
         />
-        <SubmitResponseMessage>
+        <SubmitResponseMessage ratio={fsr}>
           {responseStatus === 200
             ? successMessage
             : responseStatus === 400
@@ -399,12 +400,13 @@ class RequestSection extends Component {
     );
   };
 
-  renderLoading = (renderLoadingContent) => {
+  renderLoading = (renderLoadingContent, fsr) => {
     const { loadingText } = renderLoadingContent;
     return (
       <LoadingSection>
         <LoadingImage alt="loading img" src={loading} />
-        <LoadingText>{loadingText}...</LoadingText>
+        <LoadingText ratio={fsr}>{loadingText}...</LoadingText>
+        <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
       </LoadingSection>
     );
   };
@@ -487,6 +489,19 @@ class RequestSection extends Component {
       creatorIdPlaceHolder,
       submit,
     } = renderRequestSectionContent;
+
+    let selectedVisibilityName;
+    if (selectedVisibility) {
+      selectedVisibilityName =
+        renderRequestSectionContent[`${selectedVisibility}_`];
+    }
+
+    let selectedCategoryName;
+    if (selectedCategory) {
+      selectedCategoryName = youtubeCategories.filter(
+        (eachItem) => eachItem.id === Number(selectedCategory)
+      )[0].category;
+    }
 
     return (
       <RequestSectionContainer>
@@ -662,7 +677,7 @@ class RequestSection extends Component {
                 value={selectedVisibility}
                 onClick={this.toggleVisibilityContainer}
               >
-                {selectedVisibility ? selectedVisibility : selectVisibility}
+                {selectedVisibility ? selectedVisibilityName : selectVisibility}
                 <StyledDropDown rotate={showVisibilityContainer} />
               </FormElementSelect>
               <FormElementSelectOptionsContainer show={showVisibilityContainer}>
@@ -696,7 +711,7 @@ class RequestSection extends Component {
                 value={selectedCategory}
                 onClick={this.toggleCategoriesContainer}
               >
-                {selectedCategory ? selectedCategory : selectCategory}
+                {selectedCategory ? selectedCategoryName : selectCategory}
                 <StyledDropDown rotate={showCategoriesContainer} />
               </FormElementSelect>
               <FormElementSelectOptionsContainer
@@ -764,15 +779,15 @@ class RequestSection extends Component {
           const youtubeCategories = this.getYoutubeCategories(activeLanguage);
 
           return (
-            <div className={`bg-container ${showInGray && "show-in-gray"}`}  >
+            <div className={`bg-container ${showInGray && "show-in-gray"}`}>
               <Header ratio={fsr} />
               <div className="main-container">
                 {responseStatus === 200 ||
                 responseStatus === 400 ||
                 responseStatus === 500
-                  ? this.renderSubmitMessage(renderSubmitMessageContent)
+                  ? this.renderSubmitMessage(renderSubmitMessageContent, fsr)
                   : responseStatus === "IN_PROGRESS"
-                  ? this.renderLoading(renderLoadingContent)
+                  ? this.renderLoading(renderLoadingContent, fsr)
                   : this.renderRequestSection(
                       renderRequestSectionContent,
                       youtubeCategories,
