@@ -1,8 +1,8 @@
 import { Component } from "react";
+import { withRouter } from "react-router-dom";
 import { toast } from "react-toastify";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import { IoMdClose } from "react-icons/io";
-
 import defaultUserImage from "./default-avatar-profile-icon-vector-social-media-user-image-182145777.webp";
 import {
   HeaderContainer,
@@ -29,7 +29,7 @@ import {
   CopyImgContainer,
   StyledCopyImg,
 } from "./styledComponents";
-import { headerSectionContent } from "./languageContent";
+import { headerSectionContent, getSectionData } from "./languageContent";
 
 const languagesList = [
   { language: "عربي", code: "AR" },
@@ -53,36 +53,6 @@ class Header extends Component {
     copyImgClicked: false,
     showLanguageContainer: "initial",
     showMenuContainer: "initial",
-  };
-
-  getHeaderSectionData = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return headerSectionContent.AR;
-      case "BN":
-        return headerSectionContent.BN;
-      case "ZH":
-        return headerSectionContent.ZH;
-      case "EN":
-        return headerSectionContent.EN;
-      case "FR":
-        return headerSectionContent.FR;
-      case "HI":
-        return headerSectionContent.HI;
-      case "PT":
-        return headerSectionContent.PT;
-      case "RU":
-        return headerSectionContent.RU;
-      case "ES":
-        return headerSectionContent.ES;
-      case "TE":
-        return headerSectionContent.TE;
-      case "UR":
-        return headerSectionContent.UR;
-
-      default:
-        return null;
-    }
   };
 
   componentDidMount() {
@@ -143,8 +113,9 @@ class Header extends Component {
   onLogout = async () => {
     const response = await fetch("/logout");
     if (response.ok) {
-      window.location.reload(); // Reload the page
-      //return Redirect("/login");
+      //   window.location.reload(); // Reload the page
+      //   return <Redirect to="/login" />;
+      this.props.history.push("/login");
     }
   };
 
@@ -199,7 +170,7 @@ class Header extends Component {
             editor,
             logout,
             invCode,
-          } = this.getHeaderSectionData(activeLanguage);
+          } = getSectionData(headerSectionContent, activeLanguage);
           const selectedLanguage = languagesList.filter(
             (eachItem) => eachItem.code === activeLanguage
           )[0].language;
@@ -326,6 +297,6 @@ class Header extends Component {
     );
   }
 }
-export default Header;
+export default withRouter(Header);
 
 //before change

@@ -1,7 +1,8 @@
 export const requestsSectionContent = {
   EN: {
     renderRequestsSectionContent: {
-      sectionHeading: "Requests you made",
+      editorSectionHeading: "Requests you made",
+      creatorSectionHeading: "Requests for you",
       video: "Video",
       status: "Status",
       upload: "Upload",
@@ -10,8 +11,7 @@ export const requestsSectionContent = {
       respondedOn: "responded on",
       approve: "Approve",
       reject: "Reject",
-      editorApologiesText: "Sorry! you haven't made any requests",
-      creatorApologiesText: "Sorry! there are no requests for you",
+      apologiesText: "Sorry! there are no requests",
       makeARequest: "Make a Request",
       backToHome: "Back to Home",
       renderRequestContent: {
@@ -41,7 +41,8 @@ export const requestsSectionContent = {
   },
   HI: {
     renderRequestsSectionContent: {
-      sectionHeading: "आपके द्वारा किये गये अनुरोध",
+      editorSectionHeading: "आपके द्वारा किये गये अनुरोध",
+      creatorSectionHeading: "आपसे निवेदन है",
       video: "वीडियो",
       status: "स्थिति",
       upload: "डालना",
@@ -50,8 +51,7 @@ export const requestsSectionContent = {
       reject: "अस्वीकार करना",
       requestedOn: "पर अनुरोध किया गया",
       respondedOn: "पर अनुरोध किया गया",
-      editorApologiesText: "क्षमा मांगना! आपने कोई अनुरोध नहीं किया है",
-      creatorApologiesText: "क्षमा मांगना! आपके लिए कोई अनुरोध नहीं है",
+      apologiesText: "क्षमा मांगना! कोई अनुरोध नहीं है",
       makeARequest: "एक अनुरोध करना",
       backToHome: "घर वापिस जा रहा हूँ",
       renderRequestContent: {
@@ -82,7 +82,8 @@ export const requestsSectionContent = {
   },
   TE: {
     renderRequestsSectionContent: {
-      sectionHeading: "మీరు చేసిన అభ్యర్థనలు",
+      editorSectionHeading: "మీరు చేసిన అభ్యర్థనలు",
+      creatorSectionHeading: "మీ కోసం అభ్యర్థనలు",
       video: "వీడియో",
       status: "హోదా",
       upload: "అప్లోడ్",
@@ -91,8 +92,7 @@ export const requestsSectionContent = {
       reject: "తిరస్కరించండి",
       requestedOn: "న అభ్యర్థించారు",
       respondedOn: "న స్పందించారు",
-      editorApologiesText: "క్షమించండి! మీరు ఎలాంటి అభ్యర్థనలు చేయలేదు",
-      creatorApologiesText: "క్షమించండి! మీ కోసం అభ్యర్థనలు లేవు",
+      apologiesText: "క్షమించండి! అభ్యర్థనలు లేవు",
       makeARequest: "అభ్యర్థన చేయండి",
       backToHome: "తిరిగి ఇంటికి",
       renderRequestContent: {
@@ -123,7 +123,8 @@ export const requestsSectionContent = {
   },
   ZH: {
     renderRequestsSectionContent: {
-      sectionHeading: "您提出的請求",
+      editorSectionHeading: "您提出的請求",
+      creatorSectionHeading: "對您的要求",
       video: "影片",
       status: "地位",
       upload: "上傳",
@@ -132,8 +133,7 @@ export const requestsSectionContent = {
       reject: "拒絕",
       requestedOn: "請求於",
       respondedOn: "回應於",
-      editorApologiesText: "對不起！您還沒有提出任何請求",
-      creatorApologiesText: "對不起！沒有您的要求",
+      apologiesText: "對不起！沒有請求",
       makeARequest: "發出請求",
       backToHome: "回首頁",
       renderRequestContent: {
@@ -163,7 +163,8 @@ export const requestsSectionContent = {
   },
   ES: {
     renderRequestsSectionContent: {
-      sectionHeading: "Solicitudes que hiciste",
+      editorSectionHeading: "Solicitudes que hiciste",
+      creatorSectionHeading: "Solicitudes para ti",
       video: "Video",
       status: "Estado",
       upload: "Subir",
@@ -172,8 +173,7 @@ export const requestsSectionContent = {
       reject: "Rechazar",
       requestedOn: "solicitado en",
       respondedOn: "respondió en",
-      editorApologiesText: "¡Lo siento! no has hecho ninguna solicitud",
-      creatorApologiesText: "Vídeo¡Lo siento! no hay solicitudes para ti",
+      apologiesText: "¡Lo siento! no hay solicitudes",
       makeARequest: "Hacer una solicitud",
       backToHome: "De vuelta a casa",
       renderRequestContent: {
@@ -203,7 +203,8 @@ export const requestsSectionContent = {
   },
   FR: {
     renderRequestsSectionContent: {
-      sectionHeading: "Les demandes que vous avez faites",
+      editorSectionHeading: "Les demandes que vous avez faites",
+      creatorSectionHeading: "Des demandes pour vous",
       video: "Vidéo",
       status: "Statut",
       upload: "Télécharger",
@@ -212,8 +213,7 @@ export const requestsSectionContent = {
       reject: "Rejeter",
       requestedOn: "demandé le",
       respondedOn: "a répondu le",
-      editorApologiesText: "Désolé! tu n'as fait aucune demande",
-      creatorApologiesText: "Désolé! il n'y a aucune demande pour vous",
+      apologiesText: "Désolé! il n'y a aucune demande",
       makeARequest: "Faire une demande",
       backToHome: "De retour à la maison",
       renderRequestContent: {
@@ -244,7 +244,8 @@ export const requestsSectionContent = {
   },
   AR: {
     renderRequestsSectionContent: {
-      sectionHeading: "الطلبات التي قدمتها",
+      editorSectionHeading: "الطلبات التي قدمتها",
+      creatorSectionHeading: "طلبات لك",
       video: "فيديو",
       status: "حالة",
       upload: "رفع",
@@ -253,8 +254,7 @@ export const requestsSectionContent = {
       reject: "يرفض",
       requestedOn: "طلب على",
       respondedOn: "استجاب على",
-      editorApologiesText: "آسف! لم تقم بأي طلبات",
-      creatorApologiesText: "آسف! لا توجد طلبات لك",
+      apologiesText: "آسف! لا توجد طلبات",
       makeARequest: "تقديم طلب",
       backToHome: "العودة إلى المنزل",
       renderRequestContent: {
@@ -284,7 +284,8 @@ export const requestsSectionContent = {
   },
   BN: {
     renderRequestsSectionContent: {
-      sectionHeading: "আপনার করা অনুরোধ",
+      editorSectionHeading: "আপনার করা অনুরোধ",
+      creatorSectionHeading: "আপনার জন্য অনুরোধ",
       video: "ভিডিও",
       status: "স্ট্যাটাস",
       upload: "আপলোড করুন",
@@ -293,8 +294,7 @@ export const requestsSectionContent = {
       reject: "প্রত্যাখ্যান করুন",
       requestedOn: "অনুরোধ করা হয়েছে",
       respondedOn: "উপর প্রতিক্রিয়া",
-      editorApologiesText: "দুঃখিত! আপনি কোনো অনুরোধ করেননি",
-      creatorApologiesText: "দুঃখিত! আপনার জন্য কোন অনুরোধ নেই",
+      apologiesText: "দুঃখিত! কোন অনুরোধ আছে",
       makeARequest: "একটি অনুরোধ করুন",
       backToHome: "বাড়িতে ফিরে যাও",
       renderRequestContent: {
@@ -325,7 +325,8 @@ export const requestsSectionContent = {
   },
   RU: {
     renderRequestsSectionContent: {
-      sectionHeading: "Ваши запросы",
+      editorSectionHeading: "Ваши запросы",
+      creatorSectionHeading: "Запросы для вас",
       video: "видео",
       status: "Положение дел",
       upload: "Загрузить",
@@ -334,8 +335,7 @@ export const requestsSectionContent = {
       reject: "Отклонять",
       requestedOn: "запросили на",
       respondedOn: "ответил на",
-      editorApologiesText: "Извини! вы не делали никаких запросов",
-      creatorApologiesText: "Извини! к вам нет запросов",
+      apologiesText: "Извини! нет никаких запросов",
       makeARequest: "Обратиться с просьбой",
       backToHome: "Вернуться домой",
       renderRequestContent: {
@@ -365,7 +365,8 @@ export const requestsSectionContent = {
   },
   PT: {
     renderRequestsSectionContent: {
-      sectionHeading: "Solicitações que você fez",
+      editorSectionHeading: "Solicitações que você fez",
+      creatorSectionHeading: "Pedidos para você",
       video: "Vídeo",
       status: "Status",
       upload: "Carregar",
@@ -374,8 +375,7 @@ export const requestsSectionContent = {
       reject: "Rejeitar",
       requestedOn: "solicitado em",
       respondedOn: "respondeu em",
-      editorApologiesText: "Desculpe! você não fez nenhuma solicitação",
-      creatorApologiesText: "StatusDesculpe! não há pedidos para você",
+      apologiesText: "Desculpe! não há pedidos",
       makeARequest: "Faça um pedido",
       backToHome: "De volta para casa",
       renderRequestContent: {
@@ -405,7 +405,8 @@ export const requestsSectionContent = {
   },
   UR: {
     renderRequestsSectionContent: {
-      sectionHeading: "آپ نے جو درخواستیں کی ہیں۔",
+      editorSectionHeading: "آپ نے جو درخواستیں کی ہیں۔",
+      creatorSectionHeading: "آپ کے لیے درخواستیں",
       video: "ویڈیو",
       status: "حالت",
       upload: "اپ لوڈ کریں۔",
@@ -414,8 +415,7 @@ export const requestsSectionContent = {
       reject: "رد کرنا",
       requestedOn: "پر درخواست کی",
       respondedOn: "پر جواب دیا",
-      editorApologiesText: "معذرت! آپ نے کوئی درخواست نہیں کی ہے۔",
-      creatorApologiesText: "معذرت! آپ کے لیے کوئی درخواستیں نہیں ہیں۔",
+      apologiesText: "معذرت! کوئی درخواستیں نہیں ہیں",
       makeARequest: "ایک درخواست کریں۔",
       backToHome: "واپس گھر",
       renderRequestContent: {

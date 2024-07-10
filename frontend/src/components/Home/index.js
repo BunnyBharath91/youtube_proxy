@@ -12,38 +12,9 @@ import {
   GetStartedButton,
 } from "./styledComponents";
 import { homeSectionContent } from "./languageContent";
+import { getSectionData } from "../Header/languageContent";
 
 const Home = () => {
-  const getHomeSectionData = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return homeSectionContent.AR;
-      case "BN":
-        return homeSectionContent.BN;
-      case "ZH":
-        return homeSectionContent.ZH;
-      case "EN":
-        return homeSectionContent.EN;
-      case "FR":
-        return homeSectionContent.FR;
-      case "HI":
-        return homeSectionContent.HI;
-      case "PT":
-        return homeSectionContent.PT;
-      case "RU":
-        return homeSectionContent.RU;
-      case "ES":
-        return homeSectionContent.ES;
-      case "TE":
-        return homeSectionContent.TE;
-      case "UR":
-        return homeSectionContent.UR;
-
-      default:
-        return null;
-    }
-  };
-
   return (
     <LanguageAndAccessibilityContext.Consumer>
       {(value) => {
@@ -54,7 +25,7 @@ const Home = () => {
           upperDescription,
           mainDescription,
           lowerDescription,
-        } = getHomeSectionData(activeLanguage);
+        } = getSectionData(homeSectionContent, activeLanguage);
 
         return (
           <div className={`${showInGray && "show-in-gray"} bg-container`}>

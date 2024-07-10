@@ -22,6 +22,7 @@ import {
   GetStartedButton,
 } from "./styledComponents";
 import { loginSectionContent } from "./languageContent";
+import { getSectionData } from "../Header/languageContent";
 
 class Login extends Component {
   constructor(props) {
@@ -32,36 +33,6 @@ class Login extends Component {
       showMenuContainer: false,
     };
   }
-
-  getLoginSectionData = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return loginSectionContent.AR;
-      case "BN":
-        return loginSectionContent.BN;
-      case "ZH":
-        return loginSectionContent.ZH;
-      case "EN":
-        return loginSectionContent.EN;
-      case "FR":
-        return loginSectionContent.FR;
-      case "HI":
-        return loginSectionContent.HI;
-      case "PT":
-        return loginSectionContent.PT;
-      case "RU":
-        return loginSectionContent.RU;
-      case "ES":
-        return loginSectionContent.ES;
-      case "TE":
-        return loginSectionContent.TE;
-      case "UR":
-        return loginSectionContent.UR;
-
-      default:
-        return null;
-    }
-  };
 
   componentDidMount() {
     this.checkAuthStatus();
@@ -117,7 +88,7 @@ class Login extends Component {
       mainDescription,
       lowerDescription,
       headerItems,
-    } = this.getLoginSectionData(activeLanguage);
+    } = getSectionData(loginSectionContent, activeLanguage);
     const { about, contact, signIn } = headerItems;
     return (
       <>

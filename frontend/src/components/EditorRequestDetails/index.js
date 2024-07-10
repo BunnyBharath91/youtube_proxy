@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
+import { getSectionData } from "../Header/languageContent";
 import { TailSpin } from "react-loader-spinner";
 import {
   loading,
@@ -63,66 +64,6 @@ class EditorRequestDetails extends Component {
 
     this.getRequestDetails(videoId);
   }
-
-  getRequestDetailsSectionData = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return requestDetailsContent.AR;
-      case "BN":
-        return requestDetailsContent.BN;
-      case "ZH":
-        return requestDetailsContent.ZH;
-      case "EN":
-        return requestDetailsContent.EN;
-      case "FR":
-        return requestDetailsContent.FR;
-      case "HI":
-        return requestDetailsContent.HI;
-      case "PT":
-        return requestDetailsContent.PT;
-      case "RU":
-        return requestDetailsContent.RU;
-      case "ES":
-        return requestDetailsContent.ES;
-      case "TE":
-        return requestDetailsContent.TE;
-      case "UR":
-        return requestDetailsContent.UR;
-
-      default:
-        return null;
-    }
-  };
-
-  getPostRequestContent = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return postRequestContent.AR;
-      case "BN":
-        return postRequestContent.BN;
-      case "ZH":
-        return postRequestContent.ZH;
-      case "EN":
-        return postRequestContent.EN;
-      case "FR":
-        return postRequestContent.FR;
-      case "HI":
-        return postRequestContent.HI;
-      case "PT":
-        return postRequestContent.PT;
-      case "RU":
-        return postRequestContent.RU;
-      case "ES":
-        return postRequestContent.ES;
-      case "TE":
-        return postRequestContent.TE;
-      case "UR":
-        return postRequestContent.UR;
-
-      default:
-        return null;
-    }
-  };
 
   getRequestDetails = async (videoId) => {
     this.setState({
@@ -207,7 +148,7 @@ class EditorRequestDetails extends Component {
       thumbnailQuotaExceeded,
       thumbnailForbidden,
       error409,
-    } = this.getPostRequestContent(activeLanguage);
+    } = getSectionData(postRequestContent, activeLanguage);
 
     const { requestDetails } = this.state;
     const { videoId } = requestDetails;
@@ -593,7 +534,7 @@ class EditorRequestDetails extends Component {
             renderRequestDetailsContent,
             renderFetchingErrorContent,
             renderUploadResponseContent,
-          } = this.getRequestDetailsSectionData(activeLanguage);
+          } = getSectionData(requestDetailsContent, activeLanguage);
 
           return (
             <div className={`${showInGray && "show-in-gray"} bg-container`}>

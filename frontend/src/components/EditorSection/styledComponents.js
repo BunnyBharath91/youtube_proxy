@@ -52,6 +52,7 @@ export const RequestsTableHeader = styled.ul`
     }}px;
     font-weight: 600;
     color: rgb(51, 65, 85);
+
     border-bottom: solid 1px #cbd5e1;
     padding: 12px 0px;
   }

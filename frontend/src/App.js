@@ -75,7 +75,7 @@ class App extends Component {
       showInGray,
       showUnderLines,
     } = this.state;
-    console.log("app.js file fontRatio: ", fontSizeRatio);
+
     return (
       <BrowserRouter>
         <LanguageAndAccessibilityContext.Provider

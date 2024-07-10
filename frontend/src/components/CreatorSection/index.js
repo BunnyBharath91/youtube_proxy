@@ -4,6 +4,8 @@ import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
+import { getSectionData } from "../Header/languageContent";
+import RequestsFilter from "../RequestsFilter";
 import { apology, noRequests } from "../../images";
 import { TailSpin } from "react-loader-spinner";
 import {
@@ -39,6 +41,7 @@ import { requestsSectionContent } from "../EditorSection/languageContent";
 
 class CreatorSection extends Component {
   state = {
+    selectedFilter: "",
     requestsList: [],
     loading: true,
     fetchingErrorStatus: "",
@@ -49,42 +52,15 @@ class CreatorSection extends Component {
     this.getRequests();
   }
 
-  getCreatorSectionContent = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return requestsSectionContent.AR;
-      case "BN":
-        return requestsSectionContent.BN;
-      case "ZH":
-        return requestsSectionContent.ZH;
-      case "EN":
-        return requestsSectionContent.EN;
-      case "FR":
-        return requestsSectionContent.FR;
-      case "HI":
-        return requestsSectionContent.HI;
-      case "PT":
-        return requestsSectionContent.PT;
-      case "RU":
-        return requestsSectionContent.RU;
-      case "ES":
-        return requestsSectionContent.ES;
-      case "TE":
-        return requestsSectionContent.TE;
-      case "UR":
-        return requestsSectionContent.UR;
-
-      default:
-        return null;
-    }
-  };
-
-  getRequests = async () => {
+  getRequests = async (status = "") => {
     this.setState({
       loading: true,
+      selectedFilter: status,
     });
     try {
-      const response = await fetch("/requests?role=creator");
+      const response = await fetch(
+        `/requests?role=creator${status && `&req_status=${status}`}`
+      );
       if (!response.ok) {
         this.setState({
           loading: false,
@@ -330,55 +306,65 @@ class CreatorSection extends Component {
   };
 
   renderCreatorSection = (renderRequestsSectionContent, fsr, sUl) => {
-    const { requestsList } = this.state;
+    const { loading, requestsList, selectedFilter } = this.state;
     const {
-      sectionHeading,
+      creatorSectionHeading,
       video,
       status,
       requestedOn,
       respondedOn,
       approve,
       reject,
-      creatorApologiesText,
+      apologiesText,
       backToHome,
       renderRequestContent,
     } = renderRequestsSectionContent;
     return (
       <CreatorSectionContainer>
         <CreatorSectionHeading ratio={fsr}>
-          {sectionHeading}
+          {creatorSectionHeading}
         </CreatorSectionHeading>
-        {requestsList.length > 0 && (
-          <RequestsTableHeader ratio={fsr}>
-            <TableElement video>{video}</TableElement>
-            <TableElement requestedDateTime>{requestedOn}</TableElement>
-            <TableElement status>{status}</TableElement>
-            <TableElement respondedDateTime>{respondedOn}</TableElement>
-            <TableElement approve_>{approve}</TableElement>
-            <TableElement reject_>{reject}</TableElement>
-          </RequestsTableHeader>
-        )}
-        {requestsList.length === 0 ? (
-          <NoRequestsContainer>
-            <NoRequestsImage alt="loading img" src={noRequests} />
-            <ApologiesText ratio={fsr}>{creatorApologiesText}</ApologiesText>
-            <StyledLink to="/" sUl={sUl}>
-              <Button>{backToHome}</Button>
-            </StyledLink>
-          </NoRequestsContainer>
+        <RequestsFilter
+          getRequests={this.getRequests}
+          selectedFilter={selectedFilter}
+        />
+        {loading ? (
+          this.renderLoading()
         ) : (
-          <RequestsContainer>
-            {requestsList.map((eachItem) =>
-              this.renderRequest(renderRequestContent, eachItem, fsr)
+          <>
+            {requestsList.length > 0 && (
+              <RequestsTableHeader ratio={fsr}>
+                <TableElement video>{video}</TableElement>
+                <TableElement requestedDateTime>{requestedOn}</TableElement>
+                <TableElement status>{status}</TableElement>
+                <TableElement respondedDateTime>{respondedOn}</TableElement>
+                <TableElement approve_>{approve}</TableElement>
+                <TableElement reject_>{reject}</TableElement>
+              </RequestsTableHeader>
             )}
-          </RequestsContainer>
+            {requestsList.length === 0 ? (
+              <NoRequestsContainer>
+                <NoRequestsImage alt="loading img" src={noRequests} />
+                <ApologiesText ratio={fsr}>{apologiesText}</ApologiesText>
+                <StyledLink to="/" sUl={sUl}>
+                  <Button>{backToHome}</Button>
+                </StyledLink>
+              </NoRequestsContainer>
+            ) : (
+              <RequestsContainer>
+                {requestsList.map((eachItem) =>
+                  this.renderRequest(renderRequestContent, eachItem, fsr)
+                )}
+              </RequestsContainer>
+            )}
+          </>
         )}
       </CreatorSectionContainer>
     );
   };
 
   render() {
-    const { loading, fetchingErrorStatus } = this.state;
+    const { fetchingErrorStatus } = this.state;
 
     return (
       <LanguageAndAccessibilityContext.Consumer>
@@ -394,15 +380,13 @@ class CreatorSection extends Component {
           const {
             renderRequestsSectionContent,
             renderFetchingErrorContent,
-          } = this.getCreatorSectionContent(activeLanguage);
+          } = getSectionData(requestsSectionContent, activeLanguage);
 
           return (
             <div className={`${showInGray && "show-in-gray"} bg-container`}>
               <Header />
               <div className="main-container">
-                {loading
-                  ? this.renderLoading()
-                  : fetchingErrorStatus
+                {fetchingErrorStatus
                   ? renderFetchingErrorContent(renderFetchingErrorContent)
                   : this.renderCreatorSection(
                       renderRequestsSectionContent,

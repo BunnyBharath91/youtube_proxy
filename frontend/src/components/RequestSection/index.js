@@ -6,6 +6,7 @@ import { loading, successful, errorWhileUploading } from "../../images";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
+import { getSectionData } from "../Header/languageContent";
 import { TailSpin } from "react-loader-spinner";
 import {
   RequestSectionContainer,
@@ -77,66 +78,6 @@ class RequestSection extends Component {
     };
   }
 
-  getRequestSectionData = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return requestSectionContent.AR;
-      case "BN":
-        return requestSectionContent.BN;
-      case "ZH":
-        return requestSectionContent.ZH;
-      case "EN":
-        return requestSectionContent.EN;
-      case "FR":
-        return requestSectionContent.FR;
-      case "HI":
-        return requestSectionContent.HI;
-      case "PT":
-        return requestSectionContent.PT;
-      case "RU":
-        return requestSectionContent.RU;
-      case "ES":
-        return requestSectionContent.ES;
-      case "TE":
-        return requestSectionContent.TE;
-      case "UR":
-        return requestSectionContent.UR;
-
-      default:
-        return null;
-    }
-  };
-
-  getYoutubeCategories = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return youtubeCategoriesContainer.AR;
-      case "BN":
-        return youtubeCategoriesContainer.BN;
-      case "ZH":
-        return youtubeCategoriesContainer.ZH;
-      case "EN":
-        return youtubeCategoriesContainer.EN;
-      case "FR":
-        return youtubeCategoriesContainer.FR;
-      case "HI":
-        return youtubeCategoriesContainer.HI;
-      case "PT":
-        return youtubeCategoriesContainer.PT;
-      case "RU":
-        return youtubeCategoriesContainer.RU;
-      case "ES":
-        return youtubeCategoriesContainer.ES;
-      case "TE":
-        return youtubeCategoriesContainer.TE;
-      case "UR":
-        return youtubeCategoriesContainer.UR;
-
-      default:
-        return null;
-    }
-  };
-
   onNewRequest = () => {
     window.location.reload();
   };
@@ -201,36 +142,29 @@ class RequestSection extends Component {
       return;
     }
 
-    console.log("responseStatus:IN_PROGRESS");
     this.setState({
       responseStatus: "IN_PROGRESS",
     });
 
     const form = event.currentTarget;
     const formData = new FormData(form);
-    console.log("formData:", formData);
 
     try {
       const response = await fetch("/upload-request", {
         method: "POST",
         body: formData,
       });
-      console.log("response for uploadrequest:", response);
-      console.log("response.ok: ", response.ok);
 
       if (response.ok) {
-        console.log("responseStatus:200");
         this.setState({
           responseStatus: 200,
         });
       } else {
-        console.error("Upload failed with status:", response.status);
         this.setState({
           responseStatus: 500,
         });
       }
     } catch (error) {
-      console.error("Error uploading:", error);
       this.setState({
         responseStatus: 400,
       });
@@ -246,7 +180,6 @@ class RequestSection extends Component {
           videoError: "Video file size should not exceed 256GB.",
           videoUrl: "", // Reset the thumbnail URL
         });
-        console.log("file size is more than 256GB");
         event.target.value = null; // Reset the file input
         return;
       }
@@ -258,7 +191,6 @@ class RequestSection extends Component {
           videoUrl: reader.result,
           videoError: "",
         });
-        console.log(reader.result);
       };
       reader.onerror = (error) => {
         console.error("Error reading video file:", error);
@@ -270,12 +202,12 @@ class RequestSection extends Component {
     const file = event.target.files[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        // Check if file size is greater than 2MB
+        // Checking if file size is greater than 2MB
         this.setState({
           thumbnailError: "Thumbnail file size should not exceed 2MB.",
-          thumbnailUrl: "", // Reset the thumbnail URL
+          thumbnailUrl: "", // Resetting the thumbnail URL
         });
-        event.target.value = null; // Reset the file input
+        event.target.value = null; // Resetting the file input
         return;
       }
 
@@ -769,14 +701,16 @@ class RequestSection extends Component {
         {(value) => {
           const { activeLanguage, fontSizeRatio, showInGray } = value;
           const fsr = fontSizeRatio;
-          console.log("request section ratio: ", fsr);
 
           const {
             renderLoadingContent,
             renderSubmitMessageContent,
             renderRequestSectionContent,
-          } = this.getRequestSectionData(activeLanguage);
-          const youtubeCategories = this.getYoutubeCategories(activeLanguage);
+          } = getSectionData(requestSectionContent, activeLanguage);
+          const youtubeCategories = getSectionData(
+            youtubeCategoriesContainer,
+            activeLanguage
+          );
 
           return (
             <div className={`bg-container ${showInGray && "show-in-gray"}`}>

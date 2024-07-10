@@ -159,7 +159,7 @@ export const MenuContainer = styled.ul`
     width: 350px;
     top: 55px;
     right: max(5vw, calc((100vw - 1920px) / 2 + 5vw));
-    font-size: ${(props) => props.ratio * 17}px;
+    font-size: ${(props) => props.ratio * 16}px;
     ${(props) => showAnimation(props)}
   }
 
@@ -205,7 +205,7 @@ export const MenuUserItem = styled(MenuItem)`
   border: none;
   gap: 22px;
   font-size: ${(props) => {
-    return props.ratio * 17;
+    return props.ratio * 16;
   }}px;
 
   @media screen and (min-width: 992px) {

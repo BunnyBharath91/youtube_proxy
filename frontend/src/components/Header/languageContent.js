@@ -88,3 +88,33 @@ export const headerSectionContent = {
     invCode: "دعوت کا کوڈ",
   },
 };
+
+export const getSectionData = (sectionContent, activeLanguage) => {
+  switch (activeLanguage) {
+    case "AR":
+      return sectionContent.AR;
+    case "BN":
+      return sectionContent.BN;
+    case "ZH":
+      return sectionContent.ZH;
+    case "EN":
+      return sectionContent.EN;
+    case "FR":
+      return sectionContent.FR;
+    case "HI":
+      return sectionContent.HI;
+    case "PT":
+      return sectionContent.PT;
+    case "RU":
+      return sectionContent.RU;
+    case "ES":
+      return sectionContent.ES;
+    case "TE":
+      return sectionContent.TE;
+    case "UR":
+      return sectionContent.UR;
+
+    default:
+      return null;
+  }
+};

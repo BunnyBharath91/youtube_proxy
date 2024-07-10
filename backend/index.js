@@ -374,7 +374,7 @@ app.get("/requests", ensureAuthenticated, async (request, response) => {
     const userName = request.user.username;
     console.log(userName);
 
-    const { role } = request.query;
+    const { role, req_status } = request.query;
     let requestType;
     if (role === "creator") {
       requestType = "to_user";
@@ -384,8 +384,20 @@ app.get("/requests", ensureAuthenticated, async (request, response) => {
       return response.status(400).send("Invalid role parameter");
     }
 
-    const getRequestsQuery = `SELECT * FROM VIDEOS WHERE ${requestType} = ?;`;
-    const requestsResponse = await db.all(getRequestsQuery, [userName]);
+    // Base query
+    let getRequestsQuery = `SELECT * FROM VIDEOS WHERE ${requestType} = ?`;
+
+    // Add status filter if req_status is provided
+    if (req_status) {
+      getRequestsQuery += ` AND request_status = ?`;
+    }
+
+    // Add order by clause to sort by requested_date_time in descending order
+    getRequestsQuery += ` ORDER BY requested_date_time DESC`;
+
+    const requestsResponse = req_status
+      ? await db.all(getRequestsQuery, [userName, req_status])
+      : await db.all(getRequestsQuery, [userName]);
 
     for (let eachItem of requestsResponse) {
       if (

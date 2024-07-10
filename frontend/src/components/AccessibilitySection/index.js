@@ -8,40 +8,11 @@ import {
   AccessibilityCardElement,
 } from "./styledComponents";
 import { accessibilitySectionContent } from "./languageContent";
+import { getSectionData } from "../Header/languageContent";
 
 class AccessibilitySection extends Component {
   state = {
     showAccessibilityCard: false,
-  };
-
-  getAccessibilitySectionContent = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return accessibilitySectionContent.AR;
-      case "BN":
-        return accessibilitySectionContent.BN;
-      case "ZH":
-        return accessibilitySectionContent.ZH;
-      case "EN":
-        return accessibilitySectionContent.EN;
-      case "FR":
-        return accessibilitySectionContent.FR;
-      case "HI":
-        return accessibilitySectionContent.HI;
-      case "PT":
-        return accessibilitySectionContent.PT;
-      case "RU":
-        return accessibilitySectionContent.RU;
-      case "ES":
-        return accessibilitySectionContent.ES;
-      case "TE":
-        return accessibilitySectionContent.TE;
-      case "UR":
-        return accessibilitySectionContent.UR;
-
-      default:
-        return null;
-    }
   };
 
   toggleAccessibilityCard = () => {
@@ -76,7 +47,7 @@ class AccessibilitySection extends Component {
             removeUnderlines,
             showUnderlines,
             resetSettings_,
-          } = this.getAccessibilitySectionContent(activeLanguage);
+          } = getSectionData(accessibilitySectionContent, activeLanguage);
 
           const onIncreaseRatio = () => {
             increaseRatio();

@@ -4,6 +4,8 @@ import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
+import { getSectionData } from "../Header/languageContent";
+import RequestsFilter from "../RequestsFilter";
 import { TailSpin } from "react-loader-spinner";
 import {
   noRequests,
@@ -51,6 +53,7 @@ import { requestsSectionContent, postRequestContent } from "./languageContent";
 
 class EditorSectionRequests extends Component {
   state = {
+    selectedFilter: "",
     requestsList: [],
     loading: true,
     fetchingErrorStatus: "",
@@ -64,73 +67,15 @@ class EditorSectionRequests extends Component {
     this.getRequests();
   }
 
-  getEditorSectionData = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return requestsSectionContent.AR;
-      case "BN":
-        return requestsSectionContent.BN;
-      case "ZH":
-        return requestsSectionContent.ZH;
-      case "EN":
-        return requestsSectionContent.EN;
-      case "FR":
-        return requestsSectionContent.FR;
-      case "HI":
-        return requestsSectionContent.HI;
-      case "PT":
-        return requestsSectionContent.PT;
-      case "RU":
-        return requestsSectionContent.RU;
-      case "ES":
-        return requestsSectionContent.ES;
-      case "TE":
-        return requestsSectionContent.TE;
-      case "UR":
-        return requestsSectionContent.UR;
-
-      default:
-        return null;
-    }
-  };
-
-  getPostRequestContent = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return postRequestContent.AR;
-      case "BN":
-        return postRequestContent.BN;
-      case "ZH":
-        return postRequestContent.ZH;
-      case "EN":
-        return postRequestContent.EN;
-      case "FR":
-        return postRequestContent.FR;
-      case "HI":
-        return postRequestContent.HI;
-      case "PT":
-        return postRequestContent.PT;
-      case "RU":
-        return postRequestContent.RU;
-      case "ES":
-        return postRequestContent.ES;
-      case "TE":
-        return postRequestContent.TE;
-      case "UR":
-        return postRequestContent.UR;
-
-      default:
-        return null;
-    }
-  };
-
-  getRequests = async () => {
+  getRequests = async (status = "") => {
     this.setState({
       loading: true,
+      selectedFilter: status,
     });
-    console.log("editor section loading: true ");
     try {
-      const response = await fetch(`/requests?role=editor`);
+      const response = await fetch(
+        `/requests?role=editor${status && `&req_status=${status}`}`
+      );
 
       if (!response.ok) {
         this.setState({
@@ -204,7 +149,7 @@ class EditorSectionRequests extends Component {
       thumbnailQuotaExceeded,
       thumbnailForbidden,
       error409,
-    } = this.getPostRequestContent(activeLanguage);
+    } = getSectionData(postRequestContent, activeLanguage);
 
     const requestBody = {
       videoId,
@@ -287,22 +232,26 @@ class EditorSectionRequests extends Component {
   };
 
   resendRequest = async (videoId) => {
-    this.setState({ loading: true });
+    this.setState({
+      isProcessing: true,
+    });
 
     try {
       const response = await fetch(`/resend/${videoId}`);
       if (response.ok) {
-        window.location.reload();
-        alert("Resent successfully");
+        toast.success("Resent Successfully");
+        await this.getRequests();
       } else {
-        this.setState({ loading: false });
-        throw new Error("Error in resending. Please try again.");
+        toast.error("Error while Resending.Please try again.");
       }
     } catch (error) {
-      console.error("Error in resending:", error);
-      this.setState({ loading: false });
-      throw new Error("Error in resending. Please try again.");
+      console.log("Error in resending:", error);
+
+      toast.error("Error while Resending.Please try again.");
     }
+    this.setState({
+      isProcessing: false,
+    });
   };
 
   renderRequest = (activeLanguage, renderRequestContent, requestItem, fsr) => {
@@ -354,7 +303,6 @@ class EditorSectionRequests extends Component {
     }
 
     return (
-      //RequestCard,RequestThumbnail,RequestTextContainer
       <RequestCard
         key={videoId}
         onClick={() => this.props.history.push(`/editor_section/${videoId}`)}
@@ -362,11 +310,7 @@ class EditorSectionRequests extends Component {
       >
         <RequestThumbnail alt="thumbnail" src={thumbnailUrl} loading="lazy" />
         <RequestTextContainer className="request-card-text-container">
-          <VideoTitle ratio={fsr}>
-            This is my video title nothing fancy words just for checking
-            text-overflow: ellipses property. I mean is it working or not{" "}
-            {title}
-          </VideoTitle>
+          <VideoTitle ratio={fsr}>{title}</VideoTitle>
           <CreatorId ratio={fsr}>
             {to}: <Id>{toUser}</Id>
           </CreatorId>
@@ -391,7 +335,11 @@ class EditorSectionRequests extends Component {
                     </Button>
                   )
                 ) : (
-                  <Button onClick={handleResendRequest} wait={isProcessing}>
+                  <Button
+                    onClick={handleResendRequest}
+                    disabled={isProcessing}
+                    wait={isProcessing}
+                  >
                     {resend}
                   </Button>
                 ))}
@@ -558,63 +506,73 @@ class EditorSectionRequests extends Component {
     fsr,
     sUl
   ) => {
-    const { requestsList } = this.state;
+    const { loading, requestsList, selectedFilter } = this.state;
     const {
-      sectionHeading,
+      editorSectionHeading,
       video,
       status,
       upload,
       delete_,
       requestedOn,
       respondedOn,
-      editorApologiesText,
+      apologiesText,
       makeARequest,
       renderRequestContent,
     } = renderRequestsSectionContent;
     return (
       <EditorSectionContainer>
         <EditorSectionHeading ratio={fsr}>
-          {sectionHeading}
+          {editorSectionHeading}
         </EditorSectionHeading>
-        {requestsList.length > 0 && (
-          <RequestsTableHeader ratio={fsr}>
-            <TableElement video>{video}</TableElement>
-            <TableElement requestedDateTime>{requestedOn}</TableElement>
-            <TableElement status>{status}</TableElement>
-            <TableElement respondedDateTime>{respondedOn}</TableElement>
-            <TableElement upload>{upload} </TableElement>
-            <TableElement delete>{delete_} </TableElement>
-          </RequestsTableHeader>
-        )}
-        {requestsList.length === 0 ? (
-          //NoRequestsContainer,NoRequestsImage,ApologiesText
-          <NoRequestsContainer>
-            <NoRequestsImage alt="loading img" src={noRequests} />
-            <ApologiesText className="loading-text" ratio={fsr}>
-              {editorApologiesText}
-            </ApologiesText>
-            <StyledLink to="/request_section" sUl={sUl}>
-              <Button>{makeARequest}</Button>
-            </StyledLink>
-          </NoRequestsContainer>
+
+        <RequestsFilter
+          getRequests={this.getRequests}
+          selectedFilter={selectedFilter}
+        />
+        {loading ? (
+          this.renderLoading()
         ) : (
-          <RequestsContainer>
-            {requestsList.map((eachItem) =>
-              this.renderRequest(
-                activeLanguage,
-                renderRequestContent,
-                eachItem,
-                fsr
-              )
+          <>
+            {requestsList.length > 0 && (
+              <RequestsTableHeader ratio={fsr}>
+                <TableElement video>{video}</TableElement>
+                <TableElement requestedDateTime>{requestedOn}</TableElement>
+                <TableElement status>{status}</TableElement>
+                <TableElement respondedDateTime>{respondedOn}</TableElement>
+                <TableElement upload>{upload} </TableElement>
+                <TableElement delete>{delete_} </TableElement>
+              </RequestsTableHeader>
             )}
-          </RequestsContainer>
+            {requestsList.length === 0 ? (
+              <NoRequestsContainer>
+                <NoRequestsImage alt="loading img" src={noRequests} />
+                <ApologiesText className="loading-text" ratio={fsr}>
+                  {apologiesText}
+                </ApologiesText>
+                <StyledLink to="/request_section" sUl={sUl}>
+                  <Button>{makeARequest}</Button>
+                </StyledLink>
+              </NoRequestsContainer>
+            ) : (
+              <RequestsContainer>
+                {requestsList.map((eachItem) =>
+                  this.renderRequest(
+                    activeLanguage,
+                    renderRequestContent,
+                    eachItem,
+                    fsr
+                  )
+                )}
+              </RequestsContainer>
+            )}
+          </>
         )}
       </EditorSectionContainer>
     );
   };
 
   render() {
-    const { loading, fetchingErrorStatus, uploadResponse } = this.state;
+    const { fetchingErrorStatus, uploadResponse } = this.state;
 
     return (
       <LanguageAndAccessibilityContext.Consumer>
@@ -631,15 +589,13 @@ class EditorSectionRequests extends Component {
             renderRequestsSectionContent,
             renderFetchingErrorContent,
             renderUploadResponseContent,
-          } = this.getEditorSectionData(activeLanguage);
+          } = getSectionData(requestsSectionContent, activeLanguage);
 
           return (
             <div className={`${showInGray && "show-in-gray"} bg-container`}>
               <Header />
               <div className="main-container">
-                {loading
-                  ? this.renderLoading()
-                  : fetchingErrorStatus
+                {fetchingErrorStatus
                   ? this.renderFetchingError(renderFetchingErrorContent)
                   : uploadResponse
                   ? this.renderUploadResponse(renderUploadResponseContent)

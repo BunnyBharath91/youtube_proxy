@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
+import { getSectionData } from "../Header/languageContent";
 import { TailSpin } from "react-loader-spinner";
 import { apology, notFound } from "../../images";
 import {
@@ -48,36 +49,6 @@ class CreatorRequestDetails extends Component {
 
     this.getRequestDetails(videoId);
   }
-
-  getRequestDetailsSectionData = (activeLanguage) => {
-    switch (activeLanguage) {
-      case "AR":
-        return requestDetailsContent.AR;
-      case "BN":
-        return requestDetailsContent.BN;
-      case "ZH":
-        return requestDetailsContent.ZH;
-      case "EN":
-        return requestDetailsContent.EN;
-      case "FR":
-        return requestDetailsContent.FR;
-      case "HI":
-        return requestDetailsContent.HI;
-      case "PT":
-        return requestDetailsContent.PT;
-      case "RU":
-        return requestDetailsContent.RU;
-      case "ES":
-        return requestDetailsContent.ES;
-      case "TE":
-        return requestDetailsContent.TE;
-      case "UR":
-        return requestDetailsContent.UR;
-
-      default:
-        return null;
-    }
-  };
 
   getRequestDetails = async (videoId) => {
     this.setState({
@@ -375,7 +346,7 @@ class CreatorRequestDetails extends Component {
           const {
             renderRequestDetailsContent,
             renderFetchingErrorContent,
-          } = this.getRequestDetailsSectionData(activeLanguage);
+          } = getSectionData(requestDetailsContent, activeLanguage);
 
           return (
             <div className={`${showInGray && "show-in-gray"} bg-container`}>
