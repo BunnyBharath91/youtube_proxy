@@ -175,26 +175,20 @@ class RequestSection extends Component {
     const file = event.target.files[0];
     if (file) {
       if (file.size > 256 * 1024 * 1024 * 1024) {
-        // Check if file size is greater than 2MB
+        // Check if file size is greater than 256GB
         this.setState({
           videoError: "Video file size should not exceed 256GB.",
-          videoUrl: "", // Reset the thumbnail URL
+          videoUrl: "", // Reset the video URL
         });
         event.target.value = null; // Reset the file input
         return;
       }
 
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        this.setState({
-          videoUrl: reader.result,
-          videoError: "",
-        });
-      };
-      reader.onerror = (error) => {
-        console.error("Error reading video file:", error);
-      };
+      const url = URL.createObjectURL(file);
+      this.setState({
+        videoUrl: url,
+        videoError: "",
+      });
     }
   };
 
@@ -210,18 +204,11 @@ class RequestSection extends Component {
         event.target.value = null; // Resetting the file input
         return;
       }
-
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        this.setState({
-          thumbnailUrl: reader.result,
-          thumbnailError: "",
-        });
-      };
-      reader.onerror = (error) => {
-        console.error("Error reading thumbnail file:", error);
-      };
+      const url = URL.createObjectURL(file);
+      this.setState({
+        thumbnailUrl: url,
+        thumbnailError: "",
+      });
     }
   };
 

@@ -6,7 +6,7 @@ import LanguageAndAccessibilityContext from "../../context/languageAndAccessibil
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
 import { getSectionData } from "../Header/languageContent";
-import { TailSpin } from "react-loader-spinner";
+import { TailSpin, Oval } from "react-loader-spinner";
 import {
   loading,
   notFound,
@@ -129,14 +129,17 @@ class EditorRequestDetails extends Component {
           history.push("/editor_section");
         }, 2000);
       } else {
+        this.setState({
+          isProcessing: false,
+        });
         toast.error("Failed to Delete");
       }
     } catch (err) {
+      this.setState({
+        isProcessing: false,
+      });
       toast.error("Failed to delete");
     }
-    this.setState({
-      isProcessing: false,
-    });
   };
 
   onUploadVideo = async (activeLanguage) => {
@@ -175,8 +178,6 @@ class EditorRequestDetails extends Component {
           uploadResponseMessage: successMessage,
         });
         console.log("Video uploaded successfully:", responseData);
-        // window.location.reload(); // Reload the page
-        // alert("Video uploaded successfully");
       } else {
         if (response.status === 403) {
           if (responseData.reason === "video quotaExceeded") {
@@ -235,7 +236,7 @@ class EditorRequestDetails extends Component {
   resendRequest = async () => {
     const { requestDetails } = this.state;
     const { videoId } = requestDetails;
-    this.setState({ loading: true });
+    this.setState({ isProcessing: true });
 
     try {
       const response = await fetch(`/resend/${videoId}`);
@@ -243,13 +244,13 @@ class EditorRequestDetails extends Component {
         alert("Resent successfully");
         window.location.reload();
       } else {
-        this.setState({ loading: false });
+        this.setState({ isProcessing: false });
         throw new Error("Error in resending. Please try again.");
       }
     } catch (error) {
       console.error("Error in resending:", error);
 
-      this.setState({ loading: false });
+      this.setState({ isProcessing: false });
       throw new Error("Error in resending. Please try again.");
     }
   };
@@ -474,12 +475,6 @@ class EditorRequestDetails extends Component {
             </Element>
           </ElementsContainer>
           <ButtonsContainer>
-            {/* {videoUploadStatus === "not uploaded" && responseDateTime === null ? (
-            <button onClick={this.resendRequest}>Resend Request</button>
-          ) : (
-            <button onClick={this.onUploadVideo}>Upload</button>
-          )} */}
-
             {requestStatus === "approved" &&
               (responseDateTime ? (
                 videoUploadStatus === "not uploaded" && (
@@ -487,7 +482,7 @@ class EditorRequestDetails extends Component {
                     onClick={() => this.onUploadVideo(activeLanguage)}
                     upload
                     disabled={isProcessing}
-                    wait={isProcessing}
+                    isProcessing={isProcessing}
                   >
                     {upload}
                   </Button>
@@ -497,9 +492,13 @@ class EditorRequestDetails extends Component {
                   onClick={this.resendRequest}
                   resend
                   disabled={isProcessing}
-                  wait={isProcessing}
+                  isProcessing={isProcessing}
                 >
-                  {resendRequest}
+                  {isProcessing ? (
+                    <Oval color="var(--primary-color)" height="17" width="17" />
+                  ) : (
+                    resendRequest
+                  )}
                 </Button>
               ))}
 
@@ -510,9 +509,17 @@ class EditorRequestDetails extends Component {
                   ratio={fsr}
                   delete
                   disabled={isProcessing}
-                  wait={isProcessing}
+                  isProcessing={isProcessing}
                 >
-                  {deleteRequest}
+                  {isProcessing ? (
+                    <Oval
+                      color="var(--secondary-color)"
+                      height="17"
+                      width="17"
+                    />
+                  ) : (
+                    deleteRequest
+                  )}
                 </Button>
               )}
           </ButtonsContainer>

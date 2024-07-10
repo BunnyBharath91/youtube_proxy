@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
+import EditorSectionRequestCard from "../EditorSectionRequestCard";
 import { getSectionData } from "../Header/languageContent";
 import RequestsFilter from "../RequestsFilter";
 import { TailSpin } from "react-loader-spinner";
@@ -25,22 +26,6 @@ import {
   ApologiesText,
   StyledLink,
   RequestsContainer,
-  RequestCard,
-  RequestThumbnail,
-  RequestTextContainer,
-  VideoTitle,
-  CreatorId,
-  Id,
-  StatusAndButtonsContainer,
-  RequestStatus,
-  Status,
-  ButtonsContainer,
-  VideoUploadedText,
-  RequestedDateTime,
-  LargeScreenRequestStatus,
-  ResponseDateTime,
-  ExtraLargeScreenUploadButtonContainer,
-  LargeScreenDeleteButtonContainer,
   LoadingSection,
   FetchingErrorImage,
   FetchingErrorMessage,
@@ -114,7 +99,7 @@ class EditorSectionRequests extends Component {
     }
   };
 
-  onDeleteRequest = async (videoId) => {
+  deleteRequest = async (videoId) => {
     this.setState({
       isProcessing: true,
     });
@@ -140,7 +125,7 @@ class EditorSectionRequests extends Component {
     });
   };
 
-  onUploadVideo = async (activeLanguage, videoId) => {
+  uploadVideo = async (activeLanguage, videoId) => {
     const {
       successMessage,
       videoQuotaExceeded,
@@ -254,183 +239,6 @@ class EditorSectionRequests extends Component {
     });
   };
 
-  renderRequest = (activeLanguage, renderRequestContent, requestItem, fsr) => {
-    const { isProcessing } = this.state;
-    const {
-      videoId,
-      requestStatus,
-      toUser,
-      title,
-      thumbnailUrl,
-      videoUploadStatus,
-      requestedDateTime,
-      responseDateTime,
-    } = requestItem;
-    const {
-      to,
-      requestStatus_,
-      approved,
-      pending,
-      rejected,
-      upload,
-      resend,
-      delete_,
-      videoUploaded,
-    } = renderRequestContent;
-
-    const handleUpload = (event) => {
-      event.stopPropagation();
-      this.onUploadVideo(activeLanguage, videoId);
-    };
-
-    const handleDelete = (event) => {
-      event.stopPropagation(); //prevents the event from bubbling up the DOM tree, effectively stopping any parent elements from handling the event.
-      this.onDeleteRequest(videoId);
-    };
-
-    const handleResendRequest = (event) => {
-      event.stopPropagation();
-      this.resendRequest(videoId);
-    };
-
-    const requestedDate = requestedDateTime.slice(0, 10);
-    const requestedTime = requestedDateTime.slice(11);
-
-    let responseDate, responseTime;
-    if (responseDateTime) {
-      responseDate = responseDateTime.slice(0, 10);
-      responseTime = responseDateTime.slice(11, 19);
-    }
-
-    return (
-      <RequestCard
-        key={videoId}
-        onClick={() => this.props.history.push(`/editor_section/${videoId}`)}
-        wait={isProcessing}
-      >
-        <RequestThumbnail alt="thumbnail" src={thumbnailUrl} loading="lazy" />
-        <RequestTextContainer className="request-card-text-container">
-          <VideoTitle ratio={fsr}>{title}</VideoTitle>
-          <CreatorId ratio={fsr}>
-            {to}: <Id>{toUser}</Id>
-          </CreatorId>
-          <StatusAndButtonsContainer>
-            <RequestStatus ratio={fsr}>
-              {requestStatus_}:{" "}
-              <Status>
-                {requestStatus === "approved"
-                  ? approved
-                  : requestStatus === "pending"
-                  ? pending
-                  : rejected}
-              </Status>
-            </RequestStatus>
-
-            <ButtonsContainer className="request-card-buttons-container">
-              {requestStatus === "approved" &&
-                (responseDateTime ? (
-                  videoUploadStatus === "not uploaded" && (
-                    <Button onClick={handleUpload} wait={isProcessing}>
-                      {upload}
-                    </Button>
-                  )
-                ) : (
-                  <Button
-                    onClick={handleResendRequest}
-                    disabled={isProcessing}
-                    wait={isProcessing}
-                  >
-                    {resend}
-                  </Button>
-                ))}
-
-              {videoUploadStatus === "uploaded" && (
-                <VideoUploadedText className="video-uploaded-text" ratio={fsr}>
-                  {videoUploaded}
-                </VideoUploadedText>
-              )}
-              {videoUploadStatus === "not uploaded" &&
-                requestStatus !== "pending" && (
-                  <Button
-                    onClick={handleDelete}
-                    delete
-                    disabled={isProcessing}
-                    wait={isProcessing}
-                  >
-                    {delete_}
-                  </Button>
-                )}
-            </ButtonsContainer>
-          </StatusAndButtonsContainer>
-        </RequestTextContainer>
-        <RequestedDateTime ratio={fsr}>
-          <span>{requestedDate}</span>
-          <span>{requestedTime}</span>
-        </RequestedDateTime>
-        <LargeScreenRequestStatus ratio={fsr}>
-          {requestStatus === "approved"
-            ? approved
-            : requestStatus === "pending"
-            ? pending
-            : rejected}
-        </LargeScreenRequestStatus>
-        {/* <ResponseDateTime>
-          {responseDateTime ? responseDateTime : "-"}
-        </ResponseDateTime> */}
-        {responseDateTime ? (
-          <ResponseDateTime ratio={fsr}>
-            <span>{responseDate}</span>
-            <span>{responseTime}</span>
-          </ResponseDateTime>
-        ) : (
-          <ResponseDateTime>{"-"}</ResponseDateTime>
-        )}
-        <ExtraLargeScreenUploadButtonContainer>
-          {requestStatus === "approved" ? (
-            responseDateTime ? (
-              videoUploadStatus === "not uploaded" ? (
-                <Button
-                  onClick={handleUpload}
-                  disabled={isProcessing}
-                  wait={isProcessing}
-                >
-                  {upload}
-                </Button>
-              ) : (
-                "-"
-              )
-            ) : (
-              <Button
-                onClick={handleResendRequest}
-                disabled={isProcessing}
-                wait={isProcessing}
-              >
-                {resend}
-              </Button>
-            )
-          ) : (
-            "-"
-          )}
-        </ExtraLargeScreenUploadButtonContainer>
-        <LargeScreenDeleteButtonContainer>
-          {videoUploadStatus === "not uploaded" &&
-          requestStatus !== "pending" ? (
-            <Button
-              onClick={handleDelete}
-              delete
-              disabled={isProcessing}
-              wait={isProcessing}
-            >
-              {delete_}
-            </Button>
-          ) : (
-            "-"
-          )}
-        </LargeScreenDeleteButtonContainer>
-      </RequestCard>
-    );
-  };
-
   renderLoading = () => {
     return (
       <LoadingSection>
@@ -461,7 +269,7 @@ class EditorSectionRequests extends Component {
       uploadResponse: "",
       uploadResponseMessage: "",
     });
-    window.location.reload(); // Reload the page
+    this.getRequests();
   };
 
   renderUploadResponse = (renderUploadResponseContent) => {
@@ -506,7 +314,7 @@ class EditorSectionRequests extends Component {
     fsr,
     sUl
   ) => {
-    const { loading, requestsList, selectedFilter } = this.state;
+    const { loading, requestsList, selectedFilter, isProcessing } = this.state;
     const {
       editorSectionHeading,
       video,
@@ -555,14 +363,18 @@ class EditorSectionRequests extends Component {
               </NoRequestsContainer>
             ) : (
               <RequestsContainer>
-                {requestsList.map((eachItem) =>
-                  this.renderRequest(
-                    activeLanguage,
-                    renderRequestContent,
-                    eachItem,
-                    fsr
-                  )
-                )}
+                {requestsList.map((eachItem) => (
+                  <EditorSectionRequestCard
+                    requestDetails={eachItem}
+                    requestContent={renderRequestContent}
+                    uploadVideo={this.uploadVideo}
+                    deleteRequest={this.deleteRequest}
+                    resendRequest={this.resendRequest}
+                    isProcessing={isProcessing}
+                    activeLanguage={activeLanguage}
+                    fsr={fsr}
+                  />
+                ))}
               </RequestsContainer>
             )}
           </>

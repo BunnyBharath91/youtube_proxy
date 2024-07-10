@@ -5,7 +5,7 @@ import LanguageAndAccessibilityContext from "../../context/languageAndAccessibil
 import AccessibilitySection from "../AccessibilitySection";
 import Header from "../Header";
 import { getSectionData } from "../Header/languageContent";
-import { TailSpin } from "react-loader-spinner";
+import { TailSpin, Oval } from "react-loader-spinner";
 import { apology, notFound } from "../../images";
 import {
   RequestDetailsSection,
@@ -318,17 +318,27 @@ class CreatorRequestDetails extends Component {
               onClick={this.onApprove}
               ratio={fsr}
               disabled={isProcessing}
+              isProcessing={isProcessing}
               approve_
             >
-              {approve}
+              {isProcessing ? (
+                <Oval color="var(--approve-color)" height="17" width="17" />
+              ) : (
+                approve
+              )}
             </Button>
             <Button
               onClick={this.onReject}
               ratio={fsr}
               disabled={isProcessing}
+              isProcessing={isProcessing}
               reject_
             >
-              {reject}
+              {isProcessing ? (
+                <Oval color="var(--secondary-color)" height="17" width="17" />
+              ) : (
+                reject
+              )}
             </Button>
           </ButtonsContainer>
         )}

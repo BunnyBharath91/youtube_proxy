@@ -1,11 +1,12 @@
-import React, { Component } from "react";
+import { Component } from "react";
+import Header from "../Header";
+import RequestsFilter from "../RequestsFilter";
+import AccessibilitySection from "../AccessibilitySection";
+import { getSectionData } from "../Header/languageContent";
+import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
 import { ToastContainer, toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import LanguageAndAccessibilityContext from "../../context/languageAndAccessibilityContext";
-import AccessibilitySection from "../AccessibilitySection";
-import Header from "../Header";
-import { getSectionData } from "../Header/languageContent";
-import RequestsFilter from "../RequestsFilter";
+import CreatorSectionRequestCard from "../CreatorSectionRequestCard";
 import { apology, noRequests } from "../../images";
 import { TailSpin } from "react-loader-spinner";
 import {
@@ -18,20 +19,6 @@ import {
   ApologiesText,
   StyledLink,
   RequestsContainer,
-  RequestCard,
-  RequestThumbnail,
-  ResponseTextContainer,
-  VideoTitle,
-  EditorId,
-  Id,
-  RequestStatus,
-  Status,
-  PendingStatusAndButtonsContainer,
-  ButtonsContainer,
-  RequestedDateTime,
-  LargeScreenRequestStatus,
-  ResponseDateTime,
-  LargeScreenResponseButtonContainer,
   Button,
   LoadingSection,
   FetchingErrorImage,
@@ -157,137 +144,6 @@ class CreatorSection extends Component {
     );
   };
 
-  renderRequest = (renderRequestContent, requestItem, fsr) => {
-    const { isProcessing } = this.state;
-    const {
-      videoId,
-      requestStatus,
-      fromUser,
-      title,
-      thumbnailUrl,
-      requestedDateTime,
-      responseDateTime,
-    } = requestItem;
-    const {
-      from,
-      requestStatus_,
-      approved,
-      rejected,
-      pending,
-      approve,
-      reject,
-    } = renderRequestContent;
-
-    const onHandleApprove = (event) => {
-      event.stopPropagation();
-      this.onApprove(videoId);
-    };
-
-    const onHandleReject = (event) => {
-      event.stopPropagation();
-      this.onReject(videoId);
-    };
-
-    const requestedDate = requestedDateTime.slice(0, 10);
-    const requestedTime = requestedDateTime.slice(11);
-
-    let responseDate, responseTime;
-    if (responseDateTime) {
-      responseDate = responseDateTime.slice(0, 10);
-      responseTime = responseDateTime.slice(11, 19);
-    }
-
-    return (
-      <RequestCard
-        key={videoId}
-        onClick={() => this.props.history.push(`/creator_section/${videoId}`)}
-        wait={isProcessing}
-      >
-        <RequestThumbnail alt="thumbnail" src={thumbnailUrl} loading="lazy" />
-        <ResponseTextContainer>
-          <VideoTitle ratio={fsr}>{title}</VideoTitle>
-          <EditorId ratio={fsr}>
-            {from}: <Id>{fromUser}</Id>
-          </EditorId>
-          {requestStatus !== "pending" && (
-            <RequestStatus ratio={fsr}>
-              {requestStatus_}:{" "}
-              <Status>
-                {" "}
-                {requestStatus === "approved"
-                  ? approved
-                  : requestStatus === "pending"
-                  ? pending
-                  : rejected}
-              </Status>
-            </RequestStatus>
-          )}
-          {requestStatus === "pending" && (
-            <PendingStatusAndButtonsContainer>
-              <RequestStatus ratio={fsr}>
-                {requestStatus_}:{" "}
-                <Status>
-                  {" "}
-                  {requestStatus === "approved"
-                    ? approved
-                    : requestStatus === "pending"
-                    ? pending
-                    : rejected}
-                </Status>
-              </RequestStatus>
-              <ButtonsContainer>
-                <Button onClick={onHandleApprove} approve_>
-                  {approve}
-                </Button>
-                <Button onClick={onHandleReject} reject_>
-                  {reject}
-                </Button>
-              </ButtonsContainer>
-            </PendingStatusAndButtonsContainer>
-          )}
-        </ResponseTextContainer>
-        <RequestedDateTime ratio={fsr}>
-          <span>{requestedDate}</span>
-          <span>{requestedTime}</span>
-        </RequestedDateTime>
-        <LargeScreenRequestStatus ratio={fsr}>
-          {requestStatus === "approved"
-            ? approved
-            : requestStatus === "pending"
-            ? pending
-            : rejected}
-        </LargeScreenRequestStatus>
-
-        {responseDateTime ? (
-          <ResponseDateTime ratio={fsr}>
-            <span>{responseDate}</span>
-            <span>{responseTime}</span>
-          </ResponseDateTime>
-        ) : (
-          <ResponseDateTime>{"-"}</ResponseDateTime>
-        )}
-        <LargeScreenResponseButtonContainer>
-          {requestStatus === "pending" ? (
-            <Button onClick={onHandleApprove} disabled={isProcessing} approve_>
-              {approve}
-            </Button>
-          ) : (
-            "-"
-          )}
-        </LargeScreenResponseButtonContainer>
-        <LargeScreenResponseButtonContainer>
-          {requestStatus === "pending" ? (
-            <Button onClick={onHandleReject} disabled={isProcessing} reject_>
-              {reject}
-            </Button>
-          ) : (
-            "-"
-          )}
-        </LargeScreenResponseButtonContainer>
-      </RequestCard>
-    );
-  };
-
   renderFetchingError = (renderFetchingErrorContent) => {
     const { error500, retry } = renderFetchingErrorContent;
 
@@ -306,7 +162,7 @@ class CreatorSection extends Component {
   };
 
   renderCreatorSection = (renderRequestsSectionContent, fsr, sUl) => {
-    const { loading, requestsList, selectedFilter } = this.state;
+    const { loading, requestsList, selectedFilter, isProcessing } = this.state;
     const {
       creatorSectionHeading,
       video,
@@ -352,9 +208,16 @@ class CreatorSection extends Component {
               </NoRequestsContainer>
             ) : (
               <RequestsContainer>
-                {requestsList.map((eachItem) =>
-                  this.renderRequest(renderRequestContent, eachItem, fsr)
-                )}
+                {requestsList.map((eachItem) => (
+                  <CreatorSectionRequestCard
+                    requestDetails={eachItem}
+                    requestContent={renderRequestContent}
+                    onApprove={this.onApprove}
+                    onReject={this.onReject}
+                    fsr={fsr}
+                    isProcessing={isProcessing}
+                  />
+                ))}
               </RequestsContainer>
             )}
           </>

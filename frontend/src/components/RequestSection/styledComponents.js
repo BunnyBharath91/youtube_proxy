@@ -194,13 +194,6 @@ export const TitleTextArea = styled.textarea`
     font-size: ${(props) => props.ratio * 14}px;
   }
 
-  /* Styles for scrollbar */
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #c7c7c7 #f5f5f5; /* Firefox */
-  &::-webkit-scrollbar {
-    width: 6px; /* Width of the scrollbar */
-  }
-
   @media screen and (min-width: 768px) {
     font-size: ${(props) => {
       return props.ratio * 16;
@@ -237,6 +230,10 @@ export const DescriptionTextArea = styled(TitleTextArea)`
   height: auto; /* Ensure the textarea adjusts its height */
   max-height: calc(1.2em * 5); /* Set the maximum height to 5 rows */
   line-height: 1.2em; /* Adjust the line height to match your needs */
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
 
   @media screen and (min-width: 768px) {
     font-size: ${(props) => {
@@ -407,7 +404,7 @@ export const FormElementSelectOptionsContainer = styled.ul`
   scrollbar-width: thin; /* Firefox */
   scrollbar-color: #c7c7c7 #f5f5f5; /* Firefox */
   &::-webkit-scrollbar {
-    width: 6px; /* Width of the scrollbar */
+    width: 5px; /* Width of the scrollbar */
   }
 
   @media screen and (min-width: 576px) {

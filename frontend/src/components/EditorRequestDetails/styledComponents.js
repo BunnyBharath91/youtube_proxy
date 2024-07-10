@@ -275,31 +275,8 @@ export const UploadResponseSection = styled(RequestDetailsSection)`
 export const UploadResponseImage = styled(LoadingImage)``;
 export const UploadResponseMessage = styled(LoadingText)``;
 
-// Button colors
-const buttonColors = {
-  approve: "#46A758",
-  reject: "#E54D2E",
-  upload: "#3356C7",
-  resend: "#3356C7",
-};
-
-// Button background colors
-const buttonBgColors = {
-  approve: "#F5FBF5",
-  reject: "#FFF7F7",
-  upload: "#edf2fe",
-  resend: "#edf2fe",
-};
-
-// Button hover background colors
-const buttonHoverColors = {
-  approve: "#E9F6E9",
-  reject: "#FFDBDC",
-  upload: "#E1E9FF",
-  resend: "#E1E9FF",
-};
-
 export const Button = styled.button`
+  min-width: 70px;
   font-size: ${(props) => {
     if (props.ratio > 1) {
       return (1 + (props.ratio - 1) / 2) * 14;
@@ -311,31 +288,32 @@ export const Button = styled.button`
   }}px;
   font-weight: 500;
   color: ${(props) => {
-    if (props.approve_) return buttonColors.approve;
-    if (props.upload || props.resend) return buttonColors.upload;
-    return buttonColors.reject;
+    if (props.approve_) return "var(--approve-color)";
+    if (props.upload || props.resend) return "var(--primary-color)";
+    return "var(--secondary-color)";
   }};
   border: 1px solid
     ${(props) => {
-      if (props.approve_) return buttonColors.approve;
-      if (props.upload || props.resend) return buttonColors.upload;
-      return buttonColors.reject;
+      if (props.approve_) return "var(--approve-color)";
+      if (props.upload || props.resend) return "var(--primary-color)";
+      return "var(--secondary-color)";
     }};
   padding: 8px 16px;
   border-radius: 6px;
   background-color: ${(props) => {
-    if (props.approve_) return buttonBgColors.approve;
-    if (props.upload || props.resend) return buttonBgColors.upload;
-    return buttonBgColors.reject;
+    if (props.approve_) return "var(--approve-background-color)";
+    if (props.upload || props.resend) return "var(--primary-background-color)";
+    return "var(--secondary-background-color)";
   }};
-  cursor: ${(props) => (props.wait ? "wait" : "pointer")};
+  cursor: ${(props) => (props.isProcessing ? "no-drop" : "pointer")};
   transition: background-color 0.3s ease;
 
   &:hover {
     background-color: ${(props) => {
-      if (props.approve_) return buttonHoverColors.approve;
-      if (props.upload || props.resend) return buttonHoverColors.upload;
-      return buttonHoverColors.reject;
+      if (props.approve_) return "var(--approve-hover-background-color)";
+      if (props.upload || props.resend)
+        return "var(--primary-hover-background-color)";
+      return "var(--secondary-hover-background-color)";
     }};
   }
 
