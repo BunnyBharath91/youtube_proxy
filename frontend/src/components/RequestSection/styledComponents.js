@@ -1,7 +1,17 @@
 import styled, { keyframes } from "styled-components";
 import { TbReplace } from "react-icons/tb";
-
 import { FaChevronDown } from "react-icons/fa6";
+
+const fadeInUp = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 export const RequestSectionContainer = styled.div`
   min-height: calc(100vh - 60px);
@@ -71,6 +81,8 @@ export const MediaContainer = styled.div`
   width: 100%;
   max-width: 940px;
   aspect-ratio: 16/9;
+
+  animation: ${fadeInUp} 0.6s ease both 0.1s;
 
   @media screen and (min-width: 768px) {
     width: 49%;
@@ -154,6 +166,8 @@ export const InputContainer = styled.div`
   border-radius: 4px;
 
   padding: 8px 12px 22px 12px;
+
+  animation: ${fadeInUp} 0.6s ease both 0.2s;
 `;
 
 export const TitleLabel = styled.label`
@@ -251,6 +265,7 @@ export const FormElementsContainer = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  animation: ${fadeInUp} 0.6s ease both 0.3s;
   @media screen and (min-width: 576px) {
     flex-direction: row;
     justify-content: space-between;
@@ -473,19 +488,21 @@ export const Button = styled.button`
     return props.ratio * 14;
   }}px;
   font-weight: 500;
-  color: #3356c7;
-  border: 1px solid #3356c7;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
   border-radius: 6px;
   padding: 8px 16px;
   margin-top: 12px;
-  background-color: #edf2fe;
+  background-color: var(--primary-background-color);
   cursor: pointer;
 
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: #e1e9ff;
+    background-color: var(--primary-hover-background-color);
   }
+
+  animation: ${fadeInUp} 0.6s ease both 0.4s;
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
       return props.ratio * 16;

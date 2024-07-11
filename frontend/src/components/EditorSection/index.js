@@ -242,7 +242,12 @@ class EditorSectionRequests extends Component {
   renderLoading = () => {
     return (
       <LoadingSection>
-        <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
+        <TailSpin
+          type="ThreeDots"
+          color="var(--primary-color)"
+          height="50"
+          width="50"
+        />
       </LoadingSection>
     );
   };
@@ -294,7 +299,12 @@ class EditorSectionRequests extends Component {
         {uploadResponse === "IN_PROGRESS" ? (
           <>
             <UploadResponseMessage>{inProgressMessage}</UploadResponseMessage>
-            <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
+            <TailSpin
+              type="ThreeDots"
+              color="var(--primary-color)"
+              height="50"
+              width="50"
+            />
           </>
         ) : (
           <>

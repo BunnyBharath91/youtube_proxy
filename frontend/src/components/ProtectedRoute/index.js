@@ -50,7 +50,7 @@ class ProtectedRoute extends Component {
           alignItems: "center",
         }}
       >
-        <TailSpin type="ThreeDots" color="#0b69ff" height="50" width="50" />
+        <TailSpin type="ThreeDots" color="black" height="50" width="50" />
       </div>
     );
   };

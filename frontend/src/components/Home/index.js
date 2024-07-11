@@ -7,9 +7,11 @@ import {
   HomeContainer,
   UpperDescription,
   MainDescription,
+  LineBreak,
   LowerDescription,
   StyledLink,
   GetStartedButton,
+  StyledArrow,
 } from "./styledComponents";
 import { homeSectionContent } from "./languageContent";
 import { getSectionData } from "../Header/languageContent";
@@ -36,12 +38,21 @@ const Home = () => {
                 <UpperDescription ratio={fsr}>
                   {upperDescription}
                 </UpperDescription>
-                <MainDescription ratio={fsr}>{mainDescription}</MainDescription>
+
+                <MainDescription ratio={fsr}>
+                  {mainDescription.slice(0, 19)} <LineBreak small />
+                  {mainDescription.slice(19, 30)} <LineBreak />
+                  {mainDescription.slice(30, 42)}
+                  {mainDescription.slice(42)}
+                </MainDescription>
+
                 <LowerDescription ratio={fsr}>
                   {lowerDescription}
                 </LowerDescription>
-                <StyledLink to="/editor_section">
-                  <GetStartedButton ratio={fsr}>Get Started</GetStartedButton>
+                <StyledLink to="/request_section">
+                  <GetStartedButton ratio={fsr}>
+                    Get Started <StyledArrow />
+                  </GetStartedButton>
                 </StyledLink>
               </HomeContainer>
             </div>
