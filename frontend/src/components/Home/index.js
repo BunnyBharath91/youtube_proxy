@@ -7,7 +7,6 @@ import {
   HomeContainer,
   UpperDescription,
   MainDescription,
-  LineBreak,
   LowerDescription,
   StyledLink,
   GetStartedButton,
@@ -39,12 +38,7 @@ const Home = () => {
                   {upperDescription}
                 </UpperDescription>
 
-                <MainDescription ratio={fsr}>
-                  {mainDescription.slice(0, 19)} <LineBreak small />
-                  {mainDescription.slice(19, 30)} <LineBreak />
-                  {mainDescription.slice(30, 42)}
-                  {mainDescription.slice(42)}
-                </MainDescription>
+                <MainDescription ratio={fsr}>{mainDescription}</MainDescription>
 
                 <LowerDescription ratio={fsr}>
                   {lowerDescription}

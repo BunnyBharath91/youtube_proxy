@@ -43,7 +43,11 @@ export const AccessibilityImg = styled(BiAccessibility)`
   width: 45px;
   height: 45px;
   padding: 4px;
+  transition: scale 0.3s ease;
   cursor: pointer;
+  &:hover {
+    scale: 1.1;
+  }
 `;
 
 export const CloseIcon = styled(IoMdClose)`
@@ -51,7 +55,11 @@ export const CloseIcon = styled(IoMdClose)`
   width: 45px;
   height: 45px;
   padding: 4px;
+  transition: scale 0.3s ease;
   cursor: pointer;
+  &:hover {
+    scale: 1.05;
+  }
 `;
 
 export const AccessibilityCard = styled.ul`

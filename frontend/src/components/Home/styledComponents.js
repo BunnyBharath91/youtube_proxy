@@ -21,6 +21,8 @@ export const HomeContainer = styled.div`
   justify-content: center;
   text-align: center;
 
+  padding: 20px 5vw;
+
   @media screen and (min-width: 992px) {
     min-height: calc(100vh - 76px);
   }
@@ -45,12 +47,10 @@ export const UpperDescription = styled.p`
 `;
 
 export const MainDescription = styled.h1`
-  display: flex;
-  flex-direction: column;
-  font-weight: 800;
-
+  max-width: 1100px;
+  font-weight: 900;
   font-size: ${(props) => {
-    return props.ratio * 8;
+    return props.ratio * 7.5;
   }}vw;
 
   line-height: 1.2;
@@ -58,60 +58,41 @@ export const MainDescription = styled.h1`
 
   animation: ${fadeInUp} 0.6s ease both 0.1s;
 
-  @media screen and (min-width: 768px) {
-    font-size: ${(props) => {
-      return props.ratio * 6;
-    }}vw;
-  }
   @media screen and (min-width: 992px) {
-    font-size: ${(props) => `clamp(${props.ratio * 45}px,4vw,50px)`};
-  }
-  @media screen and (min-width: 1200px) {
-    font-size: ${(props) => `clamp(${props.ratio * 50}px, 4vw, 90px)`};
-  }
-`;
-
-export const LineBreak = styled.br`
-  @media screen and (min-width: 768px) {
-    display: ${(props) => props.small && "none"};
+    font-size: ${(props) => {
+      return props.ratio * 60;
+    }}px;
   }
 `;
 
 export const LowerDescription = styled.p`
   color: gray;
-  width: 85vw;
-  max-width: max(900px, 60vw);
+  max-width: 1100px;
   font-weight: 500;
   font-size: ${(props) => {
-    return props.ratio * 16;
-  }}px;
+    return props.ratio * 3;
+  }}vw;
   line-height: 1.4;
-  margin-bottom: 12px;
+  padding-bottom: 12px;
   animation: ${fadeInUp} 0.6s ease both 0.2s;
 
   @media screen and (min-width: 576px) {
     font-size: ${(props) => {
       return props.ratio * 18;
     }}px;
+    padding-bottom: 14px;
   }
 
   @media screen and (min-width: 768px) {
-    width: 80vw;
     font-size: ${(props) => {
       return props.ratio * 20;
     }}px;
-    margin-bottom: 14px;
   }
   @media screen and (min-width: 992px) {
-    width: 75vw;
     font-size: ${(props) => {
       return props.ratio * 24;
     }}px;
-    margin-bottom: 22px;
-  }
-  @media screen and (min-width: 1200px) {
-    font-size: ${(props) => `clamp(${props.ratio * 24}px, 1.6vw, 26px)`};
-    margin-bottom: 24px;
+    padding-bottom: 30px;
   }
 `;
 
