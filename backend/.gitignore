@@ -1,5 +1,2 @@
-.env
 node_modules/
-youtubetimer.db
 
-vercel.json

@@ -14,7 +14,6 @@ const ejs = require("ejs");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy; //importing 'Strategy' class from passport-google-oauth20 module
 const cors = require("cors");
-const request = require("request");
 const FormData = require("form-data");
 const fetch = require("node-fetch");
 
