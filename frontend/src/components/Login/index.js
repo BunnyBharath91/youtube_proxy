@@ -40,7 +40,9 @@ class Login extends Component {
 
   checkAuthStatus = async () => {
     try {
-      const response = await fetch("/oauth/status");
+      const response = await fetch(
+        "https://youtube-proxy-backend.onrender.com/oauth/status"
+      );
       if (response.ok) {
         const data = await response.json();
         this.setState({
@@ -106,7 +108,10 @@ class Login extends Component {
               {contact}
             </HeaderItem>
             <HeaderItem ratio={fsr}>
-              <AnchorTag href="http://localhost:5000/oauth/google" sUl={sUl}>
+              <AnchorTag
+                href="https://youtube-proxy-backend.onrender.com/oauth/google"
+                sUl={sUl}
+              >
                 <SignInButton className="sign-in-button" outline ratio={fsr}>
                   <SignInUserImg />
                   {signIn}
@@ -118,7 +123,7 @@ class Login extends Component {
 
               <MenuContainer show={showMenuContainer} ratio={fsr}>
                 <MenuItem className="menu-item menu-sign-in-item">
-                  <a href="http://localhost:5000/oauth/google">
+                  <a href="https://youtube-proxy-backend.onrender.com/oauth/google">
                     <SignInButton className="sign-in-button">
                       {signIn}
                     </SignInButton>
@@ -137,7 +142,7 @@ class Login extends Component {
             <MainDescription ratio={fsr}>{mainDescription}</MainDescription>
             <LowerDescription ratio={fsr}>{lowerDescription}</LowerDescription>
 
-            <a href="http://localhost:5000/oauth/google">
+            <a href="https://youtube-proxy-backend.onrender.com/oauth/google">
               <GetStartedButton ratio={fsr}>Get Started</GetStartedButton>
             </a>
           </LoginContainer>

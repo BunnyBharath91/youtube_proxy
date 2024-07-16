@@ -34,6 +34,7 @@ app.use(
 // Configuring session management using SQLite as session store
 const store = new SQLiteStore({
   sessionDB: path.join(__dirname, "database", "sessions.sqlite"), // SQLite database file from storing sessions
+  concurrentDB: true, // Enable concurrent access
 });
 
 app.use(
@@ -43,7 +44,7 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: false, // Set to true in production for HTTPS
+      secure: true, // Set to true in production for HTTPS
       maxAge: 30 * 24 * 60 * 60 * 1000, // Session valid for 30 days
     },
   })
@@ -129,10 +130,12 @@ passport.use(
 //Serialize use into session. i.e serializeUser saves user information into the session
 passport.serializeUser((email, cb) => {
   cb(null, email);
+  console.log("serializing user email:", email);
 });
 
 // Deserialize user from session .Together, they enable persistent user authentication across multiple requests in an Express.js application using Passport.js.
 passport.deserializeUser(async (email, cb) => {
+  console.log("deserializing user email:", email);
   try {
     const getUserDetailsQuery = `SELECT * FROM users WHERE email = ?;`;
     const userDetailsObj = await db.get(getUserDetailsQuery, [email]);
@@ -295,8 +298,10 @@ app.get("/logout", async (request, response) => {
 // Check authentication status
 app.get("/oauth/status", (req, res) => {
   if (req.isAuthenticated()) {
+    console.log("user is authenticated");
     res.send({ authenticated: true, user: req.user });
   } else {
+    console.log("user is not authenticated");
     res.send({ authenticated: false });
   }
 });
@@ -843,5 +848,24 @@ app.post("/upload-video", async (req, res) => {
 
     cleanupFiles(videoFileName, thumbnailFileName);
     res.status(500).json({ message: "Failed to upload video." });
+  }
+});
+app.get("/sample_api", async (request, response) => {
+  try {
+    const sample_insert = `
+      INSERT INTO users (username, email, invitation_code, refresh_token, user_image, user_display_name)
+      VALUES ('bharath', 'bunny bharath', 'bunny1', 'hhhhhhhhhhhhhhhhhhhhhhhhhhh', 'iiiiiiiiiii', 'bunny bharath');
+    `;
+    await db.run(sample_insert);
+
+    const sample_get = `SELECT * FROM users;`;
+    const dbResponse = await db.all(sample_get);
+
+    response.json({
+      message: "Details added successfully",
+      data: dbResponse,
+    });
+  } catch (error) {
+    response.status(500).json({ error: error.message });
   }
 });

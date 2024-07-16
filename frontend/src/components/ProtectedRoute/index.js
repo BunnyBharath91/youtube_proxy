@@ -17,7 +17,9 @@ class ProtectedRoute extends Component {
 
   checkAuthStatus = async () => {
     try {
-      const response = await fetch("/oauth/status");
+      const response = await fetch(
+        "https://youtube-proxy-backend.onrender.com/oauth/status"
+      );
       if (response.ok) {
         const data = await response.json();
         console.log(data);
