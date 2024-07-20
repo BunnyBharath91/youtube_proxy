@@ -60,9 +60,7 @@ class Header extends Component {
   }
 
   getUserDetails = async () => {
-    const response = await fetch(
-      "https://youtube-proxy-backend.onrender.com/user/details"
-    );
+    const response = await fetch("/user/details");
     if (response.ok) {
       const finalData = await response.json();
       console.log("final Data: ", finalData);

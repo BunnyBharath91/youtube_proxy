@@ -150,13 +150,10 @@ class RequestSection extends Component {
     const formData = new FormData(form);
 
     try {
-      const response = await fetch(
-        "https://youtube-proxy-backend.onrender.com/upload-request",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch("/upload-request", {
+        method: "POST",
+        body: formData,
+      });
 
       if (response.ok) {
         this.setState({
