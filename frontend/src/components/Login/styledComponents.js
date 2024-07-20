@@ -1,7 +1,20 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+import { Link } from "react-router-dom";
 import { IoMdClose } from "react-icons/io";
+import { GoArrowRight } from "react-icons/go";
 import { PiUserCircleLight } from "react-icons/pi";
 import { RxHamburgerMenu } from "react-icons/rx";
+
+const fadeInUp = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 export const HeaderContainer = styled.header`
   max-width: 1920px;
@@ -42,11 +55,11 @@ export const HeaderItem = styled.li`
   list-style-type: none;
   font-weight: 500;
   color: rgb(56, 63, 72);
-  cursor: pointer;
-
   font-size: ${(props) => {
-    return props.ratio * 17;
+    return props.ratio * 15;
   }}px;
+  text-underline-offset: 10px;
+  cursor: pointer;
   display: ${(props) => (props.about || props.contact ? "none" : "block")};
 
   ${(props) =>
@@ -55,7 +68,21 @@ export const HeaderItem = styled.li`
     display: flex;
     flex-direction: column;
   `}
-  @media screen and (min-width:768px) {
+  transition: color 0.3s ease, text-decoration 0.3 ease;
+
+  &:hover {
+    color: ${(props) => !props.username && "black"};
+    text-decoration: ${(props) =>
+      props.about || props.contact ? "underline" : "none"};
+  }
+
+  @media screen and (min-width: 576px) {
+    display: ${(props) => (props.username ? "none" : "block")};
+    font-size: ${(props) => {
+      return props.ratio * 17;
+    }}px;
+  }
+  @media screen and (min-width: 768px) {
     display: block;
   }
 `;
@@ -204,120 +231,124 @@ export const UpperDescription = styled.p`
     return props.ratio * 8;
   }}px;
   background-color: #f1f1f1;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 14px;
   padding: 4px 12px;
-  margin-bottom: 4px;
 
-  @media screen and (min-width: 576px) {
-    margin-bottom: 8px;
-  }
+  animation: ${fadeInUp} 0.6s ease both;
+
   @media screen and (min-width: 768px) {
     font-size: ${(props) => {
       return props.ratio * 12;
     }}px;
-    margin-bottom: 8px;
-  }
-  @media screen and (min-width: 992px) {
-    margin-bottom: 12px;
   }
 `;
 
 export const MainDescription = styled.h1`
-  width: 70vw;
-  max-width: 700px;
-  font-weight: 600;
+  max-width: 1100px;
+  font-weight: 900;
   font-size: ${(props) => {
-    return props.ratio * 16;
-  }}px;
-  line-height: 1.25;
+    return props.ratio * 7.5;
+  }}vw;
+
+  line-height: 1.2;
   margin-bottom: 10px;
-  @media screen and (min-width: 576px) {
-    font-size: ${(props) => {
-      return props.ratio * 18;
-    }}px;
-  }
-  @media screen and (min-width: 768px) {
-    width: 70vw;
-    font-size: ${(props) => {
-      return props.ratio * 22;
-    }}px;
-    margin-bottom: 16px;
-  }
+
+  animation: ${fadeInUp} 0.6s ease both 0.1s;
+
   @media screen and (min-width: 992px) {
-    width: 60vw;
     font-size: ${(props) => {
-      return props.ratio * 30;
+      return props.ratio * 60;
     }}px;
-    margin-bottom: 18px;
-  }
-  @media screen and (min-width: 1200px) {
-    width: 55vw;
-    margin-bottom: 22px;
   }
 `;
 
 export const LowerDescription = styled.p`
   color: gray;
-  width: 85vw;
-  max-width: 840px;
+  max-width: 1100px;
+  font-weight: 500;
   font-size: ${(props) => {
-    return props.ratio * 12;
-  }}px;
-  margin-bottom: 12px;
+    return props.ratio * 3;
+  }}vw;
+  line-height: 1.4;
+  padding-bottom: 12px;
+  animation: ${fadeInUp} 0.6s ease both 0.2s;
 
   @media screen and (min-width: 576px) {
     font-size: ${(props) => {
-      return props.ratio * 14;
+      return props.ratio * 18;
     }}px;
+    padding-bottom: 14px;
   }
 
   @media screen and (min-width: 768px) {
-    width: 80vw;
-    font-size: ${(props) => {
-      return props.ratio * 16;
-    }}px;
-    margin-bottom: 14px;
-  }
-  @media screen and (min-width: 992px) {
-    width: 75vw;
     font-size: ${(props) => {
       return props.ratio * 20;
     }}px;
-    margin-bottom: 22px;
-  }
-  @media screen and (min-width: 1200px) {
-    width: 70vw;
-
-    margin-bottom: 22px;
-  }
-`;
-
-export const GetStartedButton = styled.button`
-  font-size: ${(props) => {
-    return props.ratio * 12;
-  }}px;
-  padding: 6px 12px;
-  border-radius: 16px;
-  border: solid 1px gray;
-  background-color: transparent;
-  font-weight: 500;
-  @media screen and (min-width: 768px) {
-    font-size: ${(props) => {
-      return props.ratio * 14;
-    }}px;
-    padding: 6px 12px;
-    border-radius: 18px;
   }
   @media screen and (min-width: 992px) {
     font-size: ${(props) => {
+      return props.ratio * 24;
+    }}px;
+    padding-bottom: 30px;
+  }
+`;
+
+export const StyledLink = styled(Link)`
+  text-decoration: none;
+  color: inherit;
+`;
+
+export const StyledArrow = styled(GoArrowRight)`
+  font-size: 1.2em;
+  transition: transform 0.3s ease;
+`;
+
+export const GetStartedButton = styled.button`
+  width: 120px;
+  background-color: white;
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: ${(props) => {
+    return props.ratio * 12;
+  }}px;
+  padding: 10px 14px;
+  border: solid 2px black;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: scale 0.3s ease;
+
+  animation: ${fadeInUp} 0.6s ease both 0.3s;
+  @media screen and (min-width: 768px) {
+    width: 140px;
+    font-size: ${(props) => {
+      return props.ratio * 14;
+    }}px;
+    padding: 12px 16px;
+  }
+  @media screen and (min-width: 992px) {
+    width: 160px;
+    font-size: ${(props) => {
       return props.ratio * 16;
     }}px;
-    padding: 10px 16px;
-    border-radius: 20px;
+    gap: 10px;
   }
   @media screen and (min-width: 1200px) {
-    padding: 12px 18px;
-    border-radius: 22px;
+    width: 190px;
+    padding: 14px 22px;
+    font-size: 20px;
+    justify-content: flex-start;
+  }
+
+  &:hover {
+    scale: 1.02;
+  }
+
+  &:hover ${StyledArrow} {
+    transform: translateX(8px);
   }
 `;

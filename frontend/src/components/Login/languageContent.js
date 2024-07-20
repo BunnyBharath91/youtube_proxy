@@ -1,10 +1,9 @@
 export const loginSectionContent = {
   EN: {
     upperDescription: "Streamlining YouTube Collaboration",
-    mainDescription:
-      "Empower editors to upload videos on behalf of creators with a seamless approval process",
+    mainDescription: "Effortlessly upload videos on YouTube for creators",
     lowerDescription:
-      "Effortlessly manage secure video uploads with creator consent. Boost productivity and ensure seamless, trusted management with Proxy's innovative platform",
+      "Streamline secure video uploads with creator consent. Boost productivity and ensure seamless, trusted management with PROXY's innovative platform",
     headerItems: {
       about: "ABOUT",
       contact: "CONTACT",
