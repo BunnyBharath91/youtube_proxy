@@ -127,6 +127,13 @@ passport.use(
   )
 );
 
+//for only checking sessions.sqlite file
+app.use((req, res, next) => {
+  console.log("Session ID:", req.sessionID);
+  console.log("Session Data:", req.session);
+  next();
+});
+
 //Serialize use into session. i.e serializeUser saves user information into the session
 passport.serializeUser((email, cb) => {
   cb(null, email);
