@@ -19,6 +19,8 @@ import {
   UpperDescription,
   MainDescription,
   LowerDescription,
+  StyledLink,
+  StyledArrow,
   GetStartedButton,
 } from "./styledComponents";
 import { loginSectionContent } from "./languageContent";
@@ -137,9 +139,11 @@ class Login extends Component {
             <MainDescription ratio={fsr}>{mainDescription}</MainDescription>
             <LowerDescription ratio={fsr}>{lowerDescription}</LowerDescription>
 
-            <a href="http://localhost:5000/oauth/google">
-              <GetStartedButton ratio={fsr}>Get Started</GetStartedButton>
-            </a>
+            <StyledLink href="http://localhost:5000/oauth/google">
+              <GetStartedButton ratio={fsr}>
+                Get Started <StyledArrow />
+              </GetStartedButton>
+            </StyledLink>
           </LoginContainer>
         </div>
       </>
