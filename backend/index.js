@@ -36,6 +36,7 @@ app.use(
   })
 );
 
+
 // Path to sessions database
 const sessionDBPath = path.join(__dirname, "database", "sessions.db");
 
