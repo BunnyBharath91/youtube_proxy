@@ -182,7 +182,7 @@ class Header extends Component {
               <StyledLink to="/">
                 <ProxyLogo
                   alt="proxy-logo"
-                  src="https://media-content.ccbp.in/website/ccbp_website_logos/nxtwave_header_logo.png"
+                  src="https://res.cloudinary.com/drbnxuf21/image/upload/v1721970847/b8lpaayftkzohhgrs6cl.png"
                 />
               </StyledLink>
 

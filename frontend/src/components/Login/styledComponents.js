@@ -37,8 +37,7 @@ export const HeaderContainer = styled.header`
 `;
 
 export const ProxyLogo = styled.img`
-  width: 64px;
-  height: 35px;
+  height:45px;
   cursor: pointer;
 `;
 
