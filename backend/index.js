@@ -29,8 +29,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://youtube-proxy-frontend.onrender.com"
-      
+      "https://youtube-proxy-frontend.onrender.com",
     ], // Allow requests from frontend running on localhost:3000
     methods: "GET,POST,PUT,DELETE",
     credentials: true, // Allow credentials (cookies, authorization headers)
