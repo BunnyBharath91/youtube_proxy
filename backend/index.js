@@ -17,36 +17,77 @@ const cors = require("cors");
 const FormData = require("form-data");
 const fetch = require("node-fetch");
 
-const app = express();
+const app = express(); //express instance
 
 app.use(express.json()); // Middleware to parse JSON payloads
 
 app.use(express.urlencoded({ extended: false })); // Middleware to parse URL-encoded payloads
 
+app.set("trust proxy", true);
+
 app.use(
   cors({
-    origin: "http://localhost:3000", // Allow requests from frontend running on localhost:3000
+    origin: [
+      "http://localhost:3000",
+      
+    ], // Allow requests from frontend running on localhost:3000
     methods: "GET,POST,PUT,DELETE",
     credentials: true, // Allow credentials (cookies, authorization headers)
   })
 );
 
+// Path to sessions database
+const sessionDBPath = path.join(__dirname, "database", "sessions.db");
+
+let db = null;
+// Initialize SQLite database and create sessions table if it doesn't exist
+async function initializeSessionDatabase() {
+  try {
+    db = await open({
+      filename: sessionDBPath,
+      driver: sqlite3.Database,
+    });
+
+    // Create sessions table if it does not exist
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        sid TEXT PRIMARY KEY,
+        expires INTEGER,
+        sess TEXT
+      );
+    `);
+
+    console.log("Session database initialized");
+  } catch (error) {
+    console.error("Error initializing session database:", error);
+    throw error; // Re-throw to handle it in the calling context
+  }
+}
+
+initializeSessionDatabase();
+
 // Configuring session management using SQLite as session store
 const store = new SQLiteStore({
-  sessionDB: path.join(__dirname, "database", "sessions.sqlite"), // SQLite database file from storing sessions
-  concurrentDB: true, // Enable concurrent access
+  db: "sessions.db", // SQLite database file for storing sessions
+  table: "sessions", // Table name for storing session data
+  dir: path.join(__dirname, "database"), // Directory to save '.db' file
+  createDirIfNotExists: true, // Create directory if it doesn't exist
 });
 
 app.use(
   session({
     store: store,
-    secret: process.env.KEY, //Secret key used for session encryption
-    resave: false,
+    secret: process.env.KEY,
+    resave: true,
     saveUninitialized: true,
     cookie: {
+      httpOnly: true,
       secure: true, // Set to true in production for HTTPS
+      sameSite: 'none',
       maxAge: 30 * 24 * 60 * 60 * 1000, // Session valid for 30 days
+      domain: '.onrender.com', // Corrected placement
     },
+    
   })
 );
 
@@ -56,11 +97,20 @@ app.use(passport.session()); //integrating Passport.js with express-session to h
 
 // Middleware to set CORS headers for frontend communication
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000"); // updating match the domain  will make the request from
+  res.header(
+    "Access-Control-Allow-Origin",
+    "http://localhost:3000"
+  ); // updating match the domain  will make the request from
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
   );
+  next();
+});
+
+app.use((req, res, next) => {
+  console.log("Session ID:", req.sessionID);
+  console.log("Session Data:", req.session);
   next();
 });
 
@@ -83,26 +133,27 @@ passport.use(
       prompt: "consent select_account",
     },
     async (accessToken, refreshToken, profile, cb) => {
+      console.log("userAccessToken:", accessToken);
+      console.log("userRefreshToken:", refreshToken);
       try {
         const email = profile.emails[0].value;
         const userImage = profile.photos[0].value;
         const userDisplayName = profile.displayName;
-
         // Checking if user already exists in database
         const userCheckQuery = `SELECT * FROM users WHERE email=?;`;
-        const userResponse = await db.get(userCheckQuery, email);
+        const userResponse = await mdb.get(userCheckQuery, email);
 
         if (!userResponse) {
           // Creating new user entry if user doesn't exist
           const maxIdQuery = `SELECT max(id) as maximum_id FROM users;`;
-          const maxIdResponse = await db.get(maxIdQuery);
+          const maxIdResponse = await mdb.get(maxIdQuery);
           const userName = `${profile.name.givenName}${
             (maxIdResponse.maximum_id || 0) + 1
           }`;
           const userInvitationCode = userName;
 
           const addUserQuery = `INSERT INTO users (username, email, invitation_code, refresh_token, user_image, user_display_name) VALUES (?, ?, ?, ?, ?, ?)`;
-          await db.run(addUserQuery, [
+          await mdb.run(addUserQuery, [
             userName,
             email,
             userInvitationCode,
@@ -114,7 +165,7 @@ passport.use(
         } else {
           // Update user's refresh token if user already exists
           const updateRefreshTokenQuery = `UPDATE users SET refresh_token = ? WHERE email = ?`;
-          await db.run(updateRefreshTokenQuery, [refreshToken, email]);
+          await mdb.run(updateRefreshTokenQuery, [refreshToken, email]);
           console.log(`User updated: ${userResponse.username}`);
         }
 
@@ -127,25 +178,18 @@ passport.use(
   )
 );
 
-//for only checking sessions.sqlite file
-app.use((req, res, next) => {
-  console.log("Session ID:", req.sessionID);
-  console.log("Session Data:", req.session);
-  next();
-});
-
 //Serialize use into session. i.e serializeUser saves user information into the session
 passport.serializeUser((email, cb) => {
+  console.log("serializing user:", email);
   cb(null, email);
-  console.log("serializing user email:", email);
 });
 
 // Deserialize user from session .Together, they enable persistent user authentication across multiple requests in an Express.js application using Passport.js.
 passport.deserializeUser(async (email, cb) => {
-  console.log("deserializing user email:", email);
+  console.log("deserializing user:", email);
   try {
     const getUserDetailsQuery = `SELECT * FROM users WHERE email = ?;`;
-    const userDetailsObj = await db.get(getUserDetailsQuery, [email]);
+    const userDetailsObj = await mdb.get(getUserDetailsQuery, [email]);
     if (!userDetailsObj) {
       console.log("user not found");
       throw new Error("User not found");
@@ -209,10 +253,10 @@ const upload = multer({
 /*...................... initializing SQLite database and starting server .............. */
 
 const dbPath = path.join(__dirname, "youtubetimer.db");
-let db = null;
+let mdb = null;
 const initializeDBAndServer = async () => {
   try {
-    db = await open({
+    mdb = await open({
       filename: dbPath,
       driver: sqlite3.Database,
     });
@@ -235,6 +279,16 @@ const ensureAuthenticated = (request, response, next) => {
   }
 
   response.redirect("/oauth/google"); // Redirect to Google OAuth if not authenticated
+};
+
+const ensureAuthenticatedForFrontend = (request, response, next) => {
+  console.log("User: ", request.user);
+  console.log("request cookie:", request.headers.cookie);
+  if (request.isAuthenticated()) {
+    return next();
+  }
+
+  response.send({ authenticated: false });
 };
 
 // Function to get new access token using refresh token
@@ -278,7 +332,7 @@ app.get("/user/details", async (request, response) => {
   if (request.isAuthenticated()) {
     console.log("user email", request.user.email);
     const query = `SELECT email, invitation_code, user_image, user_display_name FROM users WHERE email=?;`;
-    const dbResponse = await db.get(query, request.user.email);
+    const dbResponse = await mdb.get(query, request.user.email);
     console.log("dbResponse:", dbResponse);
     response.json({
       invitationCode: dbResponse.invitation_code,
@@ -303,14 +357,8 @@ app.get("/logout", async (request, response) => {
 });
 
 // Check authentication status
-app.get("/oauth/status", (req, res) => {
-  if (req.isAuthenticated()) {
-    console.log("user is authenticated");
-    res.send({ authenticated: true, user: req.user });
-  } else {
-    console.log("user is not authenticated");
-    res.send({ authenticated: false });
-  }
+app.get("/oauth/status", ensureAuthenticatedForFrontend, (req, res) => {
+  res.send({ authenticated: true, user: req.user });
 });
 
 // Request video upload
@@ -331,7 +379,7 @@ app.post(
     } = request.body;
 
     const creatorUserNameQuery = `SELECT username from USERS where invitation_code=?;`;
-    const creatorUserNameResponse = await db.get(creatorUserNameQuery, [
+    const creatorUserNameResponse = await mdb.get(creatorUserNameQuery, [
       creatorInvitationCode,
     ]);
     console.log("creator user name Response: ", creatorUserNameResponse);
@@ -358,7 +406,7 @@ app.post(
                             privacy_status, request_status, from_user, to_user, video_public_id, thumbnail_public_id) 
         VALUES(?, ?, ?, ?, ?, ?, ?,'pending', ?, ?, ?, ?);
       `;
-      const addingResponse = await db.run(addDetailsQuery, [
+      const addingResponse = await mdb.run(addDetailsQuery, [
         videoUploadResponse.url,
         title,
         description,
@@ -407,8 +455,8 @@ app.get("/requests", ensureAuthenticated, async (request, response) => {
     getRequestsQuery += ` ORDER BY requested_date_time DESC`;
 
     const requestsResponse = req_status
-      ? await db.all(getRequestsQuery, [userName, req_status])
-      : await db.all(getRequestsQuery, [userName]);
+      ? await mdb.all(getRequestsQuery, [userName, req_status])
+      : await mdb.all(getRequestsQuery, [userName]);
 
     for (let eachItem of requestsResponse) {
       if (
@@ -422,7 +470,7 @@ app.get("/requests", ensureAuthenticated, async (request, response) => {
           const updateResponseDateTimeQuery = `
             UPDATE videos SET response_date_time=NULL WHERE id=?
           `;
-          await db.run(updateResponseDateTimeQuery, [eachItem.id]);
+          await mdb.run(updateResponseDateTimeQuery, [eachItem.id]);
           eachItem.response_date_time = null;
         }
       }
@@ -445,7 +493,7 @@ app.get(
       console.log("request params", request.params);
 
       const getRequestDetailsQuery = `SELECT * FROM VIDEOS WHERE id = ?;`;
-      const dbResponse = await db.get(getRequestDetailsQuery, [videoId]);
+      const dbResponse = await mdb.get(getRequestDetailsQuery, [videoId]);
       console.log(dbResponse);
       if (dbResponse === undefined) {
         return response.status(404).send({ message: "details not found" });
@@ -505,7 +553,7 @@ app.put(
         queryParams = [editorRequestStatus, dateTime, videoId];
       }
 
-      const dbResponse = await db.run(updateRequestStatusQuery, queryParams);
+      const dbResponse = await mdb.run(updateRequestStatusQuery, queryParams);
       response.send(dbResponse);
     } catch (error) {
       console.error("Error updating request status:", error);
@@ -525,7 +573,7 @@ app.get("/resend/:videoId", ensureAuthenticated, async (request, response) => {
       WHERE id = ?;
     `;
 
-    const dbResponse = await db.run(updateResponseStatusQuery, [videoId]);
+    const dbResponse = await mdb.run(updateResponseStatusQuery, [videoId]);
 
     if (dbResponse.changes > 0) {
       response.status(200).json({
@@ -561,10 +609,10 @@ const deleteFromCloudinary = async (
 
   try {
     // Starting the transaction
-    await db.run("BEGIN TRANSACTION;");
+    await mdb.run("BEGIN TRANSACTION;");
 
     // Adding publicId to pending_deletes table
-    await db.run(addToPendingDeletesTableQuery, [publicId, videoId]);
+    await mdb.run(addToPendingDeletesTableQuery, [publicId, videoId]);
 
     // Deleting resource from Cloudinary
     await v2.uploader.destroy(publicId, { resource_type: resourceType });
@@ -573,13 +621,13 @@ const deleteFromCloudinary = async (
     const removeFromPendingDeletesTableQuery = `
       DELETE FROM pending_deletes WHERE ${columnName} = ? AND video_id = ?;
     `;
-    await db.run(removeFromPendingDeletesTableQuery, [publicId, videoId]);
+    await mdb.run(removeFromPendingDeletesTableQuery, [publicId, videoId]);
 
     // Committing transaction
-    await db.run("COMMIT;");
+    await mdb.run("COMMIT;");
   } catch (error) {
     // Rollback transaction on error
-    await db.run("ROLLBACK;");
+    await mdb.run("ROLLBACK;");
     console.error(`Error deleting ${resourceType} from Cloudinary:`, error);
     // For handling error manually if any error occurs
   }
@@ -601,7 +649,7 @@ app.delete(
     `;
 
     try {
-      const getResponse = await db.get(getDetailsQuery, [videoId]);
+      const getResponse = await mdb.get(getDetailsQuery, [videoId]);
 
       if (!getResponse) {
         return response.status(404).json({ error: "Video not found" });
@@ -610,7 +658,7 @@ app.delete(
       await deleteFromCloudinary(videoId, getResponse.video_public_id, "video");
       await deleteFromCloudinary(videoId, getResponse.thumbnail_public_id);
 
-      const deleteResponse = await db.run(deleteRequest, [videoId]);
+      const deleteResponse = await mdb.run(deleteRequest, [videoId]);
       response.json({ message: "Video deleted successfully", deleteResponse });
     } catch (error) {
       console.error("Error deleting video:", error);
@@ -662,7 +710,7 @@ app.post("/upload-video", async (req, res) => {
   console.log("video id is :", videoId);
 
   const getVideoDetails = `SELECT * FROM videos WHERE id=?;`;
-  const getVideoDetailsResponse = await db.get(getVideoDetails, [videoId]);
+  const getVideoDetailsResponse = await mdb.get(getVideoDetails, [videoId]);
 
   const {
     video_url,
@@ -837,7 +885,7 @@ app.post("/upload-video", async (req, res) => {
 
     // Update the video and thumbnail URLs in the database
     const updateVideoDetailsQuery = `UPDATE videos SET video_url=?, thumbnail_url=?, video_upload_status='uploaded' WHERE id=?;`;
-    await db.run(updateVideoDetailsQuery, [
+    await mdb.run(updateVideoDetailsQuery, [
       youtubeVideoId,
       thumbnailResponseBody.items[0].default.url, // Use the correct path to extract the URL
       videoId,
@@ -858,22 +906,27 @@ app.post("/upload-video", async (req, res) => {
   }
 });
 
-app.get("/sample_api", async (request, response) => {
+app.get("/session-details", async (request, response) => {
   try {
-    const sample_insert = `
-      INSERT INTO users (username, email, invitation_code, refresh_token, user_image, user_display_name)
-      VALUES ('bharath', 'bunny bharath', 'bunny1', 'hhhhhhhhhhhhhhhhhhhhhhhhhhh', 'iiiiiiiiiii', 'bunny bharath');
-    `;
-    await db.run(sample_insert);
-
-    const sample_get = `SELECT * FROM users;`;
-    const dbResponse = await db.all(sample_get);
-
-    response.json({
-      message: "Details added successfully",
-      data: dbResponse,
-    });
+    // Assuming `db` is properly initialized and connected to your SQLite database
+    const dbRequest = `SELECT * FROM sessions;`;
+    const dbResponse = await db.all(dbRequest);
+    response.send(dbResponse);
+    console.log(dbResponse);
   } catch (error) {
-    response.status(500).json({ error: error.message });
+    console.error("Error fetching session details:", error);
+    response.status(500).send({ error: "Failed to retrieve session details" });
+  }
+});
+
+app.get("/sample-user-details", async (request, response) => {
+  try {
+    const dbRequest = `SELECT * FROM users;`;
+    const dbResponse = await mdb.all(dbRequest);
+    response.send(dbResponse);
+    console.log("user details", dbResponse);
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    response.status(500).send({ error: "Failed to retrieve user details" });
   }
 });

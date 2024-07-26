@@ -55,7 +55,7 @@ class CreatorRequestDetails extends Component {
       loading: true,
     });
     try {
-      const response = await fetch(`/requests/${videoId}`);
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/requests/${videoId}`);
 
       if (!response.ok) {
         this.setState({

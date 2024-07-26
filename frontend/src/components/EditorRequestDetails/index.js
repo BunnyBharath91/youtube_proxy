@@ -70,7 +70,7 @@ class EditorRequestDetails extends Component {
       loading: true,
     });
     try {
-      const response = await fetch(`/requests/${videoId}`);
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/requests/${videoId}`);
       if (!response.ok) {
         this.setState({
           loading: false,
@@ -117,7 +117,7 @@ class EditorRequestDetails extends Component {
       isProcessing: true,
     });
     try {
-      const response = await fetch(`/delete/${videoId}`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/delete/${videoId}`, {
         method: "DELETE",
         headers: {
           "Content-type": "application/json",
@@ -162,7 +162,7 @@ class EditorRequestDetails extends Component {
       uploadResponse: "IN_PROGRESS",
     });
     try {
-      const response = await fetch("/upload-video", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/upload-video`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json", // Set the correct Content-Type header
@@ -239,7 +239,7 @@ class EditorRequestDetails extends Component {
     this.setState({ isProcessing: true });
 
     try {
-      const response = await fetch(`/resend/${videoId}`);
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/resend/${videoId}`);
       if (response.ok) {
         alert("Resent successfully");
         window.location.reload();

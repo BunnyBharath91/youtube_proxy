@@ -39,7 +39,7 @@ export const AccessibilityCardContainer = styled.div`
 `;
 
 export const AccessibilityImg = styled(BiAccessibility)`
-  background-color: #0090ff;
+  background-color: #E54D2E;
   width: 45px;
   height: 45px;
   padding: 4px;

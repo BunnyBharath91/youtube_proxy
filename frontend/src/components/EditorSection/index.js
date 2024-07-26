@@ -59,7 +59,7 @@ class EditorSectionRequests extends Component {
     });
     try {
       const response = await fetch(
-        `/requests?role=editor${status && `&req_status=${status}`}`
+        `${process.env.REACT_APP_BACKEND_URL}/requests?role=editor${status && `&req_status=${status}`}`
       );
 
       if (!response.ok) {

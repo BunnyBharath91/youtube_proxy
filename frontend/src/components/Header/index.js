@@ -60,7 +60,9 @@ class Header extends Component {
   }
 
   getUserDetails = async () => {
-    const response = await fetch("/user/details");
+    const response = await fetch(
+      `${process.env.REACT_APP_BACKEND_URL}/user/details`
+    );
     if (response.ok) {
       const finalData = await response.json();
       console.log("final Data: ", finalData);
@@ -111,7 +113,7 @@ class Header extends Component {
   };
 
   onLogout = async () => {
-    const response = await fetch("/logout");
+    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/logout`);
     if (response.ok) {
       //   window.location.reload(); // Reload the page
       //   return <Redirect to="/login" />;

@@ -150,7 +150,7 @@ class RequestSection extends Component {
     const formData = new FormData(form);
 
     try {
-      const response = await fetch("/upload-request", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/upload-request`, {
         method: "POST",
         body: formData,
       });

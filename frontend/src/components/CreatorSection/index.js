@@ -46,7 +46,7 @@ class CreatorSection extends Component {
     });
     try {
       const response = await fetch(
-        `/requests?role=creator${status && `&req_status=${status}`}`
+        `${process.env.REACT_APP_BACKEND_URL}/requests?role=creator${status && `&req_status=${status}`}`
       );
       if (!response.ok) {
         this.setState({
@@ -87,7 +87,7 @@ class CreatorSection extends Component {
       isProcessing: true,
     });
     try {
-      const response = await fetch(`/response/${videoId}`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/response/${videoId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -114,7 +114,7 @@ class CreatorSection extends Component {
       isProcessing: true,
     });
     try {
-      const response = await fetch(`/response/${videoId}`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/response/${videoId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

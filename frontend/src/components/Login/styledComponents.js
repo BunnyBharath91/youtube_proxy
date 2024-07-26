@@ -294,7 +294,7 @@ export const LowerDescription = styled.p`
   }
 `;
 
-export const StyledLink = styled(Link)`
+export const StyledAnchorTag = styled.a`
   text-decoration: none;
   color: inherit;
 `;

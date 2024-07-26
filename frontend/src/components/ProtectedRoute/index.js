@@ -17,7 +17,13 @@ class ProtectedRoute extends Component {
 
   checkAuthStatus = async () => {
     try {
-      const response = await fetch("/oauth/status");
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/oauth/status`,
+        {
+          method: "GET",
+          credentials: "include", // Include cookies with the request
+        }
+      );
       if (response.ok) {
         const data = await response.json();
         console.log(data);
