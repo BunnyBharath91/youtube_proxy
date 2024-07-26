@@ -29,6 +29,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
+      "https://youtube-proxy-frontend.onrender.com"
       
     ], // Allow requests from frontend running on localhost:3000
     methods: "GET,POST,PUT,DELETE",
@@ -99,7 +100,7 @@ app.use(passport.session()); //integrating Passport.js with express-session to h
 app.use((req, res, next) => {
   res.header(
     "Access-Control-Allow-Origin",
-    "http://localhost:3000"
+    "https://youtube-proxy-frontend.onrender.com"
   ); // updating match the domain  will make the request from
   res.header(
     "Access-Control-Allow-Headers",
@@ -222,10 +223,10 @@ app.get(
 app.get(
   "/oauth/redirect",
   passport.authenticate("google", {
-    failureRedirect: "http://localhost:3000/login",
+    failureRedirect: "https://youtube-proxy-frontend.onrender.com/login",
   }),
   async (request, response) => {
-    response.redirect("http://localhost:3000");
+    response.redirect("https://youtube-proxy-frontend.onrender.com");
   }
 );
 

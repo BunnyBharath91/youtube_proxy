@@ -1,5 +1,4 @@
 import styled, { keyframes } from "styled-components";
-import { Link } from "react-router-dom";
 import { IoMdClose } from "react-icons/io";
 import { GoArrowRight } from "react-icons/go";
 import { PiUserCircleLight } from "react-icons/pi";

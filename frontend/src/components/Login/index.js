@@ -43,7 +43,7 @@ class Login extends Component {
   checkAuthStatus = async () => {
     try {
       const response = await fetch(
-        "https://sample-deployment-7sky.onrender.com/oauth/status",
+        "https://youtube-proxy-backend.onrender.com/oauth/status",
         {
           method: "GET",
           credentials: "include", // Include cookies with the request
@@ -115,7 +115,7 @@ class Login extends Component {
             </HeaderItem>
             <HeaderItem ratio={fsr}>
               <AnchorTag
-                href="https://sample-deployment-7sky.onrender.com/oauth/google"
+                href="https://youtube-proxy-backend.onrender.com/oauth/google"
                 sUl={sUl}
               >
                 <SignInButton className="sign-in-button" outline ratio={fsr}>
@@ -129,7 +129,7 @@ class Login extends Component {
 
               <MenuContainer show={showMenuContainer} ratio={fsr}>
                 <MenuItem className="menu-item menu-sign-in-item">
-                  <a href="https://sample-deployment-7sky.onrender.com/oauth/google">
+                  <a href="https://youtube-proxy-backend.onrender.com/oauth/google">
                     <SignInButton className="sign-in-button">
                       {signIn}
                     </SignInButton>
@@ -148,7 +148,7 @@ class Login extends Component {
             <MainDescription ratio={fsr}>{mainDescription}</MainDescription>
             <LowerDescription ratio={fsr}>{lowerDescription}</LowerDescription>
 
-            <StyledAnchorTag href="https://sample-deployment-7sky.onrender.com/oauth/google">
+            <StyledAnchorTag href="https://youtube-proxy-backend.onrender.com/oauth/google">
               <GetStartedButton ratio={fsr}>
                 Get Started <StyledArrow />
               </GetStartedButton>
