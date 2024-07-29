@@ -84,6 +84,7 @@ app.use(
       sameSite: "none",
       maxAge: 30 * 24 * 60 * 60 * 1000, // Session valid for 30 days
       domain: ".onrender.com",
+      path: "/",
     },
   })
 );
