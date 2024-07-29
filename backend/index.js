@@ -79,7 +79,6 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      httpOnly: true,
       secure: true, // Set to true in production for HTTPS
       sameSite: "none",
       maxAge: 30 * 24 * 60 * 60 * 1000, // Session valid for 30 days
