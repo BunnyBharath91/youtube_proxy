@@ -27,10 +27,7 @@ app.set("trust proxy", true);
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "https://youtube-proxy-frontend.onrender.com",
-    ],
+    origin: "https://youtube-proxy-frontend.onrender.com",
     // Allow requests from frontend running on localhost:3000
     methods: "GET,POST,PUT,DELETE",
     credentials: true, // Allow credentials (cookies, authorization headers)
@@ -84,9 +81,9 @@ app.use(
     cookie: {
       httpOnly: true,
       secure: true, // Set to true in production for HTTPS
-      sameSite: false,
+      sameSite: "None",
       maxAge: 30 * 24 * 60 * 60 * 1000, // Session valid for 30 days
-      domain: ".onrender.com",
+      domain: "onrender.com",
       path: "/", // Corrected placement
     },
   })
