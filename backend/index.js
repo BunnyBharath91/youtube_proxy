@@ -79,11 +79,11 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      httpOnly: false,
+      httpOnly: true,
       secure: true, // Set to true in production for HTTPS
       sameSite: "none",
       maxAge: 30 * 24 * 60 * 60 * 1000, // Session valid for 30 days
-      domain: ".onrender.com",
+      // domain: ".onrender.com",
       // path: "/",
     },
   })
