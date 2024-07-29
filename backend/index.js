@@ -27,15 +27,12 @@ app.set("trust proxy", true);
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "https://youtube-proxy-frontend.onrender.com",
-    ], // Allow requests from frontend running on localhost:3000
+    origin: "https://youtube-proxy-frontend.onrender.com",
+    // Allow requests from frontend running on localhost:3000
     methods: "GET,POST,PUT,DELETE",
     credentials: true, // Allow credentials (cookies, authorization headers)
   })
 );
-
 
 // Path to sessions database
 const sessionDBPath = path.join(__dirname, "database", "sessions.db");
@@ -86,10 +83,8 @@ app.use(
       secure: true, // Set to true in production for HTTPS
       sameSite: false,
       maxAge: 30 * 24 * 60 * 60 * 1000, // Session valid for 30 days
-      domain: 'youtube-proxy-frontend.onrender.com', // Corrected placement
-      path:'/'
+      domain: ".onrender.com", // Corrected placement
     },
-    
   })
 );
 
